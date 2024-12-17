@@ -1,6 +1,6 @@
-# Interview_Monitoring_System
+## Interview_Monitoring_System
 
-Project Description
+# Project Description
 An innovative AI-driven interview monitoring system that automates the interview process through advanced technologies like facial recognition, emotion detection, and speech analysis.
 Features
 
@@ -10,31 +10,32 @@ Real-time emotional and behavioral analysis
 Comprehensive performance reporting
 Bias-free interview assessment
 
-System Architecture
+#System Architecture
 
 Microservices-based architecture
 Scalable and modular design
 AI-powered core features
 
-Prerequisites
+# Prerequisites
 
 Docker
 Python 3.9+
 SpringBoot
+React JS
 
-Local Development Setup
+# Local Development Setup
 
 Clone the repository
 Install dependencies
 Configure environment variables
 Run services using Docker Compose
 
-Deployment
+# Deployment
 
 Kubernetes deployment scripts
 CI/CD pipeline with GitHub Actions
 
-Security Considerations
+# Security Considerations
 
 HTTPS protocols
 Data encryption
