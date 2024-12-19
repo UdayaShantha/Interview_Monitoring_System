@@ -1,3 +1,4 @@
+# This is an advanced CodeQL configuration workflow.
 name: "CodeQL Advanced"
 
 on:
@@ -10,8 +11,8 @@ on:
 
 jobs:
   analyze:
-    name: Analyze (${{ matrix.language }})
-    runs-on: ${{ matrix.os }}
+    name: Analyze (${matrix.language})
+    runs-on: ${{ matrix.language == 'swift' && 'macos-latest' || 'ubuntu-latest' }}
     permissions:
       security-events: write
       packages: read
@@ -21,43 +22,29 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'swift' ]
-        os: [ 'ubuntu-latest', 'macos-latest' ]
-        include:
-          - language: 'swift'
-            os: 'macos-latest'
-          - language: 'c-cpp'
-            os: 'ubuntu-latest'
-          # Add additional OS and language combinations as needed
+        language: [ "python", "javascript-typescript", "java-kotlin" ] # Add your desired languages here
+        build-mode: [ "default" ] # Adjust build modes if needed
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
-      with:
-        languages: ${{ matrix.language }}
-        build-mode: ${{ matrix.build-mode || 'default' }}
-        # Add any custom queries if needed
-        # queries: security-extended,security-and-quality
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          queries: +security-extended,security-and-quality
 
-    - name: Build code
-      if: matrix.language == 'c-cpp' || matrix.language == 'go' || matrix.language == 'java-kotlin' || matrix.language == 'javascript-typescript'
-      shell: bash
-      run: |
-        if [[ ${{ matrix.language }} == 'c-cpp' ]]; then
-          make
-        elif [[ ${{ matrix.language }} == 'go' ]]; then
-          go build ./...
-        elif [[ ${{ matrix.language }} == 'java-kotlin' ]]; then
-          ./gradlew build
-        elif [[ ${{ matrix.language }} == 'javascript-typescript' ]]; then
-          npm install
-          npm run build
-        fi
+      - name: Build the code (manual build mode)
+        if: matrix.build-mode == 'manual'
+        run: |
+          echo 'Custom build commands for manual mode should go here, e.g.:'
+          echo '  make bootstrap'
+          echo '  make release'
+          exit 1
 
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
-      with:
-        category: "/language:${{matrix.language}}"
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
