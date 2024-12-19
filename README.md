@@ -32,7 +32,7 @@ Run services using Docker Compose
 
 ## Deployment
 
-Kubernetes deployment scripts
+Kubernetes, Docker deployment scripts
 CI/CD pipeline with GitHub Actions
 
 ## Security Considerations
