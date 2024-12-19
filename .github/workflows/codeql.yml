@@ -1,50 +1,101 @@
-# This is an advanced CodeQL configuration workflow.
-name: "CodeQL Advanced"
+# This workflow enables advanced security analysis using CodeQL
+# It runs on multiple languages and provides detailed security insights
+name: "CodeQL Security Analysis"
 
+# Define when the workflow should run
 on:
+  # Run on pushes to the development branch
   push:
     branches: [ "development" ]
+  # Run on pull requests targeting the development branch
   pull_request:
     branches: [ "development" ]
+  # Run on a schedule (every Wednesday at 1:17 AM)
   schedule:
     - cron: '17 1 * * 3'
 
+# Define workflow jobs
 jobs:
   analyze:
-    name: Analyze (${matrix.language})
-    runs-on: ${{ matrix.language == 'swift' && 'macos-latest' || 'ubuntu-latest' }}
+    # Dynamic job name based on the language being analyzed
+    name: Analyze (${{ matrix.language }})
+    
+    # Use Ubuntu for most languages, macOS for Swift
+    runs-on: ubuntu-latest
+    
+    # Define required permissions
     permissions:
+      # Required for uploading security results
       security-events: write
+      # Required for package access
       packages: read
+      # Required for running actions
       actions: read
+      # Required for checking out code
       contents: read
 
     strategy:
+      # Continue with other languages if one fails
       fail-fast: false
       matrix:
-        language: [ "python", "javascript-typescript", "java-kotlin" ] # Add your desired languages here
-        build-mode: [ "default" ] # Adjust build modes if needed
+        # Define languages to analyze
+        # Tailored for your AI Interview Monitoring System
+        language: 
+          - 'python'        # For backend services
+          - 'javascript'    # For frontend components
+          - 'typescript'    # For type-safe frontend code
+        
+        # Include specific configurations for different scanning modes
+        config:
+          - setup: default
 
     steps:
+      # Step 1: Check out the repository code
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Step 2: Setup Python for your project
+      - name: Setup Python
+        if: matrix.language == 'python'
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      # Step 3: Setup Node.js for JavaScript/TypeScript analysis
+      - name: Setup Node.js
+        if: matrix.language == 'javascript' || matrix.language == 'typescript'
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      # Step 4: Initialize CodeQL
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
-          build-mode: ${{ matrix.build-mode }}
-          queries: +security-extended,security-and-quality
+          config-file: ./.github/codeql/codeql-config.yml
+          queries: security-extended,security-and-quality
 
-      - name: Build the code (manual build mode)
-        if: matrix.build-mode == 'manual'
+      # Step 5: Install dependencies based on language
+      - name: Install Dependencies
         run: |
-          echo 'Custom build commands for manual mode should go here, e.g.:'
-          echo '  make bootstrap'
-          echo '  make release'
-          exit 1
+          if [ "${{ matrix.language }}" = "python" ]; then
+            python -m pip install --upgrade pip
+            pip install -r requirements.txt
+          elif [ "${{ matrix.language }}" = "javascript" ] || [ "${{ matrix.language }}" = "typescript" ]; then
+            npm install
+          fi
 
+      # Step 6: Build the project (if necessary)
+      - name: Build Project
+        if: matrix.language == 'javascript' || matrix.language == 'typescript'
+        run: |
+          npm run build
+
+      # Step 7: Perform CodeQL Analysis
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:${{ matrix.language }}"
+          upload: true
+          output: sarif-results
