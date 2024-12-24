@@ -4,9 +4,9 @@ name: Interview System CI/CD Pipeline
 # Define when this workflow will run
 on:
   push:
-    branches: [ main ]  # Runs on pushes to main branch
+    branches: [ development, maater ]  # Runs on pushes to development, master branch
   pull_request:
-    branches: [ main ]  # Runs on pull requests targeting main branch
+    branches: [ development, master ]  # Runs on pull requests targeting development, master branch
 
 # Environment variables used throughout the workflow
 env:
