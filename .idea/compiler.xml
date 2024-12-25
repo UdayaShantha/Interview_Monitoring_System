@@ -2,6 +2,14 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="api-gateway" />
+        <module name="service-registry" />
+      </profile>
       <profile name="Annotation profile for interview-management-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
@@ -11,16 +19,18 @@
         </processorPath>
         <module name="interview-management-service" />
         <module name="question-management-service" />
-        <module name="report-generation-service" />
         <module name="user-management-service" />
+        <module name="report-generation-service" />
       </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="api-gateway" options="-parameters" />
       <module name="interview-management-service" options="-parameters" />
       <module name="question-management-service" options="-parameters" />
       <module name="report-generation-service" options="-parameters" />
+      <module name="service-registry" options="-parameters" />
       <module name="user-management-service" options="-parameters" />
     </option>
   </component>
