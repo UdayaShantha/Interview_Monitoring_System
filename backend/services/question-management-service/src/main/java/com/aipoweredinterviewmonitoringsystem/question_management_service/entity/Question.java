@@ -37,5 +37,5 @@ public class Question {
     private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL)
-    private List<Solution> solutions;
+    private List<Keyword> solutions;
 }

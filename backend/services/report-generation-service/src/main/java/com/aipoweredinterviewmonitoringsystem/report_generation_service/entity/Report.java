@@ -30,7 +30,43 @@ public class Report {
     @Column(nullable = false)
     private Double score;
 
-    @Column(nullable = false, updatable = false)
+    @Column(nullable = false)
     private LocalDateTime generatedAt = LocalDateTime.now();
 
+    public String getEmotionAnalysis() {
+        return emotionAnalysis;
+    }
+
+    public void setEmotionAnalysis(String emotionAnalysis) {
+        this.emotionAnalysis = emotionAnalysis;
+    }
+
+    public String getSpeechAnalysis() {
+        return speechAnalysis;
+    }
+
+    public void setSpeechAnalysis(String speechAnalysis) {
+        this.speechAnalysis = speechAnalysis;
+    }
+
+    public Boolean getFaceVerification() {
+        return faceVerification;
+    }
+
+    public void setFaceVerification(Boolean faceVerification) {
+        this.faceVerification = faceVerification;
+    }
+
+    public Double getScore() {
+        return score;
+    }
+
+    public void setScore(Double score) {
+        this.score = score;
+    }
+
+
+    public String getId() {
+        return "";
+    }
 }

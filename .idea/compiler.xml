@@ -8,19 +8,11 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="api-gateway" />
-        <module name="service-registry" />
-      </profile>
-      <profile name="Annotation profile for interview-management-service" enabled="true">
-        <sourceOutputDir name="target/generated-sources/annotations" />
-        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
-        <outputRelativeToContentRoot value="true" />
-        <processorPath useClasspath="false">
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/unknown/lombok-unknown.jar" />
-        </processorPath>
         <module name="interview-management-service" />
         <module name="question-management-service" />
-        <module name="user-management-service" />
+        <module name="service-registry" />
         <module name="report-generation-service" />
+        <module name="user-management-service" />
       </profile>
     </annotationProcessing>
   </component>
