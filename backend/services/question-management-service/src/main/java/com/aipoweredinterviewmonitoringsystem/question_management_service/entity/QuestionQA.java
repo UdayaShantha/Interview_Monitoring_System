@@ -30,3 +30,4 @@ public class QuestionQA {
         this.questionQAId = id;
     }
 }
+
