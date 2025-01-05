@@ -1,0 +1,193 @@
+# Python Virtual Environments
+venv/
+virtualenv/
+ENV/
+env/
+.env/
+.venv/
+pyenv/
+.Python
+python-env/
+
+# Python Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.coverage.*
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# IDEs and editors
+.idea/
+*.iws
+*.iml
+*.ipr
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.vscode/
+*.swp
+*.swo
+.vs/
+nbproject/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+.spyderproject
+.spyproject
+.ropeproject
+.ipynb_checkpoints
+*.pydevproject
+
+# Spring Boot
+*.log
+logs/
+spring.log
+application-*.yml
+application-*.properties
+!application.yml
+!application.properties
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+replay_pid*
+
+# Node (for frontend if any)
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+.env
+.env.test
+.env.production
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Operating System
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Docker
+*.env
+.docker/
+docker-compose.override.yml
+
+# Kubernetes
+kubeconfig
+*.kubeconfig
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+*.db
+
+# Build and package files
+dist/
+build/
+bin/
+out/
+
+# Testing
+coverage/
+.coverage
+.pytest_cache/
+htmlcov/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# Config files with sensitive information
+application-local.yml
+application-local.properties
+config/application-*.yml
+config/application-*.properties
+**/src/main/resources/application-local.yml
+**/src/main/resources/application-local.properties
+
+# Reports and documentation
+reports/
+site/
+.documentation/
+javadoc/
+
+# Microservices specific
+discovery-service/data/
+config-service/data/
+
+# Python Requirements (but keep requirements.txt!)
+!requirements.txt
+!requirements/*.txt
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
