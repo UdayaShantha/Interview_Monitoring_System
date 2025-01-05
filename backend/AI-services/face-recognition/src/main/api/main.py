@@ -3,6 +3,9 @@ import numpy as np
 import cv2
 import mediapipe as mp
 from scipy.spatial.distance import cosine
+import logging
+
+logging.basicConfig(level=logging.ERROR, format='%(asctime)s %(levelname)s %(message)s')
 
 app = FastAPI()
 
@@ -65,7 +68,8 @@ async def verify_face(stored_photo: UploadFile = File(...),
         }
 
     except Exception as e:
-        return {"success": False, "message": str(e)}
+        logging.error("Error in /verify-face endpoint: %s", str(e))
+        return {"success": False, "message": "An internal error has occurred!"}
 
 @app.post("/detect-face")
 async def detect_face(image: UploadFile = File(...)):
@@ -82,4 +86,5 @@ async def detect_face(image: UploadFile = File(...)):
         }
 
     except Exception as e:
-        return {"success": False, "message": str(e)}
+        logging.error("Error in /detect-face endpoint: %s", str(e))
+        return {"success": False, "message": "An internal error has occurred!"}
