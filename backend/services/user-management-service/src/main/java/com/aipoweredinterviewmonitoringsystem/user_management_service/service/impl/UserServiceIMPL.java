@@ -1,6 +1,7 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.service.impl;
 
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
+
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.User;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.CandidateRepository;
@@ -25,6 +26,8 @@ public class UserServiceIMPL implements UserService {
     @Autowired
     private CandidateRepository candidateRepository;
 
+
+
     @Autowired
     private ModelMapper modelMapper;
 
@@ -34,7 +37,7 @@ public class UserServiceIMPL implements UserService {
         // Create and save User first
         User user = new User();
         user.setUsername(candidateDTO.getUsername());
-        user.setPassword(candidateDTO.getPassword()); // Consider encoding password
+        user.setPassword(candidateDTO.getPassword()); // Password encoded
         user.setUserType(User.UserType.CANDIDATE);
         user.setCreatedAt(LocalDateTime.now());
 
@@ -100,6 +103,16 @@ public class UserServiceIMPL implements UserService {
         Candidate savedCandidate = candidateRepository.save(candidate);
         return modelMapper.map(savedCandidate, CandidateDTO.class);
     }
+
+    @Override
+    public boolean verifyCredentials(String username, String password) {
+            User user = userRepository.findByUsername(username);
+            if (user != null && user.getPassword().equals(password)) {
+                return true;
+            }
+            return false;
+        }
+
 
     private void updateCandidateFromDTO(Candidate candidate, CandidateDTO dto) {
         candidate.setName(dto.getName());

@@ -1,6 +1,7 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.controller;
 
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.UserLoginDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.UserService;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.util.StandardResponse;
@@ -62,6 +63,29 @@ public class UserController {
                 new StandardResponse(200,"Success",candidateUpdateDTO),
                 HttpStatus.OK
         );
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<StandardResponse> loginUser(@RequestBody UserLoginDTO userLoginDTO) {
+        try {
+            boolean isAuthenticated = userService.verifyCredentials(userLoginDTO.getUsername(), userLoginDTO.getPassword());
+            if (isAuthenticated) {
+                return new ResponseEntity<>(
+                        new StandardResponse(200, "Login successful", null),
+                        HttpStatus.OK
+                );
+            } else {
+                return new ResponseEntity<>(
+                        new StandardResponse(401, "Invalid username or password", null),
+                        HttpStatus.UNAUTHORIZED
+                );
+            }
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    new StandardResponse(500, "Internal server error", null),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
 

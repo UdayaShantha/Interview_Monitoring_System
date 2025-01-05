@@ -17,5 +17,7 @@ public interface UserService {
     String deleteCandidate(Long userId);
 
     CandidateDTO updateCandidate(Long userId, CandidateDTO candidateDTO);
+
+    boolean verifyCredentials(String username, String password);
 }
 
