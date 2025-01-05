@@ -1,4 +1,4 @@
-package entity;
+package com.aipoweredinterviewmonitoringsystem.user_management_service.entity;
 
 
 import jakarta.persistence.*;
