@@ -36,9 +36,6 @@ public class Question {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL)
-    private List<Solution> solutions;
-
     @OneToOne(mappedBy = "question" , cascade = CascadeType.ALL)
     private CommonQuestion commonQuestion;
 
@@ -50,4 +47,5 @@ public class Question {
 
     @OneToOne(mappedBy = "question" , cascade = CascadeType.ALL)
     private QuestionQA questionQA;
+
 }

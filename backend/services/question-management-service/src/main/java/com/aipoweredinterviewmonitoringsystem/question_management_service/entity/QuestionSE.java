@@ -25,4 +25,10 @@ public class QuestionSE {
 
     @Column(name = "duration" ,nullable = false)
     private LocalTime duration;
+
+    public void setQuestionSEId(Long id) {
+        this.questionSEId = id;
+    }
+
 }
+
