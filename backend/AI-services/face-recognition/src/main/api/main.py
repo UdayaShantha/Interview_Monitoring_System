@@ -65,7 +65,9 @@ async def verify_face(stored_photo: UploadFile = File(...),
         }
 
     except Exception as e:
-        return {"success": False, "message": str(e)}
+        import logging
+        logging.error("An error occurred in /verify-face: %s", str(e))
+        return {"success": False, "message": "An internal error has occurred!"}
 
 @app.post("/detect-face")
 async def detect_face(image: UploadFile = File(...)):
@@ -82,4 +84,6 @@ async def detect_face(image: UploadFile = File(...)):
         }
 
     except Exception as e:
-        return {"success": False, "message": str(e)}
+        import logging
+        logging.error("An error occurred in /detect-face: %s", str(e))
+        return {"success": False, "message": "An internal error has occurred!"}
