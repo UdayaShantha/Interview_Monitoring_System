@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+
 import java.time.LocalTime;
 
 @Entity
@@ -14,6 +15,7 @@ import java.time.LocalTime;
 @AllArgsConstructor
 @Table(name = "common_question")
 public class CommonQuestion {
+
     @Setter
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
