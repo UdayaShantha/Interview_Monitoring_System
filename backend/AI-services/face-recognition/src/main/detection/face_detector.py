@@ -6,7 +6,7 @@ import numpy as np
 from typing import Tuple, Optional
 
 class FaceDetector:
-    def __init__(self, model_path='face_recognition_model.pkl'):
+    def __init__(self, model_path='E:/Interview_Monitoring_System/backend/AI-services/face-recognition/src/main/model/face_recognition_model.pkl'):
         with open(model_path, 'rb') as f:
             self.model = pickle.load(f)
 

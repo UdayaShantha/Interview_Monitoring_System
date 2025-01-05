@@ -36,7 +36,7 @@ class MediaPipeFaceTrainer:
         encoding = np.array([[point.x, point.y, point.z] for point in landmarks]).flatten()
         return encoding
 
-    def train(self, data_dir, save_path='face_recognition_model.pkl'):
+    def train(self, data_dir, save_path='E:/Interview_Monitoring_System/backend/AI-services/face-recognition/src/main/model/face_recognition_model.pkl'):
         """Train the face recognition model using the dataset"""
         logger.info("Starting training process...")
 
@@ -137,7 +137,7 @@ def main():
     trainer = MediaPipeFaceTrainer()
 
     # Set your dataset path
-    data_dir = "E:/Interview_Monitoring_System/backend/AI-services/face-recognition/stored_embeddings/data/Face_Recognition dataset"
+    data_dir = "C:/Users/User/Downloads/Face_Recognition dataset"
 
     # Train the model
     model = trainer.train(data_dir)
