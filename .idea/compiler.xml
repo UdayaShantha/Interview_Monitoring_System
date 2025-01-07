@@ -7,6 +7,7 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="service-registry" />
       </profile>
       <profile name="Annotation profile for report-generation-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -31,7 +32,6 @@
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="api-gateway" target="17" />
-      <module name="service-registry" target="17" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
