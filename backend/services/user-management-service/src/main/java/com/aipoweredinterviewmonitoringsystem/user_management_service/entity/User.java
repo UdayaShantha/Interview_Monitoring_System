@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -33,6 +34,7 @@ public class User {
     private UserType userType;
 
     @NotNull(message = "Created at cannot be null")
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     public enum UserType {
