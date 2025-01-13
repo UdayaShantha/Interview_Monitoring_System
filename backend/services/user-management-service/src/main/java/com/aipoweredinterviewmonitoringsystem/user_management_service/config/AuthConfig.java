@@ -25,7 +25,7 @@ public class AuthConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception{
         return httpSecurity
-                .csrf(csrf -> csrf.disable()) // Disables CSRF protection
+                .csrf() // Enables CSRF protection
                 .authorizeHttpRequests((authz) -> authz
                 .requestMatchers("/auth/register", "/auth/token", "/auth/validate").permitAll() // Allow public access to specific endpoints
                 .anyRequest().authenticated() // Secure other endpoints
