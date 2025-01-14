@@ -40,12 +40,12 @@ class FaceModelTrainer:
         if not self.face_encodings:
             raise ValueError("No training data loaded")
 
-        X = np.array(self.face_encodings)
+        x = np.array(self.face_encodings)
         y = np.array(self.face_labels)
 
         # Split data into training and testing sets
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42
+            x, y, test_size=0.2, random_state=42
         )
 
         # Train the model
@@ -57,7 +57,7 @@ class FaceModelTrainer:
 
     def save_model(self, path):
         """Save trained model to file"""
-        with open(path, 'wb') as f:
+        with open("E:/Interview_Monitoring_System/backend/AI-services/face-recognition/src/main/model/model.pickle", 'wb') as f:
             pickle.dump({
                 'model': self.model,
                 'encodings': self.face_encodings,
