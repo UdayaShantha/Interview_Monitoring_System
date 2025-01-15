@@ -4,6 +4,7 @@ import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.Candid
 
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.User;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.CandidateRepository;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.UserRepository;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.UserService;
@@ -36,11 +37,10 @@ public class UserServiceIMPL implements UserService {
     public Candidate saveCandidate(CandidateDTO candidateDTO) {
         // Create and save User first
         User user = new User();
-        user.setUsername(candidateDTO.getUsername());
-        user.setPassword(candidateDTO.getPassword()); // Password encoded
-        user.setUserType(User.UserType.CANDIDATE);
-        user.setCreatedAt(LocalDateTime.now());
 
+        user.setUsername(candidateDTO.getUser().getUsername());
+        user.setPassword(candidateDTO.getUser().getPassword()); // Consider encoding password
+        user.setCreatedAt(LocalDateTime.now());
         User savedUser = userRepository.save(user);
 
         // Create and save Candidate
@@ -52,10 +52,8 @@ public class UserServiceIMPL implements UserService {
         candidate.setAddress(candidateDTO.getAddress());
         candidate.setEmail(candidateDTO.getEmail());
         candidate.setBirthday(candidateDTO.getBirthday());
-        candidate.setPosition(candidateDTO.getPosition());
+        candidate.setPositionType(candidateDTO.getPositionType());
         candidate.setPhotos(candidateDTO.getPhotos());
-        candidate.setCreatedBy(savedUser.getUserId()); // Setting created by as the user themselves
-
         return candidateRepository.save(candidate);
     }
 
@@ -121,7 +119,7 @@ public class UserServiceIMPL implements UserService {
         candidate.setAddress(dto.getAddress());
         candidate.setEmail(dto.getEmail());
         candidate.setBirthday(dto.getBirthday());
-        candidate.setPosition(dto.getPosition());
+        candidate.setPositionType(dto.getPositionType());
         candidate.setPhotos(dto.getPhotos());
     }
 }
