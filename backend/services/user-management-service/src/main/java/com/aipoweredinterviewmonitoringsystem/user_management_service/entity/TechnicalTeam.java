@@ -7,16 +7,18 @@ import lombok.Data;
 @Data
 @Entity
 @Table(name = "technical_team")
-public class TechnicalTeam {
-    @Id
-    private Long userId;
-
+public class TechnicalTeam extends User{
     @OneToOne
     @JoinColumn(name = "user_id")
     @MapsId
     private User user;
 
+    @Column(name = "technical_name",nullable = false)
     private String name;
+
+    @Column(name = "specialization",nullable = false)
     private String specialization;
-    private Integer experienceYears;
+
+    @Column(name = "experience",nullable = false)
+    private int experienceYears;
 }

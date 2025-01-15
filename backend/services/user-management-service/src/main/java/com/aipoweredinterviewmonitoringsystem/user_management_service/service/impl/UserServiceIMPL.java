@@ -3,6 +3,7 @@ package com.aipoweredinterviewmonitoringsystem.user_management_service.service.i
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.User;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.CandidateRepository;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.UserRepository;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.UserService;
@@ -35,7 +36,6 @@ public class UserServiceIMPL implements UserService {
         User user = new User();
         user.setUsername(candidateDTO.getUsername());
         user.setPassword(candidateDTO.getPassword()); // Consider encoding password
-        user.setUserType(User.UserType.CANDIDATE);
         user.setCreatedAt(LocalDateTime.now());
 
         User savedUser = userRepository.save(user);
