@@ -15,7 +15,7 @@ import java.io.ByteArrayInputStream;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/reports")
+@RequestMapping("/api/v1/reports")
 public class ReportController {
 
     @Autowired
