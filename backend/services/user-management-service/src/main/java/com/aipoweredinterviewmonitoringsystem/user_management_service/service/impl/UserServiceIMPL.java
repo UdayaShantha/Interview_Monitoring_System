@@ -34,8 +34,8 @@ public class UserServiceIMPL implements UserService {
     public Candidate saveCandidate(CandidateDTO candidateDTO) {
         // Create and save User first
         User user = new User();
-        user.setUsername(candidateDTO.getUsername());
-        user.setPassword(candidateDTO.getPassword()); // Consider encoding password
+        user.setUsername(candidateDTO.getUser().getUsername());
+        user.setPassword(candidateDTO.getUser().getPassword()); // Consider encoding password
         user.setCreatedAt(LocalDateTime.now());
 
         User savedUser = userRepository.save(user);
@@ -49,10 +49,8 @@ public class UserServiceIMPL implements UserService {
         candidate.setAddress(candidateDTO.getAddress());
         candidate.setEmail(candidateDTO.getEmail());
         candidate.setBirthday(candidateDTO.getBirthday());
-        candidate.setPosition(candidateDTO.getPosition());
+        candidate.setPositionType(candidateDTO.getPositionType());
         candidate.setPhotos(candidateDTO.getPhotos());
-        candidate.setCreatedBy(savedUser.getUserId()); // Setting created by as the user themselves
-
         return candidateRepository.save(candidate);
     }
 
@@ -108,7 +106,7 @@ public class UserServiceIMPL implements UserService {
         candidate.setAddress(dto.getAddress());
         candidate.setEmail(dto.getEmail());
         candidate.setBirthday(dto.getBirthday());
-        candidate.setPosition(dto.getPosition());
+        candidate.setPositionType(dto.getPositionType());
         candidate.setPhotos(dto.getPhotos());
     }
 }

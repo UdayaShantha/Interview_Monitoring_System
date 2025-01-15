@@ -21,4 +21,7 @@ public class TechnicalTeam extends User{
 
     @Column(name = "experience",nullable = false)
     private int experienceYears;
+
+    @Column(name = "technical_comment",length =255)
+    private String comment;
 }
