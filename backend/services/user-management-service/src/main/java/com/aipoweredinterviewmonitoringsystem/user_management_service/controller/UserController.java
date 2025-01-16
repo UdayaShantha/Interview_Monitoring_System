@@ -70,7 +70,15 @@ public class UserController {
                                                         @RequestParam(value="comment") String comment ){
         String msg=userService.saveComment(user_id,comment);
         return new ResponseEntity<StandardResponse>(
-                new StandardResponse(200,"Success",msg),HttpStatus.OK
+                new StandardResponse(201,"Success",msg),HttpStatus.OK
+        );
+    }
+
+    @GetMapping(path={"/hr/technical/name"},params = {"useId"})
+    public ResponseEntity<StandardResponse> getName(@RequestParam(value = "useId") long userId) {
+        String name=userService.getName(userId);
+        return new ResponseEntity<StandardResponse>(
+                new StandardResponse(200,"Success",name),HttpStatus.OK
         );
     }
 

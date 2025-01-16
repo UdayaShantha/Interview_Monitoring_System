@@ -127,6 +127,24 @@ public class UserServiceIMPL implements UserService {
         return "Not such kind of User";
     }
 
+    @Override
+    public String getName(long userId) {
+        if(userRepository.existsById(userId)){
+            try {
+                if (hrTeamRepository.existsById(userId)) {
+                    return hrTeamRepository.findNameByUserId(userId);
+                }
+                if (technicalTeamRepository.existsById(userId)) {
+                    return technicalTeamRepository.findNameByUserId(userId);
+                }
+            }
+            catch (RuntimeException e){
+                return "Can't get the logged user's name";
+            }
+        }
+        return "Not such kind of User";
+    }
+
     private void updateCandidateFromDTO(Candidate candidate, CandidateDTO dto) {
         candidate.setName(dto.getName());
         candidate.setPhone(dto.getPhone());

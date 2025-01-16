@@ -19,5 +19,7 @@ public interface UserService {
     CandidateDTO updateCandidate(Long userId, CandidateDTO candidateDTO);
 
     String saveComment(long userId, String comment);
+
+    String getName(long userId);
 }
 
