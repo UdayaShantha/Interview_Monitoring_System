@@ -1,7 +1,6 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.controller;
 
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.UserLoginDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.UserService;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.util.StandardResponse;
@@ -10,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.xml.stream.events.Comment;
 import java.util.List;
 
 @RestController
@@ -65,27 +65,21 @@ public class UserController {
         );
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<StandardResponse> loginUser(@RequestBody UserLoginDTO userLoginDTO) {
-        try {
-            boolean isAuthenticated = userService.verifyCredentials(userLoginDTO.getUsername(), userLoginDTO.getPassword());
-            if (isAuthenticated) {
-                return new ResponseEntity<>(
-                        new StandardResponse(200, "Login successful", null),
-                        HttpStatus.OK
-                );
-            } else {
-                return new ResponseEntity<>(
-                        new StandardResponse(401, "Invalid username or password", null),
-                        HttpStatus.UNAUTHORIZED
-                );
-            }
-        } catch (Exception e) {
-            return new ResponseEntity<>(
-                    new StandardResponse(500, "Internal server error", null),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
+    @PostMapping(path={"hr/technical/comment"},params={"user_id","comment"})
+    public ResponseEntity<StandardResponse> saveComment(@RequestParam(value = "user_id") long user_id,
+                                                        @RequestParam(value="comment") String comment ){
+        String msg=userService.saveComment(user_id,comment);
+        return new ResponseEntity<StandardResponse>(
+                new StandardResponse(201,"Success",msg),HttpStatus.OK
+        );
+    }
+
+    @GetMapping(path={"/hr/technical/name"},params = {"useId"})
+    public ResponseEntity<StandardResponse> getName(@RequestParam(value = "useId") long userId) {
+        String name=userService.getName(userId);
+        return new ResponseEntity<StandardResponse>(
+                new StandardResponse(200,"Success",name),HttpStatus.OK
+        );
     }
 
 

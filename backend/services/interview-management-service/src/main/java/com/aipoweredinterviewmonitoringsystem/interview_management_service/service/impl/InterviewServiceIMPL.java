@@ -17,11 +17,8 @@ public class InterviewServiceIMPL implements InterviewService {
     @Autowired
     public InterviewRepository interviewRepository;
 
-
     @Autowired
     public ModelMapper modelMapper;
-
-
 
     public InterviewDTO saveInterview(InterviewDTO interviewDTO) {
         Interview interview = modelMapper.map(interviewDTO, Interview.class);

@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/v1/keywords")
+@RequestMapping("/api/keywords")
 public class KeywordController {
 
     @Autowired
