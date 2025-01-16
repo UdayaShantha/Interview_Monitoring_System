@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.xml.stream.events.Comment;
 import java.util.List;
 
 @RestController
@@ -61,6 +62,15 @@ public class UserController {
         return new ResponseEntity<StandardResponse>(
                 new StandardResponse(200,"Success",candidateUpdateDTO),
                 HttpStatus.OK
+        );
+    }
+
+    @PostMapping(path={"hr/technical/comment"},params={"user_id","comment"})
+    public ResponseEntity<StandardResponse> saveComment(@RequestParam(value = "user_id") long user_id,
+                                                        @RequestParam(value="comment") String comment ){
+        String msg=userService.saveComment(user_id,comment);
+        return new ResponseEntity<StandardResponse>(
+                new StandardResponse(200,"Success",msg),HttpStatus.OK
         );
     }
 

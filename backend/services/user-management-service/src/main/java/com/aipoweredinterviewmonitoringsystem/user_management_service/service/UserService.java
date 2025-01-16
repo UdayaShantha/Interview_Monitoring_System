@@ -17,5 +17,7 @@ public interface UserService {
     String deleteCandidate(Long userId);
 
     CandidateDTO updateCandidate(Long userId, CandidateDTO candidateDTO);
+
+    String saveComment(long userId, String comment);
 }
 

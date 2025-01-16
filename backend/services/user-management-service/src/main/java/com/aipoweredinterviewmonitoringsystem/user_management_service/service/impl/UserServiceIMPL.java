@@ -5,6 +5,8 @@ import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Can
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.User;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.CandidateRepository;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.HrTeamRepository;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.TechnicalTeamRepository;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.UserRepository;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
@@ -25,6 +27,12 @@ public class UserServiceIMPL implements UserService {
 
     @Autowired
     private CandidateRepository candidateRepository;
+
+    @Autowired
+    private HrTeamRepository hrTeamRepository;
+
+    @Autowired
+    private TechnicalTeamRepository technicalTeamRepository;
 
     @Autowired
     private ModelMapper modelMapper;
@@ -97,6 +105,26 @@ public class UserServiceIMPL implements UserService {
 
         Candidate savedCandidate = candidateRepository.save(candidate);
         return modelMapper.map(savedCandidate, CandidateDTO.class);
+    }
+
+    @Override
+    public String saveComment(long userId,String comment) {
+        if(userRepository.existsById(userId)){
+            try {
+                if (hrTeamRepository.existsById(userId)) {
+                    hrTeamRepository.saveComment(userId,comment);
+                    return "Comment saved";
+                }
+                if (technicalTeamRepository.existsById(userId)) {
+                    technicalTeamRepository.saveComment(userId,comment);
+                    return "Comment saved";
+                }
+            }
+            catch (RuntimeException e){
+                return "Comment not saved";
+            }
+        }
+        return "Not such kind of User";
     }
 
     private void updateCandidateFromDTO(Candidate candidate, CandidateDTO dto) {
