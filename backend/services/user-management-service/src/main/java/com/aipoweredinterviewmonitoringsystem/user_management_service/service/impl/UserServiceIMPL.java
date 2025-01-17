@@ -128,7 +128,7 @@ public class UserServiceIMPL implements UserService {
     }
 
     @Override
-    public String getName(long userId) {
+    public String getUserName(long userId) {
         if(userRepository.existsById(userId)){
             try {
                 if (hrTeamRepository.existsById(userId)) {
@@ -137,6 +137,9 @@ public class UserServiceIMPL implements UserService {
                 if (technicalTeamRepository.existsById(userId)) {
                     return technicalTeamRepository.findNameByUserId(userId);
                 }
+                if (candidateRepository.existsById(userId)) {
+                    return candidateRepository.findNameByUserId(userId);
+                }
             }
             catch (RuntimeException e){
                 return "Can't get the logged user's name";
@@ -144,6 +147,7 @@ public class UserServiceIMPL implements UserService {
         }
         return "Not such kind of User";
     }
+
 
     private void updateCandidateFromDTO(Candidate candidate, CandidateDTO dto) {
         candidate.setName(dto.getName());

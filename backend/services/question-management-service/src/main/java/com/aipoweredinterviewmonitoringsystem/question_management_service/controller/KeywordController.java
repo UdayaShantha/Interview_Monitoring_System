@@ -1,6 +1,5 @@
 package com.aipoweredinterviewmonitoringsystem.question_management_service.controller;
 
-import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.Keyword;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.service.KeywordService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

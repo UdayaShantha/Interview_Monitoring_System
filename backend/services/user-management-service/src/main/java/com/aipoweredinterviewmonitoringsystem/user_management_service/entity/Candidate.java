@@ -50,12 +50,6 @@ public class Candidate extends User{
     @Column(name="position_type",nullable = false)
     private PositionType positionType;
 
-    @Column(name = "start_time",nullable = false,unique = true)
-    private LocalTime startTime;
-
-    @Column(name = "schedule_date",nullable = false)
-    private LocalDate scheduleDate;
-
 //    @ManyToOne(fetch = FetchType.LAZY)
 //    @JoinColumn(name = "created_by", nullable = false)
 //    private HrTeam createdBy;

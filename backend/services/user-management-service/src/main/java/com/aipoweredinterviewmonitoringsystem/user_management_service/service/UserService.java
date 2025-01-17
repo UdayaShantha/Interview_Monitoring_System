@@ -20,6 +20,7 @@ public interface UserService {
 
     String saveComment(long userId, String comment);
 
-    String getName(long userId);
+    String getUserName(long userId);
+
 }
 
