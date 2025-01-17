@@ -4,7 +4,6 @@ import com.aipoweredinterviewmonitoringsystem.question_management_service.entity
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.QuestionDA;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.QuestionQA;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.QuestionSE;
-import com.aipoweredinterviewmonitoringsystem.question_management_service.service.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
