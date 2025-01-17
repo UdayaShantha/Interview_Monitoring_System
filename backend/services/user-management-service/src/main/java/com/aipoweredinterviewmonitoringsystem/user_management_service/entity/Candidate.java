@@ -1,12 +1,15 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.entity;
 
+
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.PositionType;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.Date;
 import java.util.List;
 
 @AllArgsConstructor
@@ -14,48 +17,46 @@ import java.util.List;
 @Data
 @Entity
 @Table(name = "candidates")
-public class Candidate {
-    @Id
-    private Long userId;
+public class Candidate extends User{
 
     @OneToOne
     @JoinColumn(name = "user_id")
     @MapsId
     private User user;
 
-    @NotBlank(message = "Name cannot be blank")
-    @Size(max = 100, message = "Name cannot exceed 100 characters")
+    @Column(name = "candidate_name",nullable = false)
     private String name;
 
-    @NotBlank(message = "Phone number cannot be blank")
-    @Pattern(regexp = "\\d{10}", message = "Phone number must be exactly 10 digits")
-    private String phone;
-
-    @NotBlank(message = "NIC cannot be blank")
-    @Size(max = 20, message = "NIC cannot exceed 20 characters")
+    @Column(name = "candidate_nic",nullable = false, unique = true)
     private String nic;
 
-    @NotBlank(message = "Address cannot be blank")
-    @Size(max = 255, message = "Address cannot exceed 255 characters")
-    private String address;
-
-    @NotBlank(message = "Email cannot be blank")
-    @Email(message = "Email must be valid")
+    @Column(name = "email",nullable = false,unique = true)
     private String email;
 
-    @NotNull(message = "Birthday cannot be null")
-    @Past(message = "Birthday must be a past date")
+    @Column(name = "candidate_address",nullable = false)
+    private String address;
+
+    @Column(name = "candidate_phone_number",nullable = false,unique = true)
+    private String phone;
+
+    @Column(name = "candidate_dob",nullable = false)
     private LocalDate birthday;
-
-    @NotBlank(message = "Position cannot be blank")
-    @Size(max = 50, message = "Position cannot exceed 50 characters")
-    private String position;
-
-    @NotNull(message = "Created by cannot be null")
-    @Column(name = "created_by")
-    private Long createdBy;
 
     @ElementCollection
     @CollectionTable(name = "candidate_photos")
     private List<byte[]> photos;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name="position_type",nullable = false)
+    private PositionType positionType;
+
+    @Column(name = "start_time",nullable = false,unique = true)
+    private LocalTime startTime;
+
+    @Column(name = "schedule_date",nullable = false)
+    private LocalDate scheduleDate;
+
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "created_by", nullable = false)
+//    private HrTeam createdBy;
 }

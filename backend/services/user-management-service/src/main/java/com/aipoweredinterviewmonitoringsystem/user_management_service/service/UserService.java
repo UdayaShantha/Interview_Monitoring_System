@@ -18,6 +18,8 @@ public interface UserService {
 
     CandidateDTO updateCandidate(Long userId, CandidateDTO candidateDTO);
 
-    boolean verifyCredentials(String username, String password);
+    String saveComment(long userId, String comment);
+
+    String getName(long userId);
 }
 

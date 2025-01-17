@@ -1,10 +1,12 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.service.impl;
 
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
-
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.User;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.CandidateRepository;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.HrTeamRepository;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.TechnicalTeamRepository;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.UserRepository;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
@@ -26,7 +28,11 @@ public class UserServiceIMPL implements UserService {
     @Autowired
     private CandidateRepository candidateRepository;
 
+    @Autowired
+    private HrTeamRepository hrTeamRepository;
 
+    @Autowired
+    private TechnicalTeamRepository technicalTeamRepository;
 
     @Autowired
     private ModelMapper modelMapper;
@@ -36,9 +42,8 @@ public class UserServiceIMPL implements UserService {
     public Candidate saveCandidate(CandidateDTO candidateDTO) {
         // Create and save User first
         User user = new User();
-        user.setUsername(candidateDTO.getUsername());
-        user.setPassword(candidateDTO.getPassword()); // Password encoded
-        user.setUserType(User.UserType.CANDIDATE);
+        user.setUsername(candidateDTO.getUser().getUsername());
+        user.setPassword(candidateDTO.getUser().getPassword()); // Consider encoding password
         user.setCreatedAt(LocalDateTime.now());
 
         User savedUser = userRepository.save(user);
@@ -52,10 +57,8 @@ public class UserServiceIMPL implements UserService {
         candidate.setAddress(candidateDTO.getAddress());
         candidate.setEmail(candidateDTO.getEmail());
         candidate.setBirthday(candidateDTO.getBirthday());
-        candidate.setPosition(candidateDTO.getPosition());
+        candidate.setPositionType(candidateDTO.getPositionType());
         candidate.setPhotos(candidateDTO.getPhotos());
-        candidate.setCreatedBy(savedUser.getUserId()); // Setting created by as the user themselves
-
         return candidateRepository.save(candidate);
     }
 
@@ -105,14 +108,42 @@ public class UserServiceIMPL implements UserService {
     }
 
     @Override
-    public boolean verifyCredentials(String username, String password) {
-            User user = userRepository.findByUsername(username);
-            if (user != null && user.getPassword().equals(password)) {
-                return true;
+    public String saveComment(long userId,String comment) {
+        if(userRepository.existsById(userId)){
+            try {
+                if (hrTeamRepository.existsById(userId)) {
+                    hrTeamRepository.saveComment(userId,comment);
+                    return "Comment saved";
+                }
+                if (technicalTeamRepository.existsById(userId)) {
+                    technicalTeamRepository.saveComment(userId,comment);
+                    return "Comment saved";
+                }
             }
-            return false;
+            catch (RuntimeException e){
+                return "Comment not saved";
+            }
         }
+        return "Not such kind of User";
+    }
 
+    @Override
+    public String getName(long userId) {
+        if(userRepository.existsById(userId)){
+            try {
+                if (hrTeamRepository.existsById(userId)) {
+                    return hrTeamRepository.findNameByUserId(userId);
+                }
+                if (technicalTeamRepository.existsById(userId)) {
+                    return technicalTeamRepository.findNameByUserId(userId);
+                }
+            }
+            catch (RuntimeException e){
+                return "Can't get the logged user's name";
+            }
+        }
+        return "Not such kind of User";
+    }
 
     private void updateCandidateFromDTO(Candidate candidate, CandidateDTO dto) {
         candidate.setName(dto.getName());
@@ -121,7 +152,7 @@ public class UserServiceIMPL implements UserService {
         candidate.setAddress(dto.getAddress());
         candidate.setEmail(dto.getEmail());
         candidate.setBirthday(dto.getBirthday());
-        candidate.setPosition(dto.getPosition());
+        candidate.setPositionType(dto.getPositionType());
         candidate.setPhotos(dto.getPhotos());
     }
 }

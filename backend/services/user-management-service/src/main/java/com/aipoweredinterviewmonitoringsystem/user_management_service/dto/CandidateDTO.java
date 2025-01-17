@@ -1,28 +1,29 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.dto;
 
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.User;
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.PositionType;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Date;
 import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 public class CandidateDTO {
-    private String username;
-    private String password;
+    private User user;
     private String name;
-    private String phone;
     private String nic;
-    private String address;
     private String email;
+    private String address;
+    private String phone;
     private LocalDate birthday;
-    private String position;
     private List<byte[]> photos;
+    private PositionType positionType;
+    private LocalTime startTime;
+    private LocalDate scheduleDate;
 }

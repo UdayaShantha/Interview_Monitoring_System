@@ -1,13 +1,11 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.entity;
 
+
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -16,28 +14,24 @@ import java.time.LocalDateTime;
 @Data
 @Entity
 @Table(name = "users")
+@Inheritance(strategy = InheritanceType.JOINED)
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
     private Long userId;
 
-    @NotBlank(message = "Username cannot be blank")
-    @Size(max = 50, message = "Username cannot exceed 50 characters")
+    @Column(name = "user_name",nullable = false,unique = true)
     private String username;
 
-    @NotBlank(message = "Password cannot be blank")
-    @Size(min = 8, message = "Password must be at least 8 characters long")
+    @Column(name = "password",nullable = false)
     private String password;
 
-    @NotNull(message = "User type cannot be null")
     @Enumerated(EnumType.STRING)
+    @Column(name="user_type",nullable = false)
     private UserType userType;
 
-    @NotNull(message = "Created at cannot be null")
-    @CreationTimestamp
+    @Column(name="created_date",nullable = false)
     private LocalDateTime createdAt;
 
-    public enum UserType {
-        CANDIDATE, HR, TECHNICAL
-    }
 }
