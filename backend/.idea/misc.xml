@@ -11,6 +11,8 @@
         <option value="$PROJECT_DIR$/services/report-generation-service/pom.xml" />
         <option value="$PROJECT_DIR$/services/question-management-service/pom.xml" />
         <option value="$PROJECT_DIR$/services/interview-management-service/pom.xml" />
+        <option value="$PROJECT_DIR$/services/api-gateway/pom.xml" />
+        <option value="$PROJECT_DIR$/services/service-registry/pom.xml" />
       </list>
     </option>
   </component>

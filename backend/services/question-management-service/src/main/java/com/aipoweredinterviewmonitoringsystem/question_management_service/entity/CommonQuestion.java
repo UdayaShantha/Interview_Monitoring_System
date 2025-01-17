@@ -8,30 +8,30 @@ import lombok.Setter;
 
 
 import java.time.LocalTime;
+import java.util.List;
 
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "common_question")
-public class CommonQuestion {
-
-    @Setter
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Long commonQuestionId;
+public class CommonQuestion extends Question {
 
     @OneToOne
-    @JoinColumn(name = "question_id", nullable = false)
+    @JoinColumn(name = "question_id")
+    @MapsId
     private Question question;
 
-    @Column(name = "duration" ,nullable = false)
-    private LocalTime duration;
+    @Column(name = "duration", nullable = false)
+    private Long duration;
 
-    public void setCommonQuestionId(Long commonQuestionId) {
-        this.commonQuestionId = commonQuestionId;
-    }
+    @Lob
+    @Column(columnDefinition = "TEXT",name="common_question_content",nullable = false,unique = true)
+    private String content;
+
+    @Lob
+    @Column(name="common_keywords",nullable = false)
+    private List<String> commonKeywords;
 
 }
 

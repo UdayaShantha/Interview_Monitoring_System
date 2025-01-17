@@ -19,8 +19,8 @@ public class QuestionService {
     public <T> T saveQuestion(T questionEntity) {
         if (questionEntity instanceof CommonQuestion)
             return (T) commonQuestionRepository.save((CommonQuestion) questionEntity);
-        else if (questionEntity instanceof QuestionDS)
-            return (T) questionDSRepository.save((QuestionDS) questionEntity);
+        else if (questionEntity instanceof QuestionDA)
+            return (T) questionDSRepository.save((QuestionDA) questionEntity);
         else if (questionEntity instanceof QuestionQA)
             return (T) questionQARepository.save((QuestionQA) questionEntity);
         else if (questionEntity instanceof QuestionSE)
@@ -31,7 +31,7 @@ public class QuestionService {
     public <T> Optional<T> findQuestionById(Long id, Class<T> questionClass) {
         if (questionClass == CommonQuestion.class)
             return (Optional<T>) commonQuestionRepository.findById(id);
-        else if (questionClass == QuestionDS.class)
+        else if (questionClass == QuestionDA.class)
             return (Optional<T>) questionDSRepository.findById(id);
         else if (questionClass == QuestionQA.class)
             return (Optional<T>) questionQARepository.findById(id);
@@ -43,7 +43,7 @@ public class QuestionService {
     public void deleteQuestionById(Long id, Class<?> questionClass) {
         if (questionClass == CommonQuestion.class)
             commonQuestionRepository.deleteById(id);
-        else if (questionClass == QuestionDS.class)
+        else if (questionClass == QuestionDA.class)
             questionDSRepository.deleteById(id);
         else if (questionClass == QuestionQA.class)
             questionQARepository.deleteById(id);
@@ -59,10 +59,10 @@ public class QuestionService {
                 question.setCommonQuestionId(id);
                 return (T) commonQuestionRepository.save(question);
             }
-        } else if (updatedQuestion instanceof QuestionDS) {
-            Optional<QuestionDS> existing = questionDSRepository.findById(id);
+        } else if (updatedQuestion instanceof QuestionDA) {
+            Optional<QuestionDA> existing = questionDSRepository.findById(id);
             if (existing.isPresent()) {
-                QuestionDS question = (QuestionDS) updatedQuestion;
+                QuestionDA question = (QuestionDA) updatedQuestion;
                 question.setQuestionDSId(id);
                 return (T) questionDSRepository.save(question);
             }

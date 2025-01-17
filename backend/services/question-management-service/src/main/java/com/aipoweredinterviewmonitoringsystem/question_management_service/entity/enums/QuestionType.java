@@ -1,7 +1,5 @@
 package com.aipoweredinterviewmonitoringsystem.question_management_service.entity.enums;
 
-public enum DifficultyLevel {
-    EASY,
-    MEDIUM,
-    HARD
+public enum QuestionType {
+    QA,SOFTWARE_ENGINEERING,DATA_ANALYTICS
 }

@@ -1,7 +1,7 @@
 package com.aipoweredinterviewmonitoringsystem.question_management_service.controller;
 
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.CommonQuestion;
-import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.QuestionDS;
+import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.QuestionDA;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.QuestionQA;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.QuestionSE;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.service.QuestionService;
@@ -41,7 +41,7 @@ public class QuestionController {
     private Class<?> getClassType(String type) {
         return switch (type.toLowerCase()) {
             case "common" -> CommonQuestion.class;
-            case "ds" -> QuestionDS.class;
+            case "ds" -> QuestionDA.class;
             case "qa" -> QuestionQA.class;
             case "se" -> QuestionSE.class;
             default -> throw new IllegalArgumentException("Invalid type");
