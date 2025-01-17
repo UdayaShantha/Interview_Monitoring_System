@@ -4,7 +4,11 @@ import com.aipoweredinterviewmonitoringsystem.question_management_service.entity
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.QuestionDA;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.QuestionQA;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.QuestionSE;
+import com.aipoweredinterviewmonitoringsystem.question_management_service.service.QuestionService;
+import com.aipoweredinterviewmonitoringsystem.question_management_service.util.StandardResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -17,34 +21,19 @@ public class QuestionController {
     @Autowired
     private QuestionService questionService;
 
-    @PostMapping("/save")
-    public <T> T saveQuestion(@RequestBody T questionEntity) {
-        return questionService.saveQuestion(questionEntity);
-    }
-
-    @GetMapping("/{id}")
-    public <T> Optional<T> getQuestionById(@PathVariable Long id, @RequestParam String type) {
-        return (Optional<T>) questionService.findQuestionById(id, getClassType(type));
-    }
-
-    @PutMapping("/{id}")
-    public <T> Object updateQuestionById(@PathVariable Long id, @RequestParam String type) {
-        return questionService.updateQuestionById(id, getClassType(type));
-    }
-
-    @DeleteMapping("/{id}")
-    public void deleteQuestionById(@PathVariable Long id, @RequestParam String type) {
-        questionService.deleteQuestionById(id, getClassType(type));
-    }
-
-    private Class<?> getClassType(String type) {
-        return switch (type.toLowerCase()) {
-            case "common" -> CommonQuestion.class;
-            case "ds" -> QuestionDA.class;
-            case "qa" -> QuestionQA.class;
-            case "se" -> QuestionSE.class;
-            default -> throw new IllegalArgumentException("Invalid type");
-        };
+    @DeleteMapping(path = {"question/remove"},params = {"questionId"})
+    public ResponseEntity<StandardResponse> deleteQuestion(@RequestParam(value = "questionId") long questionId) {
+        String message = questionService.deleteQuestion(questionId);
+        try {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(204,"Deleted",message),HttpStatus.OK
+            );
+        }
+        catch (Exception e) {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(404,"User Not Found",message),HttpStatus.NOT_FOUND
+            );
+        }
     }
 }
 

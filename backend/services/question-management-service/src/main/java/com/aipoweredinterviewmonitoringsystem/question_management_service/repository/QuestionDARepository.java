@@ -1,6 +1,6 @@
 package com.aipoweredinterviewmonitoringsystem.question_management_service.repository;
 
-import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.QuestionSE;
+import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.QuestionDA;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -10,9 +10,9 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @EnableJpaRepositories
-public interface QuestionSERepository extends JpaRepository<QuestionSE, Long> {
+public interface QuestionDARepository extends JpaRepository<QuestionDA, Long> {
     @Modifying
     @Transactional
-    @Query("DELETE FROM QuestionSE se WHERE se.questionId = :questionId")
+    @Query("DELETE FROM QuestionDA qd WHERE qd.questionId = :questionId")
     void deleteAllByQuestionId(long questionId);
 }

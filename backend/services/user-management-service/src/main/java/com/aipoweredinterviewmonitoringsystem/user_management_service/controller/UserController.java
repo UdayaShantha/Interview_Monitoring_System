@@ -69,17 +69,31 @@ public class UserController {
     public ResponseEntity<StandardResponse> saveComment(@RequestParam(value = "user_id") long user_id,
                                                         @RequestParam(value="comment") String comment ){
         String msg=userService.saveComment(user_id,comment);
-        return new ResponseEntity<StandardResponse>(
-                new StandardResponse(201,"Success",msg),HttpStatus.OK
-        );
+        try {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(200,"Success",msg),HttpStatus.OK
+            );
+        }
+        catch (Exception e) {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(404,"User Not Found",e.getMessage()),HttpStatus.NOT_FOUND
+            );
+        }
     }
 
     @GetMapping(path={"/hr/technical/name"},params = {"userId"})
     public ResponseEntity<StandardResponse> getUserName(@RequestParam(value = "userId") long userId) {
         String name=userService.getUserName(userId);
-        return new ResponseEntity<StandardResponse>(
-                new StandardResponse(200,"Success",name),HttpStatus.OK
-        );
+        try {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(200,"Success",name),HttpStatus.OK
+            );
+        }
+        catch (Exception e) {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(404,"User Not Found",e.getMessage()),HttpStatus.NOT_FOUND
+            );
+        }
     }
 
 }

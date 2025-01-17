@@ -2,4 +2,5 @@ package com.aipoweredinterviewmonitoringsystem.question_management_service.servi
 
 
 public interface QuestionService {
+    String deleteQuestion(long questionId);
 }
