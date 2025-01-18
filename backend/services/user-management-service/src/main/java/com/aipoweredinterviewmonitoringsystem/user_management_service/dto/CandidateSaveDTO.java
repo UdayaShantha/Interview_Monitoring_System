@@ -26,5 +26,8 @@ public class CandidateSaveDTO {
     private LocalDate birthday;
     private PositionType positionType;
 
+    private LocalDate scheduleDate;
+    private LocalTime startTime;
+
 }
 

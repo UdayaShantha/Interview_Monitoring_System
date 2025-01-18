@@ -13,6 +13,7 @@ import java.time.LocalTime;
 @NoArgsConstructor
 @Data
 public class InterviewSaveDTO {
+    private Long candidateId;
     private LocalDate scheduleDate;
     private LocalTime startTime;
 }

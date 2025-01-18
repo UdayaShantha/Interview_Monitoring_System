@@ -1,26 +1,34 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.service.impl;
 
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewSaveDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateSaveDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.User;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.feign.InterviewFeignClient;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.CandidateRepository;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.HrTeamRepository;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.TechnicalTeamRepository;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.UserRepository;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.UserService;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.util.StandardResponse;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,32 +50,8 @@ public class UserServiceIMPL implements UserService {
     @Autowired
     private ModelMapper modelMapper;
 
-    private static final Logger LOGGER = Logger.getLogger(UserServiceIMPL.class.getName());
-
-//    @Override
-//    @Transactional
-//    public Candidate saveCandidate(CandidateDTO candidateDTO) {
-//        // Create and save User first
-//        User user = new User();
-//        user.setUsername(candidateDTO.getUser().getUsername());
-//        user.setPassword(candidateDTO.getUser().getPassword()); // Consider encoding password
-//        user.setCreatedAt(LocalDateTime.now());
-//
-//        User savedUser = userRepository.save(user);
-//
-//        // Create and save Candidate
-//        Candidate candidate = new Candidate();
-//        candidate.setUser(savedUser);
-//        candidate.setName(candidateDTO.getName());
-//        candidate.setPhone(candidateDTO.getPhone());
-//        candidate.setNic(candidateDTO.getNic());
-//        candidate.setAddress(candidateDTO.getAddress());
-//        candidate.setEmail(candidateDTO.getEmail());
-//        candidate.setBirthday(candidateDTO.getBirthday());
-//        candidate.setPositionType(candidateDTO.getPositionType());
-//        candidate.setPhotos(candidateDTO.getPhotos());
-//        return candidateRepository.save(candidate);
-//    }
+    @Autowired
+    private InterviewFeignClient interviewFeignClient;
 
     @Override
     public CandidateDTO getCandidateById(Long userId) {
@@ -159,7 +143,23 @@ public class UserServiceIMPL implements UserService {
         candidate.setCreatedAt(LocalDateTime.now());
         Candidate savedCandidate = candidateRepository.save(candidate);
 
-        return modelMapper.map(savedCandidate, CandidateSaveDTO.class);
+        InterviewSaveDTO interviewSaveDTO = new InterviewSaveDTO();
+        interviewSaveDTO.setCandidateId(savedCandidate.getUserId());
+        interviewSaveDTO.setScheduleDate(candidateSaveDTO.getScheduleDate());
+        interviewSaveDTO.setStartTime(candidateSaveDTO.getStartTime());
+
+        ResponseEntity<StandardResponse> response = interviewFeignClient.saveInterview(interviewSaveDTO);
+
+        CandidateSaveDTO savedCandidateDTO = modelMapper.map(savedCandidate, CandidateSaveDTO.class);
+        if (response.getBody() != null && response.getBody().getData() != null) {
+            Map<String, Object> data = (Map<String, Object>) response.getBody().getData();
+            if (data.containsKey("scheduleDate") && data.containsKey("startTime")) {
+                savedCandidateDTO.setScheduleDate(LocalDate.parse(data.get("scheduleDate").toString()));
+                savedCandidateDTO.setStartTime(LocalTime.parse(data.get("startTime").toString()));
+            }
+        }
+
+        return savedCandidateDTO;
     }
 
 
