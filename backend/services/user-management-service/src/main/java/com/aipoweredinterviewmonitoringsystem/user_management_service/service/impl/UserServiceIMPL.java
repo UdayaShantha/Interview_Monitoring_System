@@ -3,6 +3,7 @@ package com.aipoweredinterviewmonitoringsystem.user_management_service.service.i
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewSaveDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateSaveDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.GetCandidateDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.User;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
@@ -54,11 +55,47 @@ public class UserServiceIMPL implements UserService {
     private InterviewFeignClient interviewFeignClient;
 
     @Override
-    public CandidateDTO getCandidateById(Long userId) {
+    public CandidateSaveDTO saveCandidate(CandidateSaveDTO candidateSaveDTO) {
+        Candidate candidate = modelMapper.map(candidateSaveDTO, Candidate.class);
+        candidate.setUserType(UserType.CANDIDATE);
+        candidate.setCreatedAt(LocalDateTime.now());
+        Candidate savedCandidate = candidateRepository.save(candidate);
+
+        InterviewSaveDTO interviewSaveDTO = new InterviewSaveDTO();
+        interviewSaveDTO.setCandidateId(savedCandidate.getUserId());
+        interviewSaveDTO.setScheduleDate(candidateSaveDTO.getScheduleDate());
+        interviewSaveDTO.setStartTime(candidateSaveDTO.getStartTime());
+
+        ResponseEntity<StandardResponse> response = interviewFeignClient.saveInterview(interviewSaveDTO);
+
+        CandidateSaveDTO savedCandidateDTO = modelMapper.map(savedCandidate, CandidateSaveDTO.class);
+        if (response.getBody() != null && response.getBody().getData() != null) {
+            Map<String, Object> data = (Map<String, Object>) response.getBody().getData();
+            if (data.containsKey("scheduleDate") && data.containsKey("startTime")) {
+                savedCandidateDTO.setScheduleDate(LocalDate.parse(data.get("scheduleDate").toString()));
+                savedCandidateDTO.setStartTime(LocalTime.parse(data.get("startTime").toString()));
+            }
+        }
+
+        return savedCandidateDTO;
+    }
+
+    @Override
+    public GetCandidateDTO getCandidateById(Long userId) {
         if (candidateRepository.existsById(userId)) {
             Candidate candidate = candidateRepository.findById(userId).get();
-            CandidateDTO candidateDTO = modelMapper.map(candidate, CandidateDTO.class);
-            return candidateDTO;
+            GetCandidateDTO getCandidateDTO = modelMapper.map(candidate, GetCandidateDTO.class);
+
+            ResponseEntity<StandardResponse> response = interviewFeignClient.getInterviewById(candidate.getUserId());
+            if (response.getBody() != null && response.getBody().getData() != null) {
+                Map<String, Object> data = (Map<String, Object>) response.getBody().getData();
+                if (data.containsKey("duration") && data.containsKey("scheduleDate") && data.containsKey("startTime")) {
+                    getCandidateDTO.setDuration(Double.parseDouble(data.get("duration").toString()));
+                    getCandidateDTO.setScheduleDate(LocalDate.parse(data.get("scheduleDate").toString()));
+                    getCandidateDTO.setStartTime(LocalTime.parse(data.get("startTime").toString()));
+                }
+            }
+            return getCandidateDTO;
         } else {
             throw new RuntimeException("No candidate found with id " + userId);
         }
@@ -136,31 +173,7 @@ public class UserServiceIMPL implements UserService {
         return "Not such kind of User";
     }
 
-    @Override
-    public CandidateSaveDTO saveCandidate(CandidateSaveDTO candidateSaveDTO) {
-        Candidate candidate = modelMapper.map(candidateSaveDTO, Candidate.class);
-        candidate.setUserType(UserType.CANDIDATE);
-        candidate.setCreatedAt(LocalDateTime.now());
-        Candidate savedCandidate = candidateRepository.save(candidate);
 
-        InterviewSaveDTO interviewSaveDTO = new InterviewSaveDTO();
-        interviewSaveDTO.setCandidateId(savedCandidate.getUserId());
-        interviewSaveDTO.setScheduleDate(candidateSaveDTO.getScheduleDate());
-        interviewSaveDTO.setStartTime(candidateSaveDTO.getStartTime());
-
-        ResponseEntity<StandardResponse> response = interviewFeignClient.saveInterview(interviewSaveDTO);
-
-        CandidateSaveDTO savedCandidateDTO = modelMapper.map(savedCandidate, CandidateSaveDTO.class);
-        if (response.getBody() != null && response.getBody().getData() != null) {
-            Map<String, Object> data = (Map<String, Object>) response.getBody().getData();
-            if (data.containsKey("scheduleDate") && data.containsKey("startTime")) {
-                savedCandidateDTO.setScheduleDate(LocalDate.parse(data.get("scheduleDate").toString()));
-                savedCandidateDTO.setStartTime(LocalTime.parse(data.get("startTime").toString()));
-            }
-        }
-
-        return savedCandidateDTO;
-    }
 
 
     private void updateCandidateFromDTO(Candidate candidate, CandidateDTO dto) {

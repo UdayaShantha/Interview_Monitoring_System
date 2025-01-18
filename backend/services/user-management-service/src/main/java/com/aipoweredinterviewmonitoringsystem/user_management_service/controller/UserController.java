@@ -2,6 +2,7 @@ package com.aipoweredinterviewmonitoringsystem.user_management_service.controlle
 
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateSaveDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.GetCandidateDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.UserService;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.util.StandardResponse;
@@ -41,9 +42,9 @@ public class UserController {
 
     @GetMapping("/candidate/{id}")
     public ResponseEntity<StandardResponse> getCandidateById(@PathVariable(value = "id") Long userId) {
-        CandidateDTO candidateDTO = userService.getCandidateById(userId);
+        GetCandidateDTO getCandidateDTO = userService.getCandidateById(userId);
         return new ResponseEntity<StandardResponse>(
-                new StandardResponse(200,"Success",candidateDTO),
+                new StandardResponse(200,"Success",getCandidateDTO),
                 HttpStatus.OK
         );
     }
