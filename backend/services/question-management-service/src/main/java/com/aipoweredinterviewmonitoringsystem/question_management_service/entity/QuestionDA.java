@@ -5,16 +5,15 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalTime;
 import java.util.List;
 
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "question_SE")
+@Table(name = "question_DS")
 
-public class QuestionSE extends Question{
+public class QuestionDA extends Question{
     @OneToOne
     @JoinColumn(name = "question_id")
     @MapsId
@@ -24,12 +23,11 @@ public class QuestionSE extends Question{
     private Long duration;
 
     @Lob
-    @Column(columnDefinition = "TEXT",name="se_question_content",nullable = false,unique = true)
+    @Column(columnDefinition = "TEXT",name="da_question_content",nullable = false,unique = true)
     private String content;
 
     @Lob
-    @Column(name="se_keywords",nullable = false)
-    private List<String> seKeywords;
-
+    @Column(name="da_keywords",nullable = false)
+    private List<String> daKeywords;
 }
 

@@ -33,17 +33,7 @@ public class Interview {
     private Timestamp createdAt;
 
 
-    @OneToOne(mappedBy = "interview")
-    private EmotionAnalysis emotionAnalysis;
 
-    @OneToOne(mappedBy = "interview")
-    private FaceRecognition faceRecognition;
-
-    @OneToMany(mappedBy = "interview")
-    private List<SpeechAnalysis> speechAnalysis;
-
-    @OneToOne(mappedBy = "interview")
-    private BodyLanguageAnalysis bodyLanguageAnalysis;
 
 
 }

@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalTime;
+import java.util.List;
 
 @Entity
 @Data
@@ -13,21 +14,21 @@ import java.time.LocalTime;
 @AllArgsConstructor
 @Table(name = "question_QA")
 
-public class QuestionQA {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "question_qa_id")
-    private Long questionQAId;
-
+public class QuestionQA extends Question{
     @OneToOne
-    @JoinColumn(name = "question_id", nullable = false)
+    @JoinColumn(name = "question_id")
+    @MapsId
     private Question question;
 
-    @Column(name = "duration" ,nullable = false)
-    private LocalTime duration;
+    @Column(name = "duration", nullable = false)
+    private Long duration;
 
-    public void setQuestionQAId(Long id) {
-        this.questionQAId = id;
-    }
+    @Lob
+    @Column(columnDefinition = "TEXT",name="qa_question_content",nullable = false,unique = true)
+    private String content;
+
+    @Lob
+    @Column(name="qa_keywords",nullable = false)
+    private List<String> qaKeywords;
 }
 
