@@ -21,7 +21,7 @@ public class QuestionQA extends Question{
     private Question question;
 
     @Column(name = "duration", nullable = false)
-    private Long duration;
+    private long duration;
 
     @Lob
     @Column(columnDefinition = "TEXT",name="qa_question_content",nullable = false,unique = true)
@@ -29,6 +29,22 @@ public class QuestionQA extends Question{
 
     @Lob
     @Column(name="qa_keywords",nullable = false)
-    private List<String> qaKeywords;
+    private List<String> keywords;
+
+    public Question getQuestion() {
+        return question;
+    }
+
+    public long getDuration() {
+        return duration;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public List<String> getKeywords() {
+        return keywords;
+    }
 }
 

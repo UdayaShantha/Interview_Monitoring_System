@@ -56,7 +56,7 @@ public class UserController {
         );
     }
 
-    @PutMapping("candidate/{id}")
+    @PutMapping("/candidate/{id}")
     public ResponseEntity<StandardResponse> updateCandidate(@PathVariable(value = "id") Long userId, @RequestBody CandidateDTO candidateDTO) {
         CandidateDTO candidateUpdateDTO = userService.updateCandidate(userId,candidateDTO);
         return new ResponseEntity<StandardResponse>(
@@ -65,21 +65,35 @@ public class UserController {
         );
     }
 
-    @PostMapping(path={"hr/technical/comment"},params={"user_id","comment"})
+    @PostMapping(path={"/hr/technical/comment"},params={"user_id","comment"})
     public ResponseEntity<StandardResponse> saveComment(@RequestParam(value = "user_id") long user_id,
                                                         @RequestParam(value="comment") String comment ){
         String msg=userService.saveComment(user_id,comment);
-        return new ResponseEntity<StandardResponse>(
-                new StandardResponse(201,"Success",msg),HttpStatus.OK
-        );
+        try {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(200,"Success",msg),HttpStatus.OK
+            );
+        }
+        catch (Exception e) {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(404,"User Not Found",e.getMessage()),HttpStatus.NOT_FOUND
+            );
+        }
     }
 
     @GetMapping(path={"/hr/technical/name"},params = {"userId"})
     public ResponseEntity<StandardResponse> getUserName(@RequestParam(value = "userId") long userId) {
         String name=userService.getUserName(userId);
-        return new ResponseEntity<StandardResponse>(
-                new StandardResponse(200,"Success",name),HttpStatus.OK
-        );
+        try {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(200,"Success",name),HttpStatus.OK
+            );
+        }
+        catch (Exception e) {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(404,"User Not Found",e.getMessage()),HttpStatus.NOT_FOUND
+            );
+        }
     }
 
 }
