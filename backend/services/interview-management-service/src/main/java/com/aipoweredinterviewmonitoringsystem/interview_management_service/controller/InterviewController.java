@@ -2,6 +2,7 @@ package com.aipoweredinterviewmonitoringsystem.interview_management_service.cont
 
 
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewDTO;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewSaveDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.service.InterviewService;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.util.StandardResponse;
@@ -21,8 +22,8 @@ public class InterviewController {
     private InterviewService interviewService;
 
     @PostMapping
-    public ResponseEntity<StandardResponse> saveInterview(@RequestBody InterviewDTO interviewDTO) {
-        InterviewDTO savedInterviewDTO = interviewService.saveInterview(interviewDTO);
+    public ResponseEntity<StandardResponse> saveInterview(@RequestBody InterviewSaveDTO interviewSaveDTO) {
+        InterviewSaveDTO savedInterviewDTO = interviewService.saveInterview(interviewSaveDTO);
         return new ResponseEntity<StandardResponse>(
                 new StandardResponse(201,"Success",savedInterviewDTO),
                 HttpStatus.CREATED

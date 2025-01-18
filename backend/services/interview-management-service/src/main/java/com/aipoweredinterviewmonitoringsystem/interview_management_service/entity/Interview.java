@@ -1,5 +1,6 @@
 package com.aipoweredinterviewmonitoringsystem.interview_management_service.entity;
 
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,6 +8,9 @@ import lombok.NoArgsConstructor;
 
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Entity
@@ -20,20 +24,18 @@ public class Interview {
     @Column(name = "interview_id")
     private Long interviewId;
 
-    @Column(name = "schedule_date")
-    private Timestamp scheduleDate;
+    @Column(name = "schedule_date",nullable = false)
+    private LocalDate scheduleDate;
 
-    @Column(name = "status")
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status",nullable = false)
+    private Status status;
 
-    @Column(name = "start_time")
-    private String startTime;
+    @Column(name = "start_time",nullable = false)
+    private LocalTime startTime;
 
     @Column(name = "created_at")
-    private Timestamp createdAt;
-
-
-
+    private LocalDateTime createdAt;
 
 
 }

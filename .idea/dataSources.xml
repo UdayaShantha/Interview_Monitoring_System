@@ -28,7 +28,7 @@
       </jdbc-additional-properties>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="interview_db1@localhost" uuid="57eef918-7fae-4b6a-9a5d-6e5f5bee7d51">
+    <data-source source="LOCAL" name="interview_db1@localhost" uuid="0696720c-4d28-4769-9ba8-973518f6cde1">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
@@ -40,7 +40,7 @@
       </jdbc-additional-properties>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="user_db1@localhost" uuid="53b448ee-4eab-47c9-9c04-c94a29e3f47f">
+    <data-source source="LOCAL" name="user_db1@localhost" uuid="51ad9485-7b4f-4cab-8f91-d3308650c7bb">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>

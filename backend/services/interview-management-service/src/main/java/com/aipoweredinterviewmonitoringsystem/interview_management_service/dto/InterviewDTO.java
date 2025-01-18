@@ -10,7 +10,6 @@ import java.sql.Timestamp;
 @NoArgsConstructor
 @Data
 public class InterviewDTO {
-    private Long interviewId;
     private Timestamp scheduleDate;
     private String status;
     private String startTime;

@@ -1,11 +1,12 @@
 package com.aipoweredinterviewmonitoringsystem.interview_management_service.service;
 
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewDTO;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewSaveDTO;
 
 import java.util.List;
 
 public interface InterviewService {
-    InterviewDTO saveInterview(InterviewDTO interviewDTO);
+    InterviewSaveDTO saveInterview(InterviewSaveDTO interviewSaveDTO);
 
     List<InterviewDTO> getAllInterviews();
 

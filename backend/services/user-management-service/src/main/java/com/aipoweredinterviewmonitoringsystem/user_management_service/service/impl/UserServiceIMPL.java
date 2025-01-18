@@ -154,44 +154,12 @@ public class UserServiceIMPL implements UserService {
 
     @Override
     public CandidateSaveDTO saveCandidate(CandidateSaveDTO candidateSaveDTO) {
-//        Candidate candidate = new Candidate(
-//                1L,
-//                candidateSaveDTO.getUsername(),
-//                candidateSaveDTO.getPassword(),
-//                candidateSaveDTO.getUserType(),
-//                LocalDateTime.now(),
-//                candidateSaveDTO.getName(),
-//                candidateSaveDTO.getNic(),
-//                candidateSaveDTO.getEmail(),
-//                candidateSaveDTO.getAddress(),
-//                candidateSaveDTO.getPhone(),
-//                candidateSaveDTO.getBirthday(),
-//                candidateSaveDTO.getPositionType(),
-//                candidateSaveDTO.getStartTime(),
-//                candidateSaveDTO.getScheduleDate()
-//        );
         Candidate candidate = modelMapper.map(candidateSaveDTO, Candidate.class);
-
+        candidate.setUserType(UserType.CANDIDATE);
+        candidate.setCreatedAt(LocalDateTime.now());
         Candidate savedCandidate = candidateRepository.save(candidate);
-//        CandidateSaveDTO candidateSaveDTO1 = new CandidateSaveDTO(
-//                savedCandidate.getUserId(),
-//                savedCandidate.getUsername(),
-//                savedCandidate.getPassword(),
-//                savedCandidate.getUserType(),
-//                savedCandidate.getCreatedAt(),
-//                savedCandidate.getName(),
-//                savedCandidate.getNic(),
-//                savedCandidate.getEmail(),
-//                savedCandidate.getAddress(),
-//                savedCandidate.getPhone(),
-//                savedCandidate.getBirthday(),
-//                savedCandidate.getPositionType(),
-//                savedCandidate.getStartTime(),
-//                savedCandidate.getScheduleDate()
-//        );
-        CandidateSaveDTO candidateSaveDTO1 = modelMapper.map(savedCandidate, CandidateSaveDTO.class);
 
-        return candidateSaveDTO1;
+        return modelMapper.map(savedCandidate, CandidateSaveDTO.class);
     }
 
 

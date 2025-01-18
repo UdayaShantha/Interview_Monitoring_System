@@ -17,8 +17,6 @@ import java.util.List;
 public class CandidateSaveDTO {
     private String username;
     private String password;
-    private UserType userType;
-    private LocalDateTime createdAt;
 
     private String name;
     private String nic;
@@ -27,8 +25,6 @@ public class CandidateSaveDTO {
     private String phone;
     private LocalDate birthday;
     private PositionType positionType;
-    private LocalTime startTime;
-    private LocalDate scheduleDate;
 
 }
 

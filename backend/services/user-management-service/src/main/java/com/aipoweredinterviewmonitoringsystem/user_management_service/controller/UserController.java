@@ -86,7 +86,7 @@ public class UserController {
 
     @GetMapping(path={"/hr/technical/name"},params = {"userId"})
     public ResponseEntity<StandardResponse> getUserName(@RequestParam(value = "userId") long userId) {
-        String name=userService.getUserName(userId);
+        String name=userService.getName(userId);
         return new ResponseEntity<StandardResponse>(
                 new StandardResponse(200,"Success",name),HttpStatus.OK
         );
