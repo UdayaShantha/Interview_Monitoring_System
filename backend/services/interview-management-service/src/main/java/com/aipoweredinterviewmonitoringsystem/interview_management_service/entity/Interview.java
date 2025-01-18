@@ -40,5 +40,8 @@ public class Interview {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "interview_duration",nullable = false,columnDefinition = "double precision default 0.0")
+    private double duration = 0.0;
+
 
 }

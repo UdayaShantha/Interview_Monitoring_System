@@ -1,5 +1,6 @@
 package com.aipoweredinterviewmonitoringsystem.interview_management_service.service.impl;
 
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.GetInterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewSaveDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
@@ -44,10 +45,10 @@ public class InterviewServiceIMPL implements InterviewService {
     }
 
     @Override
-    public InterviewDTO getInterviewById(Long interviewId) {
+    public GetInterviewDTO getInterviewById(Long interviewId) {
         if(interviewRepository.existsById(interviewId)){
             Interview interview = interviewRepository.findById(interviewId).get();
-            InterviewDTO dto = modelMapper.map(interview, InterviewDTO.class);
+            GetInterviewDTO dto = modelMapper.map(interview, GetInterviewDTO.class);
             return dto;
         }
         else {

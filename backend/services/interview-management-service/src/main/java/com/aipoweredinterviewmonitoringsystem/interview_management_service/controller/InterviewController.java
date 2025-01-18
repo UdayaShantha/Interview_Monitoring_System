@@ -1,6 +1,7 @@
 package com.aipoweredinterviewmonitoringsystem.interview_management_service.controller;
 
 
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.GetInterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewSaveDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
@@ -41,9 +42,9 @@ public class InterviewController {
 
     @GetMapping("/{id}")
     public ResponseEntity<StandardResponse> getInterviewById(@PathVariable(value = "id") Long interviewId) {
-        InterviewDTO interviewDTO = interviewService.getInterviewById(interviewId);
+        GetInterviewDTO getInterviewDTO = interviewService.getInterviewById(interviewId);
         return new ResponseEntity<StandardResponse>(
-                new StandardResponse(200,"Success",interviewDTO),
+                new StandardResponse(200,"Success",getInterviewDTO),
                 HttpStatus.OK
         );
     }
