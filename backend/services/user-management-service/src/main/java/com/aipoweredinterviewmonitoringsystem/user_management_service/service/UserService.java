@@ -1,6 +1,7 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.service;
 
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateSaveDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 
 import java.util.List;
@@ -8,7 +9,7 @@ import java.util.List;
 public interface UserService {
 
 
-    Candidate saveCandidate(CandidateDTO candidateDTO);
+//    Candidate saveCandidate(CandidateDTO candidateDTO);
 
     CandidateDTO getCandidateById(Long userId);
 
@@ -21,5 +22,8 @@ public interface UserService {
     String saveComment(long userId, String comment);
 
     String getName(long userId);
+
+
+    CandidateSaveDTO saveCandidate(CandidateSaveDTO candidateSaveDTO);
 }
 
