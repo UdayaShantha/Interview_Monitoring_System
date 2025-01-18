@@ -1,9 +1,9 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.controller;
 
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCandidatesDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateSaveDTO;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.GetCandidateDTO;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateAndInterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.UserService;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.util.StandardResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.xml.stream.events.Comment;
 import java.util.List;
 
 @RestController
@@ -40,18 +39,18 @@ public class UserController {
         );
     }
 
-    @GetMapping("/candidate/{id}")
-    public ResponseEntity<StandardResponse> getCandidateById(@PathVariable(value = "id") Long userId) {
-        GetCandidateDTO getCandidateDTO = userService.getCandidateById(userId);
+    @GetMapping("/candidate-interview/{id}")
+    public ResponseEntity<StandardResponse> getCandidateAndInterviewById(@PathVariable(value = "id") Long userId) {
+        CandidateAndInterviewDTO candidateAndInterviewDTO = userService.getCandidateAndInterviewById(userId);
         return new ResponseEntity<StandardResponse>(
-                new StandardResponse(200,"Success",getCandidateDTO),
+                new StandardResponse(200,"Success", candidateAndInterviewDTO),
                 HttpStatus.OK
         );
     }
 
     @GetMapping("/candidate/all")
     public ResponseEntity<StandardResponse> getAllCandidates() {
-        List<CandidateDTO> allCandidates = userService.getAllCandidates();
+        List<AllCandidatesDTO> allCandidates = userService.getAllCandidates();
         return new ResponseEntity<StandardResponse>(
                 new StandardResponse(200,"Success",allCandidates),
                 HttpStatus.OK

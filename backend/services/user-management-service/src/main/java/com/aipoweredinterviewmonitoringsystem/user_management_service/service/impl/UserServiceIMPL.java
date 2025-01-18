@@ -1,11 +1,11 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.service.impl;
 
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewSaveDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCandidatesDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateSaveDTO;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.GetCandidateDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateAndInterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.User;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.feign.InterviewFeignClient;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.CandidateRepository;
@@ -18,20 +18,15 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Service
 public class UserServiceIMPL implements UserService {
@@ -81,21 +76,21 @@ public class UserServiceIMPL implements UserService {
     }
 
     @Override
-    public GetCandidateDTO getCandidateById(Long userId) {
+    public CandidateAndInterviewDTO getCandidateAndInterviewById(Long userId) {
         if (candidateRepository.existsById(userId)) {
             Candidate candidate = candidateRepository.findById(userId).get();
-            GetCandidateDTO getCandidateDTO = modelMapper.map(candidate, GetCandidateDTO.class);
+            CandidateAndInterviewDTO candidateAndInterviewDTO = modelMapper.map(candidate, CandidateAndInterviewDTO.class);
 
             ResponseEntity<StandardResponse> response = interviewFeignClient.getInterviewById(candidate.getUserId());
             if (response.getBody() != null && response.getBody().getData() != null) {
                 Map<String, Object> data = (Map<String, Object>) response.getBody().getData();
                 if (data.containsKey("duration") && data.containsKey("scheduleDate") && data.containsKey("startTime")) {
-                    getCandidateDTO.setDuration(Double.parseDouble(data.get("duration").toString()));
-                    getCandidateDTO.setScheduleDate(LocalDate.parse(data.get("scheduleDate").toString()));
-                    getCandidateDTO.setStartTime(LocalTime.parse(data.get("startTime").toString()));
+                    candidateAndInterviewDTO.setDuration(Double.parseDouble(data.get("duration").toString()));
+                    candidateAndInterviewDTO.setScheduleDate(LocalDate.parse(data.get("scheduleDate").toString()));
+                    candidateAndInterviewDTO.setStartTime(LocalTime.parse(data.get("startTime").toString()));
                 }
             }
-            return getCandidateDTO;
+            return candidateAndInterviewDTO;
         } else {
             throw new RuntimeException("No candidate found with id " + userId);
         }
@@ -103,14 +98,14 @@ public class UserServiceIMPL implements UserService {
     }
 
     @Override
-    public List<CandidateDTO> getAllCandidates() {
+    public List<AllCandidatesDTO> getAllCandidates() {
         List<Candidate> candidates = candidateRepository.findAll();
-        List<CandidateDTO> candidateDTOs = new ArrayList<>();
+        List<AllCandidatesDTO> allCandidatesDTOS = new ArrayList<>();
         for (Candidate candidate : candidates) {
-            candidateDTOs.add(modelMapper.map(candidate, CandidateDTO.class));
+            allCandidatesDTOS.add(modelMapper.map(candidate, AllCandidatesDTO.class));
         }
 
-        return candidateDTOs;
+        return allCandidatesDTOS;
     }
 
     @Override
