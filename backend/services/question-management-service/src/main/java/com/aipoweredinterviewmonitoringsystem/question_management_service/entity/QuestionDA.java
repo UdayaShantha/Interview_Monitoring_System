@@ -20,7 +20,7 @@ public class QuestionDA extends Question{
     private Question question;
 
     @Column(name = "duration", nullable = false)
-    private Long duration;
+    private long duration;
 
     @Lob
     @Column(columnDefinition = "TEXT",name="da_question_content",nullable = false,unique = true)
@@ -28,6 +28,22 @@ public class QuestionDA extends Question{
 
     @Lob
     @Column(name="da_keywords",nullable = false)
-    private List<String> daKeywords;
+    private List<String>keywords;
+
+    public Question getQuestion() {
+        return question;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public long getDuration() {
+        return duration;
+    }
+
+    public List<String> getKeywords() {
+        return keywords;
+    }
 }
 

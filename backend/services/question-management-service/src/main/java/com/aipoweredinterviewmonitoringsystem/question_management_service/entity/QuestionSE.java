@@ -21,7 +21,7 @@ public class QuestionSE extends Question{
     private Question question;
 
     @Column(name = "duration", nullable = false)
-    private Long duration;
+    private long duration;
 
     @Lob
     @Column(columnDefinition = "TEXT",name="se_question_content",nullable = false,unique = true)
@@ -29,7 +29,22 @@ public class QuestionSE extends Question{
 
     @Lob
     @Column(name="se_keywords",nullable = false)
-    private List<String> seKeywords;
+    private List<String> keywords;
 
+    public Question getQuestion() {
+        return question;
+    }
+
+    public long getDuration() {
+        return duration;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public List<String> getKeywords() {
+        return keywords;
+    }
 }
 

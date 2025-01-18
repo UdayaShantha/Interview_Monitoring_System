@@ -1,6 +1,6 @@
 package com.aipoweredinterviewmonitoringsystem.question_management_service.repository;
 
-import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.CommonQuestion;
+import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.QuestionDA;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.enums.QuestionType;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,23 +11,21 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-
 @Repository
 @EnableJpaRepositories
-public interface CommonQuestionRepository extends JpaRepository<CommonQuestion,Long> {
-
+public interface QuestionDARepository extends JpaRepository<QuestionDA, Long> {
     @Modifying
     @Transactional
-    @Query("DELETE FROM CommonQuestion c WHERE c.questionId = :questionId")
+    @Query("DELETE FROM QuestionDA qd WHERE qd.questionId = :questionId")
     void deleteAllByQuestionId(long questionId);
 
     @Modifying
     @Transactional
-    @Query("SELECT c.category,c.category,c.duration,c.keywords FROM CommonQuestion c WHERE c.questionId = :questionId")
-    Object getCommonQuestionByQuestionId(long questionId);
+    @Query("SELECT da.category,da.category,da.duration,da.keywords FROM QuestionDA da WHERE da.questionId = :questionId")
+    Object getQuestionDAByQuestionId(long questionId);
 
     @Modifying
     @Transactional
-    @Query("UPDATE CommonQuestion c SET c.content= :content, c.category= :category, c.duration= :duration, c.keywords= :keywords WHERE c.questionId= :questionId")
-    Object updateCommonQuestion(String content, QuestionType category, long duration, List<String> keywords, long questionId);
+    @Query("UPDATE QuestionDA da SET da.content= :content, da.category= :category, da.duration= :duration, da.keywords= :keywords WHERE da.questionId= :questionId")
+    Object updateQuestionDA(String content, QuestionType category, long duration, List<String> keywords, long questionId);
 }
