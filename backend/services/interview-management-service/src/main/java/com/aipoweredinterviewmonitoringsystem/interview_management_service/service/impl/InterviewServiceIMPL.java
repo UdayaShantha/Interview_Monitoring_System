@@ -1,13 +1,19 @@
 package com.aipoweredinterviewmonitoringsystem.interview_management_service.service.impl;
 
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.GetInterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewDTO;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewSaveDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.repository.InterviewRepository;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.service.InterviewService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,10 +26,12 @@ public class InterviewServiceIMPL implements InterviewService {
     @Autowired
     public ModelMapper modelMapper;
 
-    public InterviewDTO saveInterview(InterviewDTO interviewDTO) {
-        Interview interview = modelMapper.map(interviewDTO, Interview.class);
+    public InterviewSaveDTO saveInterview(InterviewSaveDTO interviewSaveDTO) {
+        Interview interview = modelMapper.map(interviewSaveDTO, Interview.class);
+        interview.setStatus(Status.UPCOMING);
+        interview.setCreatedAt(LocalDateTime.now());
         Interview savedInterview = interviewRepository.save(interview);
-        return modelMapper.map(savedInterview, InterviewDTO.class);
+        return modelMapper.map(savedInterview, InterviewSaveDTO.class);
     }
 
     @Override
@@ -37,10 +45,10 @@ public class InterviewServiceIMPL implements InterviewService {
     }
 
     @Override
-    public InterviewDTO getInterviewById(Long interviewId) {
+    public GetInterviewDTO getInterviewById(Long interviewId) {
         if(interviewRepository.existsById(interviewId)){
             Interview interview = interviewRepository.findById(interviewId).get();
-            InterviewDTO dto = modelMapper.map(interview, InterviewDTO.class);
+            GetInterviewDTO dto = modelMapper.map(interview, GetInterviewDTO.class);
             return dto;
         }
         else {
@@ -59,7 +67,6 @@ public class InterviewServiceIMPL implements InterviewService {
         if(interviewRepository.existsById(interviewId)){
             Interview interview = interviewRepository.findById(interviewId).get();
             InterviewDTO interviewUpdateDTO = modelMapper.map(interview, InterviewDTO.class);
-            interviewUpdateDTO.setInterviewId(interviewId);
             interviewUpdateDTO.setCreatedAt(interviewDTO.getCreatedAt());
             interviewUpdateDTO.setStatus(interviewDTO.getStatus());
             interviewUpdateDTO.setStartTime(interviewDTO.getStartTime());
