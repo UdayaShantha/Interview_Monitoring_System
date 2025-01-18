@@ -23,7 +23,7 @@ public class CommonQuestion extends Question {
     private Question question;
 
     @Column(name = "duration", nullable = false)
-    private Long duration;
+    private long duration;
 
     @Lob
     @Column(columnDefinition = "TEXT",name="common_question_content",nullable = false,unique = true)
@@ -31,7 +31,22 @@ public class CommonQuestion extends Question {
 
     @Lob
     @Column(name="common_keywords",nullable = false)
-    private List<String> commonKeywords;
+    private List<String> keywords;
 
+    public Question getQuestion() {
+        return question;
+    }
+
+    public long getDuration() {
+        return duration;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public List<String> getKeywords() {
+        return keywords;
+    }
 }
 
