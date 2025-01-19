@@ -54,3 +54,4 @@ public class Candidate extends User{
 //    @JoinColumn(name = "created_by", nullable = false)
 //    private HrTeam createdBy;
 }
+
