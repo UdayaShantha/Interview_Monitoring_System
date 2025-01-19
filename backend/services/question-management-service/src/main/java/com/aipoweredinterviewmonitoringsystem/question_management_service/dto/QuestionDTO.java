@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Data
 public class QuestionDTO {
+    private long questionId;
     private QuestionType category;
     private LocalDateTime createdAt;
 }

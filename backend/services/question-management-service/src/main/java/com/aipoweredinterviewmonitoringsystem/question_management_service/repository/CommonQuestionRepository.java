@@ -23,11 +23,16 @@ public interface CommonQuestionRepository extends JpaRepository<CommonQuestion,L
 
     @Modifying
     @Transactional
-    @Query("SELECT c.category,c.category,c.duration,c.keywords FROM CommonQuestion c WHERE c.questionId = :questionId")
+    @Query("SELECT c.content,c.category,c.duration,c.keywords FROM CommonQuestion c WHERE c.questionId = :questionId")
     Object getCommonQuestionByQuestionId(long questionId);
 
     @Modifying
     @Transactional
     @Query("UPDATE CommonQuestion c SET c.content= :content, c.category= :category, c.duration= :duration, c.keywords= :keywords WHERE c.questionId= :questionId")
     Object updateCommonQuestion(String content, QuestionType category, long duration, List<String> keywords, long questionId);
+
+    @Modifying
+    @Transactional
+    @Query("SELECT c.content,c.category,c.duration FROM CommonQuestion c WHERE c.questionId = :questionId")
+    Object getCommonQuestionsPaiginated(long questionId);
 }
