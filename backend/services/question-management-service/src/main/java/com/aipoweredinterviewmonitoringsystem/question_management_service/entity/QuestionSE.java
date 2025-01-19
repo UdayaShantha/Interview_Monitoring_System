@@ -22,7 +22,7 @@ public class QuestionSE extends Question{
     @Column(name = "duration", nullable = false)
     private long duration;
 
-    @Lob
+    //@Lob
     @Column(columnDefinition = "TEXT",name="se_question_content",nullable = false,unique = true)
     private String content;
 

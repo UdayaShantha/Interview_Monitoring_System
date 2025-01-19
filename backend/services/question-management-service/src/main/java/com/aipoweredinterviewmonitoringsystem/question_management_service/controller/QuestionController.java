@@ -104,5 +104,32 @@ public class QuestionController {
             );
         }
     }
+
+    //--------------get Count of the Entity rows----------------
+
+    @GetMapping("/count/common-question")
+    public long getCommonQuestionCount() {
+        return questionService.getCommonQuestionCount();
+    }
+
+    @GetMapping("/count/questionDA")
+    public long getQuestionDACount() {
+        return questionService.getQuestionDACount();
+    }
+
+    @GetMapping("/count/questionQA")
+    public long getQuestionQACount() {
+        return questionService.getQuestionQACount();
+    }
+
+    @GetMapping("/count/questionSE")
+    public long getQuestionSECount() {
+        return questionService.getQuestionSECount();
+    }
+
+    @GetMapping("/count/all-question")
+    public long getAllQuestionCount() {
+        return questionService.getAllQuestionCount();
+    }
 }
 

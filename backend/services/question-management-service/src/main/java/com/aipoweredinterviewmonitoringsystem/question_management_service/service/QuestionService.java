@@ -19,4 +19,14 @@ public interface QuestionService {
     String saveQuestion(SaveQuestionDTO saveQuestionDTO);
 
     QuestionPaiginatedDTO getQuestionsPaiginated(LocalDateTime date, int page, int size);
+
+    long getCommonQuestionCount();
+
+    long getQuestionDACount();
+
+    long getQuestionQACount();
+
+    long getQuestionSECount();
+
+    long getAllQuestionCount();
 }
