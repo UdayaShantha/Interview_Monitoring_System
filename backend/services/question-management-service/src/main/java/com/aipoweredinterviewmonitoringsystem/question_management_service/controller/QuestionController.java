@@ -2,6 +2,7 @@ package com.aipoweredinterviewmonitoringsystem.question_management_service.contr
 
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.paiginated.QuestionPaiginatedDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.GetQuestionDTO;
+import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.SaveQuestionDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.UpdateResponseDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.CommonQuestion;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.QuestionDA;
@@ -26,6 +27,26 @@ public class QuestionController {
 
     @Autowired
     private QuestionService questionService;
+
+    //----------------Save the Questions----------------
+    @PostMapping("/save")
+    public ResponseEntity<StandardResponse> saveQuestion(@RequestBody SaveQuestionDTO saveQuestionDTO) {
+        try {
+            String savedQuestion = questionService.saveQuestion(saveQuestionDTO);
+            return new ResponseEntity<>(
+                    new StandardResponse(201, "Question Saved", savedQuestion), HttpStatus.CREATED
+            );
+        } catch (SpecificException e) {
+            // Handle specific exception
+            return new ResponseEntity<>(
+                    new StandardResponse(400, "Bad Request", e.getMessage()), HttpStatus.BAD_REQUEST
+            );
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 
     @DeleteMapping(path = {"/question/remove"},params = {"questionId"})
     public ResponseEntity<StandardResponse> deleteQuestion(@RequestParam(value = "questionId") long questionId) {
