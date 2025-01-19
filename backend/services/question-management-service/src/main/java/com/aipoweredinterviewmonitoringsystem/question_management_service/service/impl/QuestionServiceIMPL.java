@@ -184,77 +184,53 @@ public class QuestionServiceIMPL implements QuestionService {
         return null;
     }
 
-
-    //--------------------Save the Questions-------------------------------
     @Override
     public String saveQuestion(SaveQuestionDTO saveQuestionDTO) {
 
-        // Create the base Question entity
-//        Question question = new Question();
-//        question.setCategory(saveQuestionDTO.getCategory());
-//        question.setCreatedAt(LocalDateTime.now());
-
-        // Handle saving specific types of questions based on category
         if (saveQuestionDTO.getCategory() == QuestionType.COMMON) {
-            // Create and save CommonQuestion
             CommonQuestion commonQuestion = new CommonQuestion();
-//            commonQuestion.setQuestion(question);
             commonQuestion.setDuration(saveQuestionDTO.getDuration());
             commonQuestion.setContent(saveQuestionDTO.getContent());
             commonQuestion.setKeywords(saveQuestionDTO.getKeywords());
             commonQuestion.setCategory(saveQuestionDTO.getCategory());
             commonQuestion.setCreatedAt(LocalDateTime.now());
-
             commonQuestionRepository.save(commonQuestion);
-            //System.out.println(commonQuestion);
             return "Question saved successfully";
-
-        } else if (saveQuestionDTO.getCategory() == QuestionType.QA) {
-            // Create and save questionQA
+        }
+        else if (saveQuestionDTO.getCategory() == QuestionType.QA) {
             QuestionQA questionQA = new QuestionQA();
-
             questionQA.setDuration(saveQuestionDTO.getDuration());
             questionQA.setContent(saveQuestionDTO.getContent());
             questionQA.setKeywords(saveQuestionDTO.getKeywords());
             questionQA.setCategory(saveQuestionDTO.getCategory());
             questionQA.setCreatedAt(LocalDateTime.now());
-
-            //Save the questionQA
             questionQARepository.save(questionQA);
-
             return "Question saved successfully";
-
-        } else if (saveQuestionDTO.getCategory() == QuestionType.DATA_ANALYTICS) {
-            // Create and save questionDA
+        }
+        else if (saveQuestionDTO.getCategory() == QuestionType.DATA_ANALYTICS) {
             QuestionDA questionDA = new QuestionDA();
-
             questionDA.setDuration(saveQuestionDTO.getDuration());
             questionDA.setContent(saveQuestionDTO.getContent());
             questionDA.setKeywords(saveQuestionDTO.getKeywords());
             questionDA.setCategory(saveQuestionDTO.getCategory());
             questionDA.setCreatedAt(LocalDateTime.now());
-
-            //Save the questionDA
             questionDARepository.save(questionDA);
-
             return "Question saved successfully";
-
-        } else if (saveQuestionDTO.getCategory() == QuestionType.SOFTWARE_ENGINEERING) {
-            // Create and save questionSE
+        }
+        else if (saveQuestionDTO.getCategory() == QuestionType.SOFTWARE_ENGINEERING) {
             QuestionSE questionSE = new QuestionSE();
-
             questionSE.setDuration(saveQuestionDTO.getDuration());
             questionSE.setContent(saveQuestionDTO.getContent());
             questionSE.setKeywords(saveQuestionDTO.getKeywords());
             questionSE.setCategory(saveQuestionDTO.getCategory());
             questionSE.setCreatedAt(LocalDateTime.now());
-
-            //Save the questionSE
             questionSERepository.save(questionSE);
-
             return "Question saved successfully";
-        } else {
-
+        }
+        else {
+            return null;
+        }
+    }
     @Override
     public QuestionPaiginatedDTO getQuestionsPaiginated(LocalDateTime date, int page, int size) {
         try{
@@ -262,16 +238,20 @@ public class QuestionServiceIMPL implements QuestionService {
             if(!questions.isEmpty()) {
                 for (Question question : questions) {
                     if(commonQuestionRepository.existsById(question.getQuestionId())) {
-                        return modelMapper.map(commonQuestionRepository.getCommonQuestionsPaiginated(question.getQuestionId()),QuestionPaiginatedDTO.class);
+                        QuestionPaiginatedDTO questionPaiginatedDTO=modelMapper.map(commonQuestionRepository.getCommonQuestionsPaiginated(question.getQuestionId()),QuestionPaiginatedDTO.class);
+                        return questionPaiginatedDTO;
                     }
                     if(questionDARepository.existsById(question.getQuestionId())) {
-                        return modelMapper.map(questionDARepository.getQuestionDASPaiginated(question.getQuestionId()),QuestionPaiginatedDTO.class);
+                        QuestionPaiginatedDTO questionPaiginatedDTO=modelMapper.map(questionDARepository.getQuestionDASPaiginated(question.getQuestionId()),QuestionPaiginatedDTO.class);
+                        return questionPaiginatedDTO;
                     }
                     if(questionQARepository.existsById(question.getQuestionId())) {
-                        return modelMapper.map(questionQARepository.getQuestionQASPaiginated(question.getQuestionId()),QuestionPaiginatedDTO.class);
+                        QuestionPaiginatedDTO questionPaiginatedDTO= modelMapper.map(questionQARepository.getQuestionQASPaiginated(question.getQuestionId()),QuestionPaiginatedDTO.class);
+                        return questionPaiginatedDTO;
                     }
                     if(questionSERepository.existsById(question.getQuestionId())) {
-                        return modelMapper.map(questionSERepository.getQuestionSESPaiginated(question.getQuestionId()),QuestionPaiginatedDTO.class);
+                        QuestionPaiginatedDTO questionPaiginatedDTO=modelMapper.map(questionSERepository.getQuestionSESPaiginated(question.getQuestionId()),QuestionPaiginatedDTO.class);
+                        return questionPaiginatedDTO;
                     }
                 }
             }
@@ -279,7 +259,6 @@ public class QuestionServiceIMPL implements QuestionService {
         }
         catch (Exception e){
             return null;
-
         }
     }
 }

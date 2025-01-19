@@ -16,9 +16,7 @@ public interface QuestionService {
 
     UpdateResponseDTO updateQuestion(GetQuestionDTO getQuestionDTO, long questionId);
 
-
     String saveQuestion(SaveQuestionDTO saveQuestionDTO);
 
     QuestionPaiginatedDTO getQuestionsPaiginated(LocalDateTime date, int page, int size);
-
 }

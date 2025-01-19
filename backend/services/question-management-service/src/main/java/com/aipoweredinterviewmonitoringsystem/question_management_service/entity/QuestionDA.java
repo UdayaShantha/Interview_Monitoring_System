@@ -4,56 +4,29 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Data
+@Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "question_DS")
 
 public class QuestionDA extends Question{
 
-//    ----------Question table is already extended------------
-//    @OneToOne
-//    @JoinColumn(name = "question_id")
-//    @MapsId
-//    private Question question;
-
     @Column(name = "duration", nullable = false)
     private long duration;
 
-    //@Lob
+    @Lob
     @Column(columnDefinition = "TEXT",name="da_question_content",nullable = false,unique = true)
     private String content;
 
-//    @Lob
-//    @Column(name="da_keywords",nullable = false)
-//    private List<String>keywords;
-
-//    public Question getQuestion() {
-//        return question;
-//    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public long getDuration() {
-        return duration;
-    }
-
-//    public List<String> getKeywords() {
-//        return keywords;
-//    }
-
     @Column(name = "da_keywords", nullable = false)
-    private String keywords; // This will store JSON
+    private String keywords;
 
     public void setKeywords(List<String> keywords) {
         try {

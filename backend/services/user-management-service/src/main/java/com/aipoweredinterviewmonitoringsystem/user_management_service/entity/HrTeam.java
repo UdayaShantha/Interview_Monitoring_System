@@ -9,11 +9,6 @@ import lombok.Data;
 @Table(name = "hr_team")
 public class HrTeam extends User{
 
-    @OneToOne
-    @JoinColumn(name = "user_id")
-    @MapsId
-    private User user;
-
     @Column(name = "hr_name",nullable = false)
     private String name;
 

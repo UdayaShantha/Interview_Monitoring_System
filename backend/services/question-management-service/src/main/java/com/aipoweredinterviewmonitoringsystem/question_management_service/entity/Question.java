@@ -30,16 +30,4 @@ public class Question {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
-
-    public long getQuestionId() {
-        return questionId;
-    }
-
-    public QuestionType getCategory() {
-        return category;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
 }

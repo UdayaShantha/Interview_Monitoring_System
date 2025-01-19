@@ -4,17 +4,17 @@ import com.aipoweredinterviewmonitoringsystem.question_management_service.entity
 import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
+@Setter
+@Getter
 public class QuestionDTO {
     private long questionId;
     private QuestionType category;
     private LocalDateTime createdAt;
+
 }
