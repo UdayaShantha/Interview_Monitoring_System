@@ -151,7 +151,7 @@ public class UserServiceIMPL implements UserService {
     }
 
     @Override
-    public String getName(long userId) {
+    public String getUserName(long userId) {
         if(userRepository.existsById(userId)){
             try {
                 if (hrTeamRepository.existsById(userId)) {
