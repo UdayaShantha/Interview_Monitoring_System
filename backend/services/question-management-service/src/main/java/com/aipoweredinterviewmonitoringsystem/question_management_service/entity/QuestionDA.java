@@ -1,10 +1,14 @@
 package com.aipoweredinterviewmonitoringsystem.question_management_service.entity;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -14,25 +18,27 @@ import java.util.List;
 @Table(name = "question_DS")
 
 public class QuestionDA extends Question{
-    @OneToOne
-    @JoinColumn(name = "question_id")
-    @MapsId
-    private Question question;
+
+//    ----------Question table is already extended------------
+//    @OneToOne
+//    @JoinColumn(name = "question_id")
+//    @MapsId
+//    private Question question;
 
     @Column(name = "duration", nullable = false)
     private long duration;
 
-    @Lob
+    //@Lob
     @Column(columnDefinition = "TEXT",name="da_question_content",nullable = false,unique = true)
     private String content;
 
-    @Lob
-    @Column(name="da_keywords",nullable = false)
-    private List<String>keywords;
+//    @Lob
+//    @Column(name="da_keywords",nullable = false)
+//    private List<String>keywords;
 
-    public Question getQuestion() {
-        return question;
-    }
+//    public Question getQuestion() {
+//        return question;
+//    }
 
     public String getContent() {
         return content;
@@ -42,8 +48,29 @@ public class QuestionDA extends Question{
         return duration;
     }
 
+//    public List<String> getKeywords() {
+//        return keywords;
+//    }
+
+    @Column(name = "da_keywords", nullable = false)
+    private String keywords; // This will store JSON
+
+    public void setKeywords(List<String> keywords) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            this.keywords = objectMapper.writeValueAsString(keywords); // Serialize list to JSON
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize keywords", e);
+        }
+    }
+
     public List<String> getKeywords() {
-        return keywords;
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return this.keywords == null ? new ArrayList<>() : objectMapper.readValue(this.keywords, new TypeReference<List<String>>() {});
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to deserialize keywords", e);
+        }
     }
 }
 

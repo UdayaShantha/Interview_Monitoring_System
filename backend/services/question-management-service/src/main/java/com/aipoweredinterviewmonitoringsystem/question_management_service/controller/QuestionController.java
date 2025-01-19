@@ -1,6 +1,7 @@
 package com.aipoweredinterviewmonitoringsystem.question_management_service.controller;
 
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.GetQuestionDTO;
+import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.SaveQuestionDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.UpdateResponseDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.CommonQuestion;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.QuestionDA;
@@ -22,6 +23,18 @@ public class QuestionController {
 
     @Autowired
     private QuestionService questionService;
+
+    //----------------Save the Questions----------------
+    @PostMapping("/save")
+    public String saveQuestion(@RequestBody SaveQuestionDTO saveQuestionDTO) {
+        try {
+            String savedQuestion = questionService.saveQuestion(saveQuestionDTO);
+            return savedQuestion;
+        } catch (Exception e) {
+            return "Error: " + e.getMessage();
+        }
+    }
+
 
     @DeleteMapping(path = {"/question/remove"},params = {"questionId"})
     public ResponseEntity<StandardResponse> deleteQuestion(@RequestParam(value = "questionId") long questionId) {
