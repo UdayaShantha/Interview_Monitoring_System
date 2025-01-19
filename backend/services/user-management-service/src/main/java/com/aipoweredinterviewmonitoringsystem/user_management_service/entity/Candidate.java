@@ -2,12 +2,14 @@ package com.aipoweredinterviewmonitoringsystem.user_management_service.entity;
 
 
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.PositionType;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Date;
 import java.util.List;
@@ -18,11 +20,6 @@ import java.util.List;
 @Entity
 @Table(name = "candidates")
 public class Candidate extends User{
-
-    @OneToOne
-    @JoinColumn(name = "user_id")
-    @MapsId
-    private User user;
 
     @Column(name = "candidate_name",nullable = false)
     private String name;
@@ -50,8 +47,6 @@ public class Candidate extends User{
     @Column(name="position_type",nullable = false)
     private PositionType positionType;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "created_by", nullable = false)
-//    private HrTeam createdBy;
+
 }
 

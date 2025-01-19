@@ -4,14 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class InterviewDTO {
-    private Timestamp scheduleDate;
-    private String status;
-    private String startTime;
-    private Timestamp createdAt;
+public class GetInterviewDTO {
+    private double duration;
+    private LocalDate scheduleDate;
+    private LocalTime startTime;
 }
