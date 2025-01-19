@@ -1,11 +1,13 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.service.impl;
 
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewSaveDTO;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCandidatesDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateSaveDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateAndInterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.PositionType;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.feign.InterviewFeignClient;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.CandidateRepository;
@@ -27,6 +29,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceIMPL implements UserService {
@@ -131,19 +134,18 @@ public class UserServiceIMPL implements UserService {
     }
 
     @Override
-    public String saveComment(long userId,String comment) {
-        if(userRepository.existsById(userId)){
+    public String saveComment(long userId, String comment) {
+        if (userRepository.existsById(userId)) {
             try {
                 if (hrTeamRepository.existsById(userId)) {
-                    hrTeamRepository.saveComment(userId,comment);
+                    hrTeamRepository.saveComment(userId, comment);
                     return "Comment saved";
                 }
                 if (technicalTeamRepository.existsById(userId)) {
-                    technicalTeamRepository.saveComment(userId,comment);
+                    technicalTeamRepository.saveComment(userId, comment);
                     return "Comment saved";
                 }
-            }
-            catch (RuntimeException e){
+            } catch (RuntimeException e) {
                 return "Comment not saved";
             }
         }
@@ -152,7 +154,7 @@ public class UserServiceIMPL implements UserService {
 
     @Override
     public String getName(long userId) {
-        if(userRepository.existsById(userId)){
+        if (userRepository.existsById(userId)) {
             try {
                 if (hrTeamRepository.existsById(userId)) {
                     return hrTeamRepository.findNameByUserId(userId);
@@ -160,15 +162,12 @@ public class UserServiceIMPL implements UserService {
                 if (technicalTeamRepository.existsById(userId)) {
                     return technicalTeamRepository.findNameByUserId(userId);
                 }
-            }
-            catch (RuntimeException e){
+            } catch (RuntimeException e) {
                 return "Can't get the logged user's name";
             }
         }
         return "Not such kind of User";
     }
-
-
 
 
     private void updateCandidateFromDTO(Candidate candidate, CandidateDTO dto) {
@@ -181,7 +180,37 @@ public class UserServiceIMPL implements UserService {
         candidate.setPositionType(dto.getPositionType());
         candidate.setPhotos(dto.getPhotos());
     }
-}
 
+    @Override
+    public List<CandidateDTO> filterCandidates(PositionType positionType, Status status) {
+        // Step 1: Filter candidates by position type
+        List<Candidate> candidatesByPosition = candidateRepository.findByPositionType(positionType);
+
+        // Step 2: Fetch user IDs matching the given status from Interview Management Service
+        ResponseEntity<List<Long>> response = interviewFeignClient.getInterviewsByStatus(status);
+        List<Long> userIdsByStatus = response.getBody();
+
+        // Step 3: Filter candidates by status using user IDs
+        List<Candidate> filteredCandidates = candidatesByPosition.stream()
+                .filter(candidate -> userIdsByStatus.contains(candidate.getUserId()))
+                .collect(Collectors.toList());
+
+        // Convert to DTOs
+        return filteredCandidates.stream()
+                .map(candidate -> new CandidateDTO(
+                        candidate,
+                        candidate.getName(),
+                        candidate.getNic(),
+                        candidate.getEmail(),
+                        candidate.getAddress(),
+                        candidate.getPhone(),
+                        candidate.getBirthday(),
+                        candidate.getPhotos(),
+                        candidate.getPositionType()
+                ))
+                .collect(Collectors.toList());
+    }
+
+}
 
 

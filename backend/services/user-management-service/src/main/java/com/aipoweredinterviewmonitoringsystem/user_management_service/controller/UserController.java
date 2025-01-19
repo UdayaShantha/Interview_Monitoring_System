@@ -1,9 +1,11 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.controller;
 
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCandidatesDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateSaveDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateAndInterviewDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.PositionType;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.UserService;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.util.StandardResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,7 +96,7 @@ public class UserController {
     @GetMapping(path={"/hr/technical/name"},params = {"userId"})
     public ResponseEntity<StandardResponse> getUserName(@RequestParam(value = "userId") long userId) {
 
-        String name=userService.getUserName(userId);
+        String name=userService.getName(userId);
         try {
             return new ResponseEntity<StandardResponse>(
                     new StandardResponse(200,"Success",name),HttpStatus.OK
@@ -105,6 +107,16 @@ public class UserController {
                     new StandardResponse(404,"User Not Found",e.getMessage()),HttpStatus.NOT_FOUND
             );
         }
+    }
+
+    @GetMapping("/candidates/filter")
+    public ResponseEntity<StandardResponse> filterCandidates(
+            @RequestParam("positionType") PositionType positionType,
+            @RequestParam("status") Status status) {
+        List<CandidateDTO> filteredCandidates = userService.filterCandidates(positionType, status);
+        return new ResponseEntity<>(
+                new StandardResponse(200, "Success", filteredCandidates),
+                HttpStatus.OK);
     }
 
 }

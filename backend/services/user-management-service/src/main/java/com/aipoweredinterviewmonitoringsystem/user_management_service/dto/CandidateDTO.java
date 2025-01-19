@@ -1,5 +1,6 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.dto;
 
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.User;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.PositionType;
 import jakarta.persistence.*;
@@ -26,4 +27,7 @@ public class CandidateDTO {
     private PositionType positionType;
     private LocalTime startTime;
     private LocalDate scheduleDate;
+
+    public CandidateDTO(Candidate candidate, String name, String nic, String email, String address, String phone, LocalDate birthday, List<byte[]> photos, PositionType positionType) {
+    }
 }

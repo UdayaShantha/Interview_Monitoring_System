@@ -5,6 +5,7 @@ import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.G
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewSaveDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.service.InterviewService;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.util.StandardResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,7 +69,7 @@ public class InterviewController {
     }
 
     @GetMapping("by-status/{status}")
-    public ResponseEntity<StandardResponse> getInterviewByStatus(@PathVariable(value = "status") String status) {
+    public ResponseEntity<StandardResponse> getInterviewByStatus(@PathVariable(value = "status") Status status) {
         List<InterviewDTO> allInterviewsByStatus = interviewService.getAllInterviewsByStatus(status);
         return new ResponseEntity<StandardResponse>(
                 new StandardResponse(200,"Success",allInterviewsByStatus),
