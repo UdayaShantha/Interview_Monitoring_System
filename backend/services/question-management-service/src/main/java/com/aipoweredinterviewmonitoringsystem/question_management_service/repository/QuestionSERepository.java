@@ -21,11 +21,16 @@ public interface QuestionSERepository extends JpaRepository<QuestionSE, Long> {
 
     @Modifying
     @Transactional
-    @Query("SELECT se.category,se.category,se.duration,se.keywords FROM QuestionSE se WHERE se.questionId = :questionId")
+    @Query("SELECT se.content,se.category,se.duration,se.keywords FROM QuestionSE se WHERE se.questionId = :questionId")
     Object getQuestionSEByQuestionId(long questionId);
 
     @Modifying
     @Transactional
     @Query("UPDATE QuestionSE se SET se.content= :content, se.category= :category, se.duration= :duration, se.keywords= :keywords WHERE se.questionId= :questionId")
     Object updateQuestionSE(String content, QuestionType category, long duration, List<String> keywords, long questionId);
+
+    @Modifying
+    @Transactional
+    @Query("SELECT se.content,se.category,se.duration FROM QuestionSE se WHERE se.questionId = :questionId")
+    Object getQuestionSESPaiginated(long questionId);
 }

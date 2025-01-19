@@ -1,23 +1,32 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.service.impl;
 
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewSaveDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCandidatesDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateSaveDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateAndInterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.User;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.feign.InterviewFeignClient;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.CandidateRepository;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.HrTeamRepository;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.TechnicalTeamRepository;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.UserRepository;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.UserService;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.util.StandardResponse;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class UserServiceIMPL implements UserService {
@@ -37,37 +46,51 @@ public class UserServiceIMPL implements UserService {
     @Autowired
     private ModelMapper modelMapper;
 
+    @Autowired
+    private InterviewFeignClient interviewFeignClient;
+
     @Override
-    @Transactional
-    public Candidate saveCandidate(CandidateDTO candidateDTO) {
-        // Create and save User first
-        User user = new User();
-        user.setUsername(candidateDTO.getUser().getUsername());
-        user.setPassword(candidateDTO.getUser().getPassword()); // Consider encoding password
-        user.setCreatedAt(LocalDateTime.now());
+    public CandidateSaveDTO saveCandidate(CandidateSaveDTO candidateSaveDTO) {
+        Candidate candidate = modelMapper.map(candidateSaveDTO, Candidate.class);
+        candidate.setUserType(UserType.CANDIDATE);
+        candidate.setCreatedAt(LocalDateTime.now());
+        Candidate savedCandidate = candidateRepository.save(candidate);
 
-        User savedUser = userRepository.save(user);
+        InterviewSaveDTO interviewSaveDTO = new InterviewSaveDTO();
+        interviewSaveDTO.setCandidateId(savedCandidate.getUserId());
+        interviewSaveDTO.setScheduleDate(candidateSaveDTO.getScheduleDate());
+        interviewSaveDTO.setStartTime(candidateSaveDTO.getStartTime());
 
-        // Create and save Candidate
-        Candidate candidate = new Candidate();
-        candidate.setUser(savedUser);
-        candidate.setName(candidateDTO.getName());
-        candidate.setPhone(candidateDTO.getPhone());
-        candidate.setNic(candidateDTO.getNic());
-        candidate.setAddress(candidateDTO.getAddress());
-        candidate.setEmail(candidateDTO.getEmail());
-        candidate.setBirthday(candidateDTO.getBirthday());
-        candidate.setPositionType(candidateDTO.getPositionType());
-        candidate.setPhotos(candidateDTO.getPhotos());
-        return candidateRepository.save(candidate);
+        ResponseEntity<StandardResponse> response = interviewFeignClient.saveInterview(interviewSaveDTO);
+
+        CandidateSaveDTO savedCandidateDTO = modelMapper.map(savedCandidate, CandidateSaveDTO.class);
+        if (response.getBody() != null && response.getBody().getData() != null) {
+            Map<String, Object> data = (Map<String, Object>) response.getBody().getData();
+            if (data.containsKey("scheduleDate") && data.containsKey("startTime")) {
+                savedCandidateDTO.setScheduleDate(LocalDate.parse(data.get("scheduleDate").toString()));
+                savedCandidateDTO.setStartTime(LocalTime.parse(data.get("startTime").toString()));
+            }
+        }
+
+        return savedCandidateDTO;
     }
 
     @Override
-    public CandidateDTO getCandidateById(Long userId) {
+    public CandidateAndInterviewDTO getCandidateAndInterviewById(Long userId) {
         if (candidateRepository.existsById(userId)) {
             Candidate candidate = candidateRepository.findById(userId).get();
-            CandidateDTO candidateDTO = modelMapper.map(candidate, CandidateDTO.class);
-            return candidateDTO;
+            CandidateAndInterviewDTO candidateAndInterviewDTO = modelMapper.map(candidate, CandidateAndInterviewDTO.class);
+
+            ResponseEntity<StandardResponse> response = interviewFeignClient.getInterviewById(candidate.getUserId());
+            if (response.getBody() != null && response.getBody().getData() != null) {
+                Map<String, Object> data = (Map<String, Object>) response.getBody().getData();
+                if (data.containsKey("duration") && data.containsKey("scheduleDate") && data.containsKey("startTime")) {
+                    candidateAndInterviewDTO.setDuration(Double.parseDouble(data.get("duration").toString()));
+                    candidateAndInterviewDTO.setScheduleDate(LocalDate.parse(data.get("scheduleDate").toString()));
+                    candidateAndInterviewDTO.setStartTime(LocalTime.parse(data.get("startTime").toString()));
+                }
+            }
+            return candidateAndInterviewDTO;
         } else {
             throw new RuntimeException("No candidate found with id " + userId);
         }
@@ -75,14 +98,14 @@ public class UserServiceIMPL implements UserService {
     }
 
     @Override
-    public List<CandidateDTO> getAllCandidates() {
+    public List<AllCandidatesDTO> getAllCandidates() {
         List<Candidate> candidates = candidateRepository.findAll();
-        List<CandidateDTO> candidateDTOs = new ArrayList<>();
+        List<AllCandidatesDTO> allCandidatesDTOS = new ArrayList<>();
         for (Candidate candidate : candidates) {
-            candidateDTOs.add(modelMapper.map(candidate, CandidateDTO.class));
+            allCandidatesDTOS.add(modelMapper.map(candidate, AllCandidatesDTO.class));
         }
 
-        return candidateDTOs;
+        return allCandidatesDTOS;
     }
 
     @Override
@@ -128,7 +151,7 @@ public class UserServiceIMPL implements UserService {
     }
 
     @Override
-    public String getUserName(long userId) {
+    public String getName(long userId) {
         if(userRepository.existsById(userId)){
             try {
                 if (hrTeamRepository.existsById(userId)) {
@@ -137,9 +160,6 @@ public class UserServiceIMPL implements UserService {
                 if (technicalTeamRepository.existsById(userId)) {
                     return technicalTeamRepository.findNameByUserId(userId);
                 }
-                if (candidateRepository.existsById(userId)) {
-                    return candidateRepository.findNameByUserId(userId);
-                }
             }
             catch (RuntimeException e){
                 return "Can't get the logged user's name";
@@ -147,6 +167,8 @@ public class UserServiceIMPL implements UserService {
         }
         return "Not such kind of User";
     }
+
+
 
 
     private void updateCandidateFromDTO(Candidate candidate, CandidateDTO dto) {

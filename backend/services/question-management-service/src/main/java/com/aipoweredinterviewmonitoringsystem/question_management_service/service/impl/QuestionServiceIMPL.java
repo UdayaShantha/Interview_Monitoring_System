@@ -2,19 +2,30 @@ package com.aipoweredinterviewmonitoringsystem.question_management_service.servi
 
 
 import com.aipoweredinterviewmonitoringsystem.question_management_service.config.ModelMapperConfig;
+import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.QuestionDTO;
+import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.paiginated.QuestionPaiginatedDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.GetQuestionDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.SaveQuestionDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.UpdateResponseDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.*;
+
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.enums.QuestionType;
+
 import com.aipoweredinterviewmonitoringsystem.question_management_service.repository.*;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.service.QuestionService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
 import java.time.LocalDateTime;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class QuestionServiceIMPL implements QuestionService {
@@ -173,6 +184,7 @@ public class QuestionServiceIMPL implements QuestionService {
         return null;
     }
 
+
     //--------------------Save the Questions-------------------------------
     @Override
     public String saveQuestion(SaveQuestionDTO saveQuestionDTO) {
@@ -242,7 +254,32 @@ public class QuestionServiceIMPL implements QuestionService {
 
             return "Question saved successfully";
         } else {
-                return "Invalid question category";
+
+    @Override
+    public QuestionPaiginatedDTO getQuestionsPaiginated(LocalDateTime date, int page, int size) {
+        try{
+            Page<Question> questions=questionRepository.findQuestionsByCreatedAtBefore(date, PageRequest.of(page,size, Sort.by("createdAt").descending()));
+            if(!questions.isEmpty()) {
+                for (Question question : questions) {
+                    if(commonQuestionRepository.existsById(question.getQuestionId())) {
+                        return modelMapper.map(commonQuestionRepository.getCommonQuestionsPaiginated(question.getQuestionId()),QuestionPaiginatedDTO.class);
+                    }
+                    if(questionDARepository.existsById(question.getQuestionId())) {
+                        return modelMapper.map(questionDARepository.getQuestionDASPaiginated(question.getQuestionId()),QuestionPaiginatedDTO.class);
+                    }
+                    if(questionQARepository.existsById(question.getQuestionId())) {
+                        return modelMapper.map(questionQARepository.getQuestionQASPaiginated(question.getQuestionId()),QuestionPaiginatedDTO.class);
+                    }
+                    if(questionSERepository.existsById(question.getQuestionId())) {
+                        return modelMapper.map(questionSERepository.getQuestionSESPaiginated(question.getQuestionId()),QuestionPaiginatedDTO.class);
+                    }
+                }
+            }
+            return null;
+        }
+        catch (Exception e){
+            return null;
+
         }
     }
 }
