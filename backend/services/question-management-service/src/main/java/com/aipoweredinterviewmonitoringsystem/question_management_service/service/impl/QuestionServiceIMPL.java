@@ -261,4 +261,30 @@ public class QuestionServiceIMPL implements QuestionService {
             return null;
         }
     }
+
+    //------------------------get count of the row in the entity-----------------------------
+    @Override
+    public long getCommonQuestionCount() {
+        return commonQuestionRepository.count();
+    }
+
+    @Override
+    public long getQuestionDACount() {
+        return questionDARepository.count();
+    }
+
+    @Override
+    public long getQuestionQACount() {
+        return questionQARepository.count();
+    }
+
+    @Override
+    public long getQuestionSECount() {
+        return questionSERepository.count();
+    }
+
+    @Override
+    public long getAllQuestionCount() {
+        return questionRepository.count();
+    }
 }
