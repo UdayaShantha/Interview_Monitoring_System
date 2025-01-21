@@ -8,6 +8,7 @@ import com.aipoweredinterviewmonitoringsystem.question_management_service.entity
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.QuestionDA;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.QuestionQA;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.QuestionSE;
+import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.enums.QuestionType;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.service.QuestionService;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.util.StandardResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -105,8 +106,6 @@ public class QuestionController {
         }
     }
 
-    //--------------get Count of the Entity rows----------------
-
     @GetMapping("/count/common-question")
     public long getCommonQuestionCount() {
         return questionService.getCommonQuestionCount();
@@ -130,6 +129,26 @@ public class QuestionController {
     @GetMapping("/count/all-question")
     public long getAllQuestionCount() {
         return questionService.getAllQuestionCount();
+    }
+
+    @GetMapping(path={"/filter/questions/paiginated"},params = {"date","category","duration","page","size"})
+    public ResponseEntity<StandardResponse> getFilteredQuestionsPaiginated(@RequestParam(value = "date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date,
+                                                                           @RequestParam(value = "category")QuestionType category,
+                                                                           @RequestParam(value="duration")long duration,
+                                                                           @RequestParam(value = "page", defaultValue = "0") int page,
+                                                                           @RequestParam(value="size", defaultValue = "6") int size)
+    {
+        QuestionPaiginatedDTO questionPaiginatedDTO=questionService.getFilteredQuestionsPaiginated(date,category,duration,page,size);
+        try {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(200,"Success",questionPaiginatedDTO),HttpStatus.OK
+            );
+        }
+        catch (Exception e) {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(204,"No Content",e.getMessage()),HttpStatus.NOT_FOUND
+            );
+        }
     }
 }
 

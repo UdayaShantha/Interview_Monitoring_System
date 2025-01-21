@@ -21,8 +21,8 @@ public class QuestionDA extends Question{
     @Column(name = "duration", nullable = false)
     private long duration;
 
-    //@Lob
-    @Column(columnDefinition = "TEXT",name="da_question_content",nullable = false,unique = true)
+    @Lob
+    @Column(name="da_question_content",nullable = false,unique = true)
     private String content;
 
     @Column(name = "da_keywords", nullable = false)

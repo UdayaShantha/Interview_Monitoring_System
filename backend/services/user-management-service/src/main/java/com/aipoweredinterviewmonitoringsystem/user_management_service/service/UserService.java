@@ -4,6 +4,7 @@ import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCan
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateSaveDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateAndInterviewDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.response.PositionResponse;
 
 import java.util.List;
 
@@ -24,6 +25,8 @@ public interface UserService {
     String getUserName(long userId);
 
 
+    PositionResponse getCandidatePosition(long userId);
 
+    String saveCandidateFeedback(long userId,int rate, String comment);
 }
 

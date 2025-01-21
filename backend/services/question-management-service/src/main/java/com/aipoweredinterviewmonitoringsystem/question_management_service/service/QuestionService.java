@@ -5,6 +5,7 @@ import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.pa
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.GetQuestionDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.SaveQuestionDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.UpdateResponseDTO;
+import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.enums.QuestionType;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,4 +30,6 @@ public interface QuestionService {
     long getQuestionSECount();
 
     long getAllQuestionCount();
+
+    QuestionPaiginatedDTO getFilteredQuestionsPaiginated(LocalDateTime date,QuestionType category, long duration, int page, int size);
 }
