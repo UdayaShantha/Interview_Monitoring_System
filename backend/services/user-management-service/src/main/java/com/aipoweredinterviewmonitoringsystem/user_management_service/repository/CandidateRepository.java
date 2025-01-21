@@ -24,4 +24,9 @@ public interface CandidateRepository extends JpaRepository<Candidate, Long> {
     @Transactional
     @Query("SELECT c.positionType FROM Candidate c WHERE c.userId = :userId")
     Candidate findPositionByuserId(long userId);
+
+    @Modifying
+    @Transactional
+    @Query(value = "INSERT INTO Candidate (rate,comment) VALUES (:rate, :comment)", nativeQuery = true)
+    void saveRateAndComment(int rate, String comment);
 }

@@ -4,6 +4,8 @@ package com.aipoweredinterviewmonitoringsystem.user_management_service.entity;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.PositionType;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -47,6 +49,12 @@ public class Candidate extends User{
     @Column(name="position_type",nullable = false)
     private PositionType positionType;
 
+    @Min(1)
+    @Max(5)
+    @Column(name = "candidate_rating")
+    private int rate;
 
+    @Column(name = "candidate_comment")
+    private String comment;
 }
 

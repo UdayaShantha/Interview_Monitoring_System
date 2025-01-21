@@ -184,6 +184,20 @@ public class UserServiceIMPL implements UserService {
         return null;
     }
 
+    @Override
+    public String saveCandidateFeedback(long userId, int rate,String comment) {
+        if(userRepository.existsById(userId) && candidateRepository.existsById(userId)){
+            try {
+                candidateRepository.saveRateAndComment(rate,comment);
+                return "Comment saved";
+            }
+            catch (RuntimeException e){
+                return "Feddback not saved";
+            }
+        }
+        return "Not such kind of User";
+    }
+
 
     private void updateCandidateFromDTO(Candidate candidate, CandidateDTO dto) {
         candidate.setName(dto.getName());

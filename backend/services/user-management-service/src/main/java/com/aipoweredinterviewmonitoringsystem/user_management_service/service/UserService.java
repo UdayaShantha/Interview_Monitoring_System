@@ -26,5 +26,7 @@ public interface UserService {
 
 
     PositionResponse getCandidatePosition(long userId);
+
+    String saveCandidateFeedback(long userId,int rate, String comment);
 }
 
