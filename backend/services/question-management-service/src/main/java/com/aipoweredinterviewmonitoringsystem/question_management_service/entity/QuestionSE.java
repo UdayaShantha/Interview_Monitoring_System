@@ -22,8 +22,8 @@ public class QuestionSE extends Question{
     @Column(name = "duration", nullable = false)
     private long duration;
 
-    //@Lob
-    @Column(columnDefinition = "TEXT",name="se_question_content",nullable = false,unique = true)
+    @Lob
+    @Column(name="se_question_content",nullable = false,unique = true)
     private String content;
 
     @Column(name = "se_keywords", nullable = false)

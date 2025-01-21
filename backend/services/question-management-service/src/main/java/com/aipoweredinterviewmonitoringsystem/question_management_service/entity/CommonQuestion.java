@@ -24,8 +24,8 @@ public class CommonQuestion extends Question {
     @Column(name = "duration", nullable = false)
     private long duration;
 
-    //@Lob
-    @Column(columnDefinition = "TEXT",name="common_question_content",nullable = false,unique = true)
+    @Lob
+    @Column(name="common_question_content",nullable = false,unique = true)
     private String content;
 
     @Column(name = "common_keywords", nullable = false)
