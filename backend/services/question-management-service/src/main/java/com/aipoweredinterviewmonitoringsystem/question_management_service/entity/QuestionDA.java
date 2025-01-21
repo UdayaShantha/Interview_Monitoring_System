@@ -1,33 +1,49 @@
 package com.aipoweredinterviewmonitoringsystem.question_management_service.entity;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Data
+@Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "question_DS")
 
 public class QuestionDA extends Question{
-    @OneToOne
-    @JoinColumn(name = "question_id")
-    @MapsId
-    private Question question;
 
     @Column(name = "duration", nullable = false)
-    private Long duration;
+    private long duration;
 
     @Lob
-    @Column(columnDefinition = "TEXT",name="da_question_content",nullable = false,unique = true)
+    @Column(name="da_question_content",nullable = false,unique = true)
     private String content;
 
-    @Lob
-    @Column(name="da_keywords",nullable = false)
-    private List<String> daKeywords;
+    @Column(name = "da_keywords", nullable = false)
+    private String keywords;
+
+    public void setKeywords(List<String> keywords) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            this.keywords = objectMapper.writeValueAsString(keywords); // Serialize list to JSON
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize keywords", e);
+        }
+    }
+
+    public List<String> getKeywords() {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return this.keywords == null ? new ArrayList<>() : objectMapper.readValue(this.keywords, new TypeReference<List<String>>() {});
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to deserialize keywords", e);
+        }
+    }
 }
 

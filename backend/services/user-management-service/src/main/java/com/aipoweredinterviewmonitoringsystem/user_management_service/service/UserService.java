@@ -1,5 +1,6 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.service;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.*;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.response.PositionResponse;
 
 import java.util.List;
 
@@ -17,9 +18,11 @@ public interface UserService {
 
     String saveComment(long userId, String comment);
 
-    String getName(long userId);
+    String getUserName(long userId);
 
 
+    PositionResponse getCandidatePosition(long userId);
 
+    String saveCandidateFeedback(long userId,int rate, String comment);
 }
 

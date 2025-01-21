@@ -4,6 +4,7 @@ import com.aipoweredinterviewmonitoringsystem.question_management_service.entity
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -13,12 +14,12 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Data
 @Table(name = "questions")
-
+@Inheritance(strategy = InheritanceType.JOINED)
 public class Question {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "question_id")
-    private Long questionId;
+    private long questionId;
 
     @Column(name="category",nullable = false)
     @Enumerated(EnumType.STRING)
@@ -29,5 +30,4 @@ public class Question {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
-
 }

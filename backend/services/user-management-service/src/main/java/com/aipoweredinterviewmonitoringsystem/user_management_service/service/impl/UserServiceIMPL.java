@@ -4,6 +4,11 @@ import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.I
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.repository.InterviewRepository;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.*;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCandidatesDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateSaveDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateAndInterviewDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.response.PositionResponse;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.feign.InterviewFeignClient;
@@ -159,7 +164,7 @@ public class UserServiceIMPL implements UserService {
     }
 
     @Override
-    public String getName(long userId) {
+    public String getUserName(long userId) {
         if(userRepository.existsById(userId)){
             try {
                 if (hrTeamRepository.existsById(userId)) {
@@ -176,7 +181,34 @@ public class UserServiceIMPL implements UserService {
         return "Not such kind of User";
     }
 
+    @Override
+    public PositionResponse getCandidatePosition(long userId) {
+        try{
+            if(candidateRepository.existsById(userId)) {
+                Candidate candidate=candidateRepository.findPositionByuserId(userId);
+                PositionResponse positionResponse=modelMapper.map(candidate, PositionResponse.class);
+                return positionResponse;
+            }
+        }
+        catch (Exception e){
+            return null;
+        }
+        return null;
+    }
 
+    @Override
+    public String saveCandidateFeedback(long userId, int rate,String comment) {
+        if(userRepository.existsById(userId) && candidateRepository.existsById(userId)){
+            try {
+                candidateRepository.saveRateAndComment(rate,comment);
+                return "Comment saved";
+            }
+            catch (RuntimeException e){
+                return "Feddback not saved";
+            }
+        }
+        return "Not such kind of User";
+    }
 
 
 

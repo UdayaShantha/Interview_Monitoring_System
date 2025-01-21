@@ -1,5 +1,10 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.controller;
 
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCandidatesDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateSaveDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateAndInterviewDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.response.PositionResponse;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.*;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.CandidateRepository;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.UserService;
@@ -35,7 +40,7 @@ public class UserController {
         CandidateAndInterviewDTO candidateAndInterviewDTO = userService.getCandidateAndInterviewById(userId);
         return new ResponseEntity<StandardResponse>(
                 new StandardResponse(200,"Success", candidateAndInterviewDTO),
-                HttpStatus.OK
+                HttpStatus.FOUND
         );
     }
 
@@ -44,7 +49,7 @@ public class UserController {
         List<AllCandidatesDTO> allCandidates = userService.getAllCandidates();
         return new ResponseEntity<StandardResponse>(
                 new StandardResponse(200,"Success",allCandidates),
-                HttpStatus.OK
+                HttpStatus.FOUND
         );
     }
 
@@ -66,21 +71,66 @@ public class UserController {
         );
     }
 
-    @PostMapping(path={"hr/technical/comment"},params={"user_id","comment"})
+    @PostMapping(path={"/hr/technical/comment"},params={"user_id","comment"})
     public ResponseEntity<StandardResponse> saveComment(@RequestParam(value = "user_id") long user_id,
                                                         @RequestParam(value="comment") String comment ){
         String msg=userService.saveComment(user_id,comment);
-        return new ResponseEntity<StandardResponse>(
-                new StandardResponse(201,"Success",msg),HttpStatus.OK
-        );
+        try {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(200,"Success",msg),HttpStatus.CREATED
+            );
+        }
+        catch (Exception e) {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(404,"User Not Found",e.getMessage()),HttpStatus.NOT_FOUND
+            );
+        }
     }
 
     @GetMapping(path={"/hr/technical/name"},params = {"userId"})
     public ResponseEntity<StandardResponse> getUserName(@RequestParam(value = "userId") long userId) {
-        String name=userService.getName(userId);
-        return new ResponseEntity<StandardResponse>(
-                new StandardResponse(200,"Success",name),HttpStatus.OK
-        );
+
+        String name=userService.getUserName(userId);
+        try {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(200,"Success",name),HttpStatus.FOUND
+            );
+        }
+        catch (Exception e) {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(404,"User Not Found",e.getMessage()),HttpStatus.NOT_FOUND
+            );
+        }
     }
 
+    @GetMapping(path={"/candidate/position"},params={"user_id"})
+    public ResponseEntity<StandardResponse> getCandidatePosition(@RequestParam(value = "user_id") long user_id){
+        PositionResponse positionResponse =userService.getCandidatePosition(user_id);
+        try {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(200,"Success",positionResponse),HttpStatus.FOUND
+            );
+        }
+        catch (Exception e) {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(404,"User Not Found",e.getMessage()),HttpStatus.NOT_FOUND
+            );
+        }
+    }
+    @PostMapping(path={"/candidate/feedback"},params={"user_id","rate","comment"})
+    public ResponseEntity<StandardResponse> saveCandidateFeedback(@RequestParam(value = "user_id") long user_id,
+                                                        @RequestParam(value = "rate") int rate,
+                                                        @RequestParam(value="comment") String comment){
+        String msg=userService.saveCandidateFeedback(user_id,rate,comment);
+        try {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(200,"Success",msg),HttpStatus.CREATED
+            );
+        }
+        catch (Exception e) {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(404,"User Not Found",e.getMessage()),HttpStatus.NOT_FOUND
+            );
+        }
+    }
 }

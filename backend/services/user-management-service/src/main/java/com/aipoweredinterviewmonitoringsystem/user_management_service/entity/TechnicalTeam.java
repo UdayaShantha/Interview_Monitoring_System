@@ -8,10 +8,6 @@ import lombok.Data;
 @Entity
 @Table(name = "technical_team")
 public class TechnicalTeam extends User{
-    @OneToOne
-    @JoinColumn(name = "user_id")
-    @MapsId
-    private User user;
 
     @Column(name = "technical_name",nullable = false)
     private String name;
