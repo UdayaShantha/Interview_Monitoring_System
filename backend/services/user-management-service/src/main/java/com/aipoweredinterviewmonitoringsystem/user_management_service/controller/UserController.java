@@ -4,12 +4,14 @@ import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCan
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateSaveDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateAndInterviewDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.paginated.PaginatedCandidateGetAllDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.response.PositionResponse;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.*;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.CandidateRepository;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.UserService;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.util.StandardResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -44,7 +46,7 @@ public class UserController {
         );
     }
 
-    @GetMapping("/candidate/all")
+    @GetMapping ("/candidate/all/")
     public ResponseEntity<StandardResponse> getAllCandidates() {
         List<AllCandidatesDTO> allCandidates = userService.getAllCandidates();
         return new ResponseEntity<StandardResponse>(
@@ -52,6 +54,21 @@ public class UserController {
                 HttpStatus.FOUND
         );
     }
+
+    @GetMapping(
+            path = "/candidate/all",
+            params = {"page", "size"}
+    )
+    public ResponseEntity<StandardResponse> getAllCandidates(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        PaginatedCandidateGetAllDTO paginatedCandidateGetAllDTO = userService.getAllCandidatesPaginated(page, size);
+        return new ResponseEntity<StandardResponse>(
+                new StandardResponse(200, "Success", paginatedCandidateGetAllDTO),
+                HttpStatus.OK
+        );
+    }
+
 
     @DeleteMapping("/candidate/{id}")
     public ResponseEntity<StandardResponse> deleteCandidate(@PathVariable(value = "id") Long userId) {

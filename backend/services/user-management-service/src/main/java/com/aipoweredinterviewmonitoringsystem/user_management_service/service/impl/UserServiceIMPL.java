@@ -8,6 +8,7 @@ import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCan
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateSaveDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateAndInterviewDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.paginated.PaginatedCandidateGetAllDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.response.PositionResponse;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
@@ -22,6 +23,8 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +34,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceIMPL implements UserService {
@@ -112,6 +116,25 @@ public class UserServiceIMPL implements UserService {
         }
 
         return allCandidatesDTOS;
+    }
+    @Override
+    public PaginatedCandidateGetAllDTO getAllCandidatesPaginated(int page, int size) {
+        Page<Candidate> candidates = candidateRepository.findAll(PageRequest.of(page, size));
+        if (!candidates.hasContent()) {
+            throw new EntityNotFoundException("No candidates found");
+        }
+
+        List<AllCandidatesDTO> allCandidatesDTOs = new ArrayList<>();
+        for (Candidate candidate : candidates.getContent()) {
+            allCandidatesDTOs.add(modelMapper.map(candidate, AllCandidatesDTO.class));
+        }
+
+        PaginatedCandidateGetAllDTO paginatedCandidateGetAllDTO = new PaginatedCandidateGetAllDTO(
+                allCandidatesDTOs,
+                candidates.getTotalElements()
+        );
+
+        return paginatedCandidateGetAllDTO;
     }
 
     @Override
@@ -209,6 +232,7 @@ public class UserServiceIMPL implements UserService {
         }
         return "Not such kind of User";
     }
+
 
 
 
