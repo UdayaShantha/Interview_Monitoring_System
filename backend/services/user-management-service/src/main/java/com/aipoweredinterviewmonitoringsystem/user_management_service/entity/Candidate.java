@@ -48,4 +48,7 @@ public class Candidate extends User{
     private PositionType positionType;
 
 
+
+
+
 }

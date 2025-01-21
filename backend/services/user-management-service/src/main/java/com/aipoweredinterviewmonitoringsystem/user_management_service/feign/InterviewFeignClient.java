@@ -17,8 +17,13 @@ public interface InterviewFeignClient {
     @GetMapping("api/v1/interviews/{id}")
     ResponseEntity<StandardResponse> getInterviewById(@PathVariable(value = "id") Long interviewId);
 
-    @GetMapping("api/v1/interviews/by-status/{status}")
-    ResponseEntity<List<Long>> getInterviewsByStatus(@RequestParam("status") Status status);
+    @GetMapping("api/v1/interviews/filter")
+    ResponseEntity<StandardResponse> filterInterviews(
+            @RequestParam(value = "positionType", required = false) String positionType,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "scheduleDate", required = false) String scheduleDate
+    );
+
 
 
 }

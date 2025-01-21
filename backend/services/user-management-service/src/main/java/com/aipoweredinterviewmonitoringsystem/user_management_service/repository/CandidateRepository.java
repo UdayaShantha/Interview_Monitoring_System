@@ -2,6 +2,7 @@ package com.aipoweredinterviewmonitoringsystem.user_management_service.repositor
 
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.PositionType;
+import feign.Param;
 import jakarta.transaction.Transactional;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,5 +22,13 @@ public interface CandidateRepository extends JpaRepository<Candidate, Long> {
     @Query("SELECT c.name FROM Candidate c WHERE c.userId = :userId")
     String findNameByUserId(long userId);
 
-    List<Candidate> findByPositionType(PositionType positionType);
+    @Query("SELECT c FROM Candidate c WHERE c.positionType = :positionType")
+    List<Candidate> findByPositionType(@Param("positionType") PositionType positionType);
+
+
+   // List<Candidate> findByPositionType(PositionType positionType);
+
+
+
+
 }

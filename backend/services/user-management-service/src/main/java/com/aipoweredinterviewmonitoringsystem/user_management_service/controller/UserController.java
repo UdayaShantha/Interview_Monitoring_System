@@ -1,5 +1,6 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.controller;
 
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.ScheduleDate;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCandidatesDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
@@ -109,14 +110,18 @@ public class UserController {
         }
     }
 
-    @GetMapping("/candidates/filter")
+
+    @GetMapping("/filter-candidates")
     public ResponseEntity<StandardResponse> filterCandidates(
-            @RequestParam("positionType") PositionType positionType,
-            @RequestParam("status") Status status) {
-        List<CandidateDTO> filteredCandidates = userService.filterCandidates(positionType, status);
+            @RequestParam(value = "positionType", required = false) PositionType positionType,
+            @RequestParam(value = "status", required = false) Status status,
+            @RequestParam(value = "scheduleDate", required = false) ScheduleDate scheduleDate) {
+
+        List<CandidateDTO> filteredCandidates = userService.filterCandidates(positionType, status, scheduleDate);
         return new ResponseEntity<>(
                 new StandardResponse(200, "Success", filteredCandidates),
-                HttpStatus.OK);
+                HttpStatus.OK
+        );
     }
 
 }

@@ -1,5 +1,6 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.service;
 
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.ScheduleDate;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCandidatesDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
@@ -25,6 +26,8 @@ public interface UserService {
 
     String getName(long userId);
 
-    List<CandidateDTO> filterCandidates(PositionType positionType, Status status);
+    List<CandidateDTO> filterCandidates(PositionType positionType, Status status, ScheduleDate scheduleDate);
 }
+
+
 

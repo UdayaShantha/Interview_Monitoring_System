@@ -1,6 +1,8 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.service.impl;
 
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewSaveDTO;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.ScheduleDate;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCandidatesDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
@@ -170,6 +172,8 @@ public class UserServiceIMPL implements UserService {
     }
 
 
+
+
     private void updateCandidateFromDTO(Candidate candidate, CandidateDTO dto) {
         candidate.setName(dto.getName());
         candidate.setPhone(dto.getPhone());
@@ -181,36 +185,68 @@ public class UserServiceIMPL implements UserService {
         candidate.setPhotos(dto.getPhotos());
     }
 
+
     @Override
-    public List<CandidateDTO> filterCandidates(PositionType positionType, Status status) {
-        // Step 1: Filter candidates by position type
-        List<Candidate> candidatesByPosition = candidateRepository.findByPositionType(positionType);
+    public List<CandidateDTO> filterCandidates(PositionType positionType, Status status, ScheduleDate scheduleDate) {
+        List<Candidate> candidates = candidateRepository.findAll();
 
-        // Step 2: Fetch user IDs matching the given status from Interview Management Service
-        ResponseEntity<List<Long>> response = interviewFeignClient.getInterviewsByStatus(status);
-        List<Long> userIdsByStatus = response.getBody();
+        // Filter by PositionType
+        if (positionType != null) {
+            candidates = candidates.stream()
+                    .filter(candidate -> candidate.getPositionType().equals(positionType))
+                    .collect(Collectors.toList());
+        }
 
-        // Step 3: Filter candidates by status using user IDs
-        List<Candidate> filteredCandidates = candidatesByPosition.stream()
-                .filter(candidate -> userIdsByStatus.contains(candidate.getUserId()))
+        // Filter by Status
+        if (status != null) {
+            candidates = candidates.stream()
+                    .filter(candidate -> {
+                        InterviewDTO interview = (InterviewDTO) interviewFeignClient
+                                .getInterviewById(candidate.getUserId())
+                                .getBody()
+                                .getData(); // Assuming respo
+                        return interview != null && interview.getStatus().equals(status);
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        // Filter by ScheduleDate
+        if (scheduleDate != null) {
+            candidates = candidates.stream()
+                    .filter(candidate -> {
+                        InterviewDTO interview = (InterviewDTO) interviewFeignClient
+                                .getInterviewById(candidate.getUserId())
+                                .getBody()
+                                .getData();
+                        return interview != null && interview.getScheduleDate().equals(scheduleDate);
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        // Convert to CandidateDTO
+        return candidates.stream()
+                .map(candidate -> {
+                    InterviewDTO interview = (InterviewDTO) interviewFeignClient
+                            .getInterviewById(candidate.getUserId())
+                            .getBody()
+                            .getData();
+
+                    CandidateDTO dto = new CandidateDTO();
+                    //dto.setId(candidate.getId());
+                    dto.setName(candidate.getName());
+                    dto.setNic(candidate.getNic());
+                    dto.setEmail(candidate.getEmail());
+                    dto.setAddress(candidate.getAddress());
+                    dto.setPhone(candidate.getPhone());
+                    dto.setBirthday(candidate.getBirthday());
+                    dto.setPositionType(candidate.getPositionType());
+                    return dto;
+                })
                 .collect(Collectors.toList());
-
-        // Convert to DTOs
-        return filteredCandidates.stream()
-                .map(candidate -> new CandidateDTO(
-                        candidate,
-                        candidate.getName(),
-                        candidate.getNic(),
-                        candidate.getEmail(),
-                        candidate.getAddress(),
-                        candidate.getPhone(),
-                        candidate.getBirthday(),
-                        candidate.getPhotos(),
-                        candidate.getPositionType()
-                ))
-                .collect(Collectors.toList());
-    }
-
+   }
 }
+
+
+
 
 
