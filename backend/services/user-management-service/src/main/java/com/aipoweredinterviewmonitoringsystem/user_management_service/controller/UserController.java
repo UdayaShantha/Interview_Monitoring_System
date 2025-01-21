@@ -6,7 +6,10 @@ import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCan
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateSaveDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateAndInterviewDTO;
+
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.PositionType;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.response.PositionResponse;
+
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.UserService;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.util.StandardResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +50,7 @@ public class UserController {
         CandidateAndInterviewDTO candidateAndInterviewDTO = userService.getCandidateAndInterviewById(userId);
         return new ResponseEntity<StandardResponse>(
                 new StandardResponse(200,"Success", candidateAndInterviewDTO),
-                HttpStatus.OK
+                HttpStatus.FOUND
         );
     }
 
@@ -56,7 +59,7 @@ public class UserController {
         List<AllCandidatesDTO> allCandidates = userService.getAllCandidates();
         return new ResponseEntity<StandardResponse>(
                 new StandardResponse(200,"Success",allCandidates),
-                HttpStatus.OK
+                HttpStatus.FOUND
         );
     }
 
@@ -84,7 +87,7 @@ public class UserController {
         String msg=userService.saveComment(user_id,comment);
         try {
             return new ResponseEntity<StandardResponse>(
-                    new StandardResponse(200,"Success",msg),HttpStatus.OK
+                    new StandardResponse(200,"Success",msg),HttpStatus.CREATED
             );
         }
         catch (Exception e) {
@@ -100,7 +103,7 @@ public class UserController {
         String name=userService.getName(userId);
         try {
             return new ResponseEntity<StandardResponse>(
-                    new StandardResponse(200,"Success",name),HttpStatus.OK
+                    new StandardResponse(200,"Success",name),HttpStatus.FOUND
             );
         }
         catch (Exception e) {
@@ -124,4 +127,34 @@ public class UserController {
         );
     }
 
+    @GetMapping(path={"/candidate/position"},params={"user_id"})
+    public ResponseEntity<StandardResponse> getCandidatePosition(@RequestParam(value = "user_id") long user_id){
+        PositionResponse positionResponse =userService.getCandidatePosition(user_id);
+        try {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(200,"Success",positionResponse),HttpStatus.FOUND
+            );
+        }
+        catch (Exception e) {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(404,"User Not Found",e.getMessage()),HttpStatus.NOT_FOUND
+            );
+        }
+    }
+    @PostMapping(path={"/candidate/feedback"},params={"user_id","rate","comment"})
+    public ResponseEntity<StandardResponse> saveCandidateFeedback(@RequestParam(value = "user_id") long user_id,
+                                                        @RequestParam(value = "rate") int rate,
+                                                        @RequestParam(value="comment") String comment){
+        String msg=userService.saveCandidateFeedback(user_id,rate,comment);
+        try {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(200,"Success",msg),HttpStatus.CREATED
+            );
+        }
+        catch (Exception e) {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(404,"User Not Found",e.getMessage()),HttpStatus.NOT_FOUND
+            );
+        }
+    }
 }

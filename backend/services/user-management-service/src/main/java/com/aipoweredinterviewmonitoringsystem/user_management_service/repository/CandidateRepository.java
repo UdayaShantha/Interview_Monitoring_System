@@ -22,6 +22,7 @@ public interface CandidateRepository extends JpaRepository<Candidate, Long> {
     @Query("SELECT c.name FROM Candidate c WHERE c.userId = :userId")
     String findNameByUserId(long userId);
 
+
     @Query("SELECT c FROM Candidate c WHERE c.positionType = :positionType")
     List<Candidate> findByPositionType(@Param("positionType") PositionType positionType);
 
@@ -30,5 +31,15 @@ public interface CandidateRepository extends JpaRepository<Candidate, Long> {
 
 
 
+
+    @Modifying
+    @Transactional
+    @Query("SELECT c.positionType FROM Candidate c WHERE c.userId = :userId")
+    Candidate findPositionByuserId(long userId);
+
+    @Modifying
+    @Transactional
+    @Query(value = "INSERT INTO Candidate (rate,comment) VALUES (:rate, :comment)", nativeQuery = true)
+    void saveRateAndComment(int rate, String comment);
 
 }
