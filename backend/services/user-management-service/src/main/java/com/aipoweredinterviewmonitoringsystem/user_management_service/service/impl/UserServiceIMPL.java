@@ -5,6 +5,7 @@ import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCan
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateSaveDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateAndInterviewDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.response.PositionResponse;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.feign.InterviewFeignClient;
@@ -168,7 +169,20 @@ public class UserServiceIMPL implements UserService {
         return "Not such kind of User";
     }
 
-
+    @Override
+    public PositionResponse getCandidatePosition(long userId) {
+        try{
+            if(candidateRepository.existsById(userId)) {
+                Candidate candidate=candidateRepository.findPositionByuserId(userId);
+                PositionResponse positionResponse=modelMapper.map(candidate, PositionResponse.class);
+                return positionResponse;
+            }
+        }
+        catch (Exception e){
+            return null;
+        }
+        return null;
+    }
 
 
     private void updateCandidateFromDTO(Candidate candidate, CandidateDTO dto) {

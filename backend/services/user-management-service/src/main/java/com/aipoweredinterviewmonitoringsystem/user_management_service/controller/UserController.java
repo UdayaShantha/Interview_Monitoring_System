@@ -4,6 +4,7 @@ import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCan
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateSaveDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateAndInterviewDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.response.PositionResponse;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.UserService;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.util.StandardResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -98,6 +99,21 @@ public class UserController {
         try {
             return new ResponseEntity<StandardResponse>(
                     new StandardResponse(200,"Success",name),HttpStatus.OK
+            );
+        }
+        catch (Exception e) {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(404,"User Not Found",e.getMessage()),HttpStatus.NOT_FOUND
+            );
+        }
+    }
+
+    @PostMapping(path={"/candidate/position"},params={"user_id"})
+    public ResponseEntity<StandardResponse> getCandidatePosition(@RequestParam(value = "user_id") long user_id){
+        PositionResponse positionResponse =userService.getCandidatePosition(user_id);
+        try {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(200,"Success",positionResponse),HttpStatus.FOUND
             );
         }
         catch (Exception e) {
