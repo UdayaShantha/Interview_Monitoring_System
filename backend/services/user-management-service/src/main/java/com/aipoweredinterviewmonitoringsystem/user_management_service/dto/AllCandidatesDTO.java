@@ -12,4 +12,8 @@ public class AllCandidatesDTO {
     private Long userId;
     private String name;
     private PositionType positionType;
+
+
 }
+
+

@@ -1,5 +1,6 @@
 package com.aipoweredinterviewmonitoringsystem.interview_management_service.entity;
 
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.ScheduleDate;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -27,8 +28,9 @@ public class Interview {
     @Column(name = "candidate_id",nullable = false)
     private Long candidateId;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "schedule_date",nullable = false)
-    private LocalDate scheduleDate;
+    private ScheduleDate scheduleDate;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status",nullable = false)

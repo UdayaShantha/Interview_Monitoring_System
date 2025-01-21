@@ -1,5 +1,7 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.dto;
 
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.ScheduleDate;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.User;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.PositionType;
 import jakarta.persistence.*;
@@ -26,4 +28,5 @@ public class CandidateDTO {
     private PositionType positionType;
     private LocalTime startTime;
     private LocalDate scheduleDate;
+
 }
