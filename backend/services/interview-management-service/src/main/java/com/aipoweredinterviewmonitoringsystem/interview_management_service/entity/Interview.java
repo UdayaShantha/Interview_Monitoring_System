@@ -28,6 +28,7 @@ public class Interview {
     @Column(name = "candidate_id",nullable = false)
     private Long candidateId;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "schedule_date",nullable = false)
     private ScheduleDate scheduleDate;
 
