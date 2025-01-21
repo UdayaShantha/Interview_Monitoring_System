@@ -90,4 +90,12 @@ public class InterviewServiceIMPL implements InterviewService {
         return interviewDTOs;
     }
 
+    @Override
+    public Interview getInterviewByCandidateId(Long candidateId) {
+        if(interviewRepository.existsByCandidateId(candidateId)){
+            return interviewRepository.findByCandidateId(candidateId);
+        }
+        return null;
+    }
+
 }

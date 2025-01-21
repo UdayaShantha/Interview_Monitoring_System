@@ -7,4 +7,8 @@ import java.util.List;
 
 public interface InterviewRepository extends JpaRepository<Interview, Long> {
     List<Interview> findAllByStatusEquals(String status);
+
+    Interview findByCandidateId(Long candidateId);
+
+    boolean existsByCandidateId(Long candidateId);
 }

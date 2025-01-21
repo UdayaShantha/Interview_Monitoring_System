@@ -76,5 +76,10 @@ public class InterviewController {
         );
     }
 
+    @GetMapping("/candidate/{candidateId}")
+    Interview getInterviewByCandidateId(@PathVariable(value = "candidateId") Long candidateId){
+        return interviewService.getInterviewByCandidateId(candidateId);
+    }
+
 
 }

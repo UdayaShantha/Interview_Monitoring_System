@@ -1,9 +1,7 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.controller;
 
-import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCandidatesDTO;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateSaveDTO;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateAndInterviewDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.*;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.CandidateRepository;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.UserService;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.util.StandardResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,16 +17,9 @@ import java.util.List;
 public class UserController {
     @Autowired
     private UserService userService;
+    @Autowired
+    private CandidateRepository candidateRepository;
 
-//    @PostMapping("/candidate")
-//    public ResponseEntity<Candidate> saveCandidate(@RequestBody CandidateDTO candidateDTO) {
-//        try {
-//            Candidate savedCandidate = userService.saveCandidate(candidateDTO);
-//            return new ResponseEntity<>(savedCandidate, HttpStatus.CREATED);
-//        } catch (Exception e) {
-//            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//    }
 
     @PostMapping("/candidate")
     public ResponseEntity<StandardResponse> saveCandidate(@RequestBody CandidateSaveDTO candidateSaveDTO) {
@@ -67,8 +58,8 @@ public class UserController {
     }
 
     @PutMapping("candidate/{id}")
-    public ResponseEntity<StandardResponse> updateCandidate(@PathVariable(value = "id") Long userId, @RequestBody CandidateDTO candidateDTO) {
-        CandidateDTO candidateUpdateDTO = userService.updateCandidate(userId,candidateDTO);
+    public ResponseEntity<StandardResponse> updateCandidate(@PathVariable(value = "id") Long userId, @RequestBody CandidateUpdateDTO candidateUpdateDTO) {
+        CandidateUpdateDTO updatedCandidate = userService.updateCandidate(userId, candidateUpdateDTO);
         return new ResponseEntity<StandardResponse>(
                 new StandardResponse(200,"Success",candidateUpdateDTO),
                 HttpStatus.OK

@@ -1,10 +1,9 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.service.impl;
 
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewSaveDTO;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCandidatesDTO;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateSaveDTO;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateAndInterviewDTO;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.repository.InterviewRepository;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.*;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.feign.InterviewFeignClient;
@@ -48,6 +47,8 @@ public class UserServiceIMPL implements UserService {
 
     @Autowired
     private InterviewFeignClient interviewFeignClient;
+
+
 
     @Override
     public CandidateSaveDTO saveCandidate(CandidateSaveDTO candidateSaveDTO) {
@@ -109,25 +110,32 @@ public class UserServiceIMPL implements UserService {
     }
 
     @Override
-    @Transactional
     public String deleteCandidate(Long userId) {
         candidateRepository.deleteById(userId);
-        userRepository.deleteById(userId);
 
-
+        Interview interview = interviewFeignClient.getInterviewByCandidateId(userId);
+        if(interview != null){
+            Long interviewId = interview.getInterviewId();
+            interviewFeignClient.deleteInterview(interviewId);
+        }
         return "Candidate with id: " + userId + " deleted";
     }
 
     @Override
     @Transactional
-    public CandidateDTO updateCandidate(Long userId, CandidateDTO candidateDTO) {
-        Candidate candidate = candidateRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("No candidate found with id " + userId));
-
-        updateCandidateFromDTO(candidate, candidateDTO);
-
-        Candidate savedCandidate = candidateRepository.save(candidate);
-        return modelMapper.map(savedCandidate, CandidateDTO.class);
+    public CandidateUpdateDTO updateCandidate(Long userId, CandidateUpdateDTO candidateUpdateDTO) {
+        Candidate candidate = candidateRepository.findById(userId).get();
+        candidate.setUsername(candidateUpdateDTO.getUsername());
+        candidate.setPassword(candidateUpdateDTO.getPassword());
+        candidate.setName(candidateUpdateDTO.getName());
+        candidate.setNic(candidateUpdateDTO.getNic());
+        candidate.setEmail(candidateUpdateDTO.getEmail());
+        candidate.setAddress(candidateUpdateDTO.getAddress());
+        candidate.setPhone(candidateUpdateDTO.getPhone());
+        candidate.setBirthday(candidateUpdateDTO.getBirthday());
+        candidate.setPositionType(candidateUpdateDTO.getPositionType());
+        candidateRepository.save(candidate);
+        return modelMapper.map(candidate, CandidateUpdateDTO.class);
     }
 
     @Override
@@ -171,16 +179,7 @@ public class UserServiceIMPL implements UserService {
 
 
 
-    private void updateCandidateFromDTO(Candidate candidate, CandidateDTO dto) {
-        candidate.setName(dto.getName());
-        candidate.setPhone(dto.getPhone());
-        candidate.setNic(dto.getNic());
-        candidate.setAddress(dto.getAddress());
-        candidate.setEmail(dto.getEmail());
-        candidate.setBirthday(dto.getBirthday());
-        candidate.setPositionType(dto.getPositionType());
-        candidate.setPhotos(dto.getPhotos());
-    }
+
 }
 
 

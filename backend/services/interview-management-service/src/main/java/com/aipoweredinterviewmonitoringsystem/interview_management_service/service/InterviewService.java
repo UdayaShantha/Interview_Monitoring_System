@@ -3,6 +3,7 @@ package com.aipoweredinterviewmonitoringsystem.interview_management_service.serv
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.GetInterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewSaveDTO;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
 
 import java.util.List;
 
@@ -18,4 +19,6 @@ public interface InterviewService {
     InterviewDTO updateInterview(Long interviewId, InterviewDTO interviewDTO);
 
     List<InterviewDTO> getAllInterviewsByStatus(String status);
+
+    Interview getInterviewByCandidateId(Long candidateId);
 }
