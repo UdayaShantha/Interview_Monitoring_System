@@ -4,6 +4,7 @@ package com.aipoweredinterviewmonitoringsystem.interview_management_service.cont
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.GetInterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewSaveDTO;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewUpdateDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.service.InterviewService;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.util.StandardResponse;
@@ -59,13 +60,15 @@ public class InterviewController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<StandardResponse> updateInterview(@PathVariable(value = "id") Long interviewId, @RequestBody InterviewDTO interviewDTO) {
-        InterviewDTO interviewUpdateDTO = interviewService.updateInterview(interviewId,interviewDTO);
+    public ResponseEntity<StandardResponse> updateInterview(@PathVariable(value = "id") Long interviewId, @RequestBody InterviewUpdateDTO interviewUpdateDTO) {
+        InterviewUpdateDTO updatedInterview = interviewService.updateInterview(interviewId,interviewUpdateDTO);
         return new ResponseEntity<StandardResponse>(
-                new StandardResponse(200,"Success",interviewUpdateDTO),
+                new StandardResponse(200,"Success",updatedInterview),
                 HttpStatus.OK
         );
+
     }
+
 
     @GetMapping("by-status/{status}")
     public ResponseEntity<StandardResponse> getInterviewByStatus(@PathVariable(value = "status") String status) {

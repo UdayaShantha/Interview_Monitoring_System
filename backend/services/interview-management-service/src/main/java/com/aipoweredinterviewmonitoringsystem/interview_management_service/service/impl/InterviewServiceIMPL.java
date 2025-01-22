@@ -3,6 +3,7 @@ package com.aipoweredinterviewmonitoringsystem.interview_management_service.serv
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.GetInterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewSaveDTO;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewUpdateDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.repository.InterviewRepository;
@@ -63,16 +64,16 @@ public class InterviewServiceIMPL implements InterviewService {
     }
 
     @Override
-    public InterviewDTO updateInterview(Long interviewId, InterviewDTO interviewDTO) {
+    public InterviewUpdateDTO updateInterview(Long interviewId, InterviewUpdateDTO interviewUpdateDTO) {
         if(interviewRepository.existsById(interviewId)){
             Interview interview = interviewRepository.findById(interviewId).get();
-            InterviewDTO interviewUpdateDTO = modelMapper.map(interview, InterviewDTO.class);
-            interviewUpdateDTO.setCreatedAt(interviewDTO.getCreatedAt());
-            interviewUpdateDTO.setStatus(interviewDTO.getStatus());
-            interviewUpdateDTO.setStartTime(interviewDTO.getStartTime());
-            interviewUpdateDTO.setScheduleDate(interviewDTO.getScheduleDate());
-            Interview updatedInterview = modelMapper.map(interviewUpdateDTO, Interview.class);
-            interviewRepository.save(updatedInterview);
+            interview.setStartTime(interviewUpdateDTO.getStartTime());
+            interview.setScheduleDate(interviewUpdateDTO.getScheduleDate());
+            interview.setDuration(interviewUpdateDTO.getDuration());
+            interview.setStatus(interviewUpdateDTO.getStatus());
+
+            Interview updatedInterview = interviewRepository.save(interview);
+            interviewUpdateDTO = modelMapper.map(updatedInterview, InterviewUpdateDTO.class);
             return interviewUpdateDTO;
         }
         else {

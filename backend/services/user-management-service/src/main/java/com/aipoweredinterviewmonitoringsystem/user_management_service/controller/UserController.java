@@ -30,20 +30,39 @@ public class UserController {
 
     @PostMapping("/candidate")
     public ResponseEntity<StandardResponse> saveCandidate(@RequestBody CandidateSaveDTO candidateSaveDTO) {
-        CandidateSaveDTO savedCandidate = userService.saveCandidate(candidateSaveDTO);
-        return new ResponseEntity<StandardResponse>(
-                new StandardResponse(201,"Success",savedCandidate),
-                HttpStatus.CREATED
-        );
+        try {
+            CandidateSaveDTO savedCandidate = userService.saveCandidate(candidateSaveDTO);
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(201,"Success",savedCandidate),
+                    HttpStatus.CREATED
+            );
+        } catch (Exception e) {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(500,"Internal Server Error",e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
     @GetMapping("/candidate-interview/{id}")
     public ResponseEntity<StandardResponse> getCandidateAndInterviewById(@PathVariable(value = "id") Long userId) {
-        CandidateAndInterviewDTO candidateAndInterviewDTO = userService.getCandidateAndInterviewById(userId);
-        return new ResponseEntity<StandardResponse>(
-                new StandardResponse(200,"Success", candidateAndInterviewDTO),
-                HttpStatus.FOUND
-        );
+        try {
+            CandidateAndInterviewDTO candidateAndInterviewDTO = userService.getCandidateAndInterviewById(userId);
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(200, "Success", candidateAndInterviewDTO),
+                    HttpStatus.FOUND
+            );
+        } catch (RuntimeException e) {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(404, "Candidate Not Found", e.getMessage()),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (Exception e) {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(500, "Internal Server Error", e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
     @GetMapping ("/candidate/all/")
@@ -56,7 +75,7 @@ public class UserController {
     }
 
     @GetMapping(
-            path = "/candidate/all",
+            path = "/candidate/all/paginated",
             params = {"page", "size"}
     )
     public ResponseEntity<StandardResponse> getAllCandidates(
