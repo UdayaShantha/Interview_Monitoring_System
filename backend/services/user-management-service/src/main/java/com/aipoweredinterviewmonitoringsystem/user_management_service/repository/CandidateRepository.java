@@ -1,6 +1,7 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.repository;
 
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.PositionType;
 import jakarta.transaction.Transactional;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.domain.Page;

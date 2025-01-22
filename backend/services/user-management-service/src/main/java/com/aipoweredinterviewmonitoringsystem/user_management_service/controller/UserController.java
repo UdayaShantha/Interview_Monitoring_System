@@ -169,4 +169,19 @@ public class UserController {
             );
         }
     }
+
+    @GetMapping("/candidate/position/{id}")
+    public ResponseEntity<StandardResponse> getCandidatePositionById(@PathVariable(value = "id") Long userId){
+        try {
+            String position = userService.getCandidatePositionById(userId);
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(200,"Success",position),HttpStatus.OK
+            );
+        }
+        catch (Exception e) {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(404,"User Not Found",e.getMessage()),HttpStatus.NOT_FOUND
+            );
+        }
+    }
 }

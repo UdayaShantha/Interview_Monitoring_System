@@ -1,10 +1,8 @@
 package com.aipoweredinterviewmonitoringsystem.interview_management_service.controller;
 
 
-import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.GetInterviewDTO;
-import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewDTO;
-import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewSaveDTO;
-import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewUpdateDTO;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.*;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.paginated.PaginatedInterviewGetAllDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.service.InterviewService;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.util.StandardResponse;
@@ -32,11 +30,24 @@ public class InterviewController {
         );
     }
 
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<StandardResponse> getAllInterviews() {
-        List<InterviewDTO> allInterviews = interviewService.getAllInterviews();
+        List<GetAllInterviewsDTO> allInterviews = interviewService.getAllInterviews();
         return new ResponseEntity<StandardResponse>(
                 new StandardResponse(200,"Success",allInterviews),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping(
+            path="all/paginated",
+            params={"page","size"}
+    )
+    public ResponseEntity<StandardResponse> getAllInterviewsPaginated(@RequestParam(defaultValue = "0") int page,
+                                                                     @RequestParam(defaultValue = "10") int size) {
+        PaginatedInterviewGetAllDTO paginatedInterviewGetAllDTO = interviewService.getAllInterviewsPaginated(page, size);
+        return new ResponseEntity<StandardResponse>(
+                new StandardResponse(200, "Success", paginatedInterviewGetAllDTO),
                 HttpStatus.OK
         );
     }

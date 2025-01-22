@@ -11,6 +11,7 @@ import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.Candid
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.paginated.PaginatedCandidateGetAllDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.response.PositionResponse;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.PositionType;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.feign.InterviewFeignClient;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.CandidateRepository;
@@ -27,6 +28,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.webjars.NotFoundException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -34,6 +36,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -135,6 +138,13 @@ public class UserServiceIMPL implements UserService {
         );
 
         return paginatedCandidateGetAllDTO;
+    }
+
+    @Override
+    public String getCandidatePositionById(Long userId) {
+        Candidate candidate = candidateRepository.findById(userId).get();
+
+        return candidate.getPositionType().name();
     }
 
     @Override

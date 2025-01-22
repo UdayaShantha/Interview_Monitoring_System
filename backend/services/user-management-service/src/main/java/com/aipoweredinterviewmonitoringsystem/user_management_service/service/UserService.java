@@ -27,5 +27,7 @@ public interface UserService {
     String saveCandidateFeedback(long userId,int rate, String comment);
 
     PaginatedCandidateGetAllDTO getAllCandidatesPaginated(int page, int size);
+
+    String getCandidatePositionById(Long userId);
 }
 
