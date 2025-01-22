@@ -172,8 +172,6 @@ public class UserServiceIMPL implements UserService {
     }
 
 
-
-
     private void updateCandidateFromDTO(Candidate candidate, CandidateDTO dto) {
         candidate.setName(dto.getName());
         candidate.setPhone(dto.getPhone());
@@ -187,7 +185,7 @@ public class UserServiceIMPL implements UserService {
 
 
     @Override
-    public List<CandidateDTO> filterCandidates(PositionType positionType, Status status, ScheduleDate scheduleDate) {
+    public List<CandidateDTO> filterCandidates(PositionType positionType, Status status, LocalDate scheduleDate, ScheduleDate scheduleFilter) {
         List<Candidate> candidates = candidateRepository.findAll();
 
         // Filter by PositionType
@@ -204,35 +202,50 @@ public class UserServiceIMPL implements UserService {
                         InterviewDTO interview = (InterviewDTO) interviewFeignClient
                                 .getInterviewById(candidate.getUserId())
                                 .getBody()
-                                .getData(); // Assuming respo
+                                .getData();
                         return interview != null && interview.getStatus().equals(status);
                     })
                     .collect(Collectors.toList());
         }
 
         // Filter by ScheduleDate
-        if (scheduleDate != null) {
+        if (scheduleDate != null || scheduleFilter != null) {
             candidates = candidates.stream()
                     .filter(candidate -> {
                         InterviewDTO interview = (InterviewDTO) interviewFeignClient
                                 .getInterviewById(candidate.getUserId())
                                 .getBody()
                                 .getData();
-                        return interview != null && interview.getScheduleDate().equals(scheduleDate);
+                        if (interview == null || interview.getScheduleDate() == null) {
+                            return false;
+                        }
+                        LocalDate interviewDate = interview.getScheduleDate();
+
+                        switch (scheduleFilter) {
+                            case TODAY:
+                                return interviewDate.isEqual(LocalDate.now());
+
+                            case TOMORROW:
+                                return interviewDate.isEqual(LocalDate.now().plusDays(1));
+
+                            case THIS_WEEK:
+                                return interviewDate.isAfter(LocalDate.now().minusDays(1)) &&
+                                        interviewDate.isBefore(LocalDate.now().plusDays(7));
+
+                            case THIS_MONTH:
+                                return interviewDate.getMonth().equals(LocalDate.now().getMonth()) &&
+                                        interviewDate.getYear() == LocalDate.now().getYear();
+
+                            default:
+                                return scheduleDate != null && interviewDate.equals(scheduleDate);
+                        }
                     })
                     .collect(Collectors.toList());
         }
 
-        // Convert to CandidateDTO
         return candidates.stream()
                 .map(candidate -> {
-                    InterviewDTO interview = (InterviewDTO) interviewFeignClient
-                            .getInterviewById(candidate.getUserId())
-                            .getBody()
-                            .getData();
-
                     CandidateDTO dto = new CandidateDTO();
-                    //dto.setId(candidate.getId());
                     dto.setName(candidate.getName());
                     dto.setNic(candidate.getNic());
                     dto.setEmail(candidate.getEmail());
@@ -240,11 +253,20 @@ public class UserServiceIMPL implements UserService {
                     dto.setPhone(candidate.getPhone());
                     dto.setBirthday(candidate.getBirthday());
                     dto.setPositionType(candidate.getPositionType());
+                    candidate.setPhotos(dto.getPhotos());
                     return dto;
                 })
                 .collect(Collectors.toList());
-   }
+    }
 }
+
+
+
+
+
+
+
+
 
 
 

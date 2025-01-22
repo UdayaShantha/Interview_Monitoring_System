@@ -25,8 +25,14 @@ public interface CandidateRepository extends JpaRepository<Candidate, Long> {
     @Query("SELECT c FROM Candidate c WHERE c.positionType = :positionType")
     List<Candidate> findByPositionType(@Param("positionType") PositionType positionType);
 
+    @Query("SELECT c FROM Candidate c WHERE c.userId IN :userIds")
+    List<Candidate> findByUserIds(List<Long> userIds);
 
-   // List<Candidate> findByPositionType(PositionType positionType);
+    @Query("SELECT c FROM Candidate c WHERE c.userId = :userId")
+    Candidate findByUserId(Long userId);
+
+
+
 
 
 

@@ -4,7 +4,7 @@ package com.aipoweredinterviewmonitoringsystem.interview_management_service.cont
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.GetInterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewSaveDTO;
-import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.ScheduleDate;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.service.InterviewService;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.util.StandardResponse;
@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -76,6 +77,29 @@ public class InterviewController {
                 HttpStatus.OK
         );
     }
+
+    @GetMapping("/by-schedule-date/{scheduleDate}")
+    public ResponseEntity<StandardResponse> getAllInterviewsByScheduleDate(@PathVariable(value = "scheduleDate") String scheduleDate) {
+        LocalDate parsedDate = LocalDate.parse(scheduleDate);
+        List<InterviewDTO> interviews = interviewService.getAllInterviewsByScheduleDate(parsedDate);
+        return new ResponseEntity<>(
+                new StandardResponse(200, "Success",interviews),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/by-schedule-filter/{scheduleFilter}")
+    public ResponseEntity<StandardResponse> getAllInterviewsByScheduleFilter(@PathVariable(value = "scheduleFilter") ScheduleDate scheduleFilter){
+        List<InterviewDTO> filteredInterviews = interviewService.getAllInterviewsByScheduleFilter(scheduleFilter);
+        return new ResponseEntity<>(
+                new StandardResponse(200, "Success", filteredInterviews),
+                HttpStatus.OK
+        );
+    }
+
+
+
+
 
 
 }

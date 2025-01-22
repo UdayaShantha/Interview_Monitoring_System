@@ -1,6 +1,5 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.dto;
 
-import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.ScheduleDate;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.PositionType;
 import lombok.AllArgsConstructor;
 import lombok.Data;

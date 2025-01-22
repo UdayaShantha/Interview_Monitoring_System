@@ -10,10 +10,12 @@ import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enu
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.UserService;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.util.StandardResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -111,17 +113,27 @@ public class UserController {
     }
 
 
+
+
     @GetMapping("/filter-candidates")
     public ResponseEntity<StandardResponse> filterCandidates(
             @RequestParam(value = "positionType", required = false) PositionType positionType,
             @RequestParam(value = "status", required = false) Status status,
-            @RequestParam(value = "scheduleDate", required = false) ScheduleDate scheduleDate) {
-
-        List<CandidateDTO> filteredCandidates = userService.filterCandidates(positionType, status, scheduleDate);
-        return new ResponseEntity<>(
-                new StandardResponse(200, "Success", filteredCandidates),
-                HttpStatus.OK
-        );
+            @RequestParam(value = "scheduleDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate scheduleDate,
+            @RequestParam(value = "scheduleFilter", required = false) ScheduleDate scheduleFilter) {
+        try {
+            List<CandidateDTO> filteredCandidates = userService.filterCandidates(positionType, status, scheduleDate, scheduleFilter);
+            return new ResponseEntity<>(
+                    new StandardResponse(200, "Success", filteredCandidates),
+                    HttpStatus.OK
+            );
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    new StandardResponse(500, "Internal Server Error", null),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
+
 
 }

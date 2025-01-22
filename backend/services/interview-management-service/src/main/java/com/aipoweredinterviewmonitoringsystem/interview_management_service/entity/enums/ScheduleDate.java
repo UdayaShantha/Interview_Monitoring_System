@@ -2,7 +2,7 @@ package com.aipoweredinterviewmonitoringsystem.interview_management_service.enti
 
 public enum ScheduleDate {
     TODAY,
+    TOMORROW,
     THIS_WEEK,
     THIS_MONTH,
-    THIS_YEAR
 }

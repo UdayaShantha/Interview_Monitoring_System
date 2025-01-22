@@ -8,6 +8,7 @@ import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.Candid
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateAndInterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.PositionType;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface UserService {
@@ -26,7 +27,7 @@ public interface UserService {
 
     String getName(long userId);
 
-    List<CandidateDTO> filterCandidates(PositionType positionType, Status status, ScheduleDate scheduleDate);
+    List<CandidateDTO> filterCandidates(PositionType positionType, Status status, LocalDate scheduleDate, ScheduleDate scheduleFilter);
 }
 
 
