@@ -22,4 +22,6 @@ public interface InterviewService {
     Interview getInterviewByCandidateId(Long candidateId);
 
     PaginatedInterviewGetAllDTO getAllInterviewsPaginated(int page, int size);
+
+    InterviewStatusUpdateDTO updateInterviewStatus(Long interviewId, InterviewStatusUpdateDTO interviewStatusUpdateDTO);
 }

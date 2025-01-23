@@ -95,5 +95,15 @@ public class InterviewController {
         return interviewService.getInterviewByCandidateId(candidateId);
     }
 
+    @PutMapping("/status/{interviewId}")
+    public ResponseEntity<StandardResponse> updateInterviewStatus(@PathVariable(value = "interviewId") Long interviewId, @RequestBody InterviewStatusUpdateDTO interviewStatusUpdateDTO) {
+        InterviewStatusUpdateDTO updatedInterview = interviewService.updateInterviewStatus(interviewId,interviewStatusUpdateDTO);
+        return new ResponseEntity<StandardResponse>(
+                new StandardResponse(200,"Success",updatedInterview),
+                HttpStatus.OK
+        );
+
+    }
+
 
 }

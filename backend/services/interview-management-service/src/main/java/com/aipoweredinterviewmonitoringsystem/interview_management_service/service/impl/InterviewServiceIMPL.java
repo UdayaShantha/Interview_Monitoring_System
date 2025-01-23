@@ -20,6 +20,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -97,6 +98,27 @@ public class InterviewServiceIMPL implements InterviewService {
         );
 
         return paginatedInterviewGetAllDTO;
+    }
+
+    @Override
+    public InterviewStatusUpdateDTO updateInterviewStatus(Long interviewId, InterviewStatusUpdateDTO interviewStatusUpdateDTO) {
+        if(interviewRepository.existsById(interviewId)){
+            Interview interview = interviewRepository.findById(interviewId).get();
+
+            // Validate if the status from the DTO is in the allowed list
+            List<Status> allowedStatuses = Arrays.asList(Status.UPCOMING, Status.IN_PROGRESS, Status.COMPLETED, Status.POSTPONED);
+            if (!allowedStatuses.contains(interviewStatusUpdateDTO.getStatus())) {
+                throw new IllegalArgumentException("Invalid status selected");
+            }
+
+            interview.setStatus(interviewStatusUpdateDTO.getStatus());
+            Interview updatedInterview = interviewRepository.save(interview);
+            interviewStatusUpdateDTO = modelMapper.map(updatedInterview, InterviewStatusUpdateDTO.class);
+            return interviewStatusUpdateDTO;
+        }
+        else {
+            throw new RuntimeException("No such interview");
+        }
     }
 
 
