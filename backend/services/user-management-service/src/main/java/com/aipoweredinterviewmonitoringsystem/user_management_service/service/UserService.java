@@ -1,9 +1,6 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.service;
-
-import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCandidatesDTO;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateSaveDTO;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateAndInterviewDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.*;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.paginated.PaginatedCandidateGetAllDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.response.PositionResponse;
 
 import java.util.List;
@@ -18,7 +15,7 @@ public interface UserService {
 
     String deleteCandidate(Long userId);
 
-    CandidateDTO updateCandidate(Long userId, CandidateDTO candidateDTO);
+    CandidateUpdateDTO updateCandidate(Long userId, CandidateUpdateDTO candidateUpdateDTO);
 
     String saveComment(long userId, String comment);
 
@@ -28,5 +25,9 @@ public interface UserService {
     PositionResponse getCandidatePosition(long userId);
 
     String saveCandidateFeedback(long userId,int rate, String comment);
+
+    PaginatedCandidateGetAllDTO getAllCandidatesPaginated(int page, int size);
+
+    String getCandidatePositionById(Long userId);
 }
 

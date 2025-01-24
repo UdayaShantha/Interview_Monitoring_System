@@ -1,9 +1,8 @@
 package com.aipoweredinterviewmonitoringsystem.interview_management_service.controller;
 
 
-import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.GetInterviewDTO;
-import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewDTO;
-import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewSaveDTO;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.*;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.paginated.PaginatedInterviewGetAllDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.service.InterviewService;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.util.StandardResponse;
@@ -31,11 +30,24 @@ public class InterviewController {
         );
     }
 
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<StandardResponse> getAllInterviews() {
-        List<InterviewDTO> allInterviews = interviewService.getAllInterviews();
+        List<GetAllInterviewsDTO> allInterviews = interviewService.getAllInterviews();
         return new ResponseEntity<StandardResponse>(
                 new StandardResponse(200,"Success",allInterviews),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping(
+            path="all/paginated",
+            params={"page","size"}
+    )
+    public ResponseEntity<StandardResponse> getAllInterviewsPaginated(@RequestParam(defaultValue = "0") int page,
+                                                                     @RequestParam(defaultValue = "10") int size) {
+        PaginatedInterviewGetAllDTO paginatedInterviewGetAllDTO = interviewService.getAllInterviewsPaginated(page, size);
+        return new ResponseEntity<StandardResponse>(
+                new StandardResponse(200, "Success", paginatedInterviewGetAllDTO),
                 HttpStatus.OK
         );
     }
@@ -59,13 +71,15 @@ public class InterviewController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<StandardResponse> updateInterview(@PathVariable(value = "id") Long interviewId, @RequestBody InterviewDTO interviewDTO) {
-        InterviewDTO interviewUpdateDTO = interviewService.updateInterview(interviewId,interviewDTO);
+    public ResponseEntity<StandardResponse> updateInterview(@PathVariable(value = "id") Long interviewId, @RequestBody InterviewUpdateDTO interviewUpdateDTO) {
+        InterviewUpdateDTO updatedInterview = interviewService.updateInterview(interviewId,interviewUpdateDTO);
         return new ResponseEntity<StandardResponse>(
-                new StandardResponse(200,"Success",interviewUpdateDTO),
+                new StandardResponse(200,"Success",updatedInterview),
                 HttpStatus.OK
         );
+
     }
+
 
     @GetMapping("by-status/{status}")
     public ResponseEntity<StandardResponse> getInterviewByStatus(@PathVariable(value = "status") String status) {
@@ -74,6 +88,21 @@ public class InterviewController {
                 new StandardResponse(200,"Success",allInterviewsByStatus),
                 HttpStatus.OK
         );
+    }
+
+    @GetMapping("/candidate/{candidateId}")
+    Interview getInterviewByCandidateId(@PathVariable(value = "candidateId") Long candidateId){
+        return interviewService.getInterviewByCandidateId(candidateId);
+    }
+
+    @PutMapping("/status/{interviewId}")
+    public ResponseEntity<StandardResponse> updateInterviewStatus(@PathVariable(value = "interviewId") Long interviewId, @RequestBody InterviewStatusUpdateDTO interviewStatusUpdateDTO) {
+        InterviewStatusUpdateDTO updatedInterview = interviewService.updateInterviewStatus(interviewId,interviewStatusUpdateDTO);
+        return new ResponseEntity<StandardResponse>(
+                new StandardResponse(200,"Success",updatedInterview),
+                HttpStatus.OK
+        );
+
     }
 
 
