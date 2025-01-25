@@ -4,7 +4,6 @@ package com.aipoweredinterviewmonitoringsystem.interview_management_service.cont
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.GetInterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewSaveDTO;
-import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.service.InterviewService;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.util.StandardResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,6 +74,5 @@ public class InterviewController {
                 HttpStatus.OK
         );
     }
-
 
 }

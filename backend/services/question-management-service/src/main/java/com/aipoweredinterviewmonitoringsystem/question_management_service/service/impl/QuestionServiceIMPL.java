@@ -95,46 +95,31 @@ public class QuestionServiceIMPL implements QuestionService {
 
     @Override
     public GetQuestionDTO getQuestion(long questionId) {
-        if(questionRepository.existsById(questionId)){
-            this.qid=questionId;
-            if (commonQuestionRepository.existsById(questionId)) {
-                try{
-                    GetQuestionDTO getQuestionDTO =modelMapper.map(commonQuestionRepository.getCommonQuestionByQuestionId(questionId),GetQuestionDTO.class);
+        try{
+            if (questionRepository.existsById(questionId)) {
+                this.qid = questionId;
+                if (commonQuestionRepository.existsById(questionId)) {
+                    GetQuestionDTO getQuestionDTO = modelMapper.map(commonQuestionRepository.getCommonQuestionByQuestionId(questionId), GetQuestionDTO.class);
                     return getQuestionDTO;
                 }
-                catch (Exception e){
-                    return null;
-                }
-            }
-            if (questionDARepository.existsById(questionId)) {
-                try{
-                    GetQuestionDTO getQuestionDTO =modelMapper.map(questionDARepository.getQuestionDAByQuestionId(questionId),GetQuestionDTO.class);
+                if (questionDARepository.existsById(questionId)) {
+                    GetQuestionDTO getQuestionDTO = modelMapper.map(questionDARepository.getQuestionDAByQuestionId(questionId), GetQuestionDTO.class);
                     return getQuestionDTO;
                 }
-                catch (Exception e){
-                    return null;
-                }
-            }
-            if (questionQARepository.existsById(questionId)) {
-                try{
-                    GetQuestionDTO getQuestionDTO =modelMapper.map(questionQARepository.getQuestionQAByQuestionId(questionId),GetQuestionDTO.class);
+                if (questionQARepository.existsById(questionId)) {
+                    GetQuestionDTO getQuestionDTO = modelMapper.map(questionQARepository.getQuestionQAByQuestionId(questionId), GetQuestionDTO.class);
                     return getQuestionDTO;
                 }
-                catch (Exception e){
-                    return null;
-                }
-            }
-            if (questionSERepository.existsById(questionId)) {
-                try{
-                    GetQuestionDTO getQuestionDTO =modelMapper.map(questionSERepository.getQuestionSEByQuestionId(questionId),GetQuestionDTO.class);
+                if (questionSERepository.existsById(questionId)) {
+                    GetQuestionDTO getQuestionDTO = modelMapper.map(questionSERepository.getQuestionSEByQuestionId(questionId), GetQuestionDTO.class);
                     return getQuestionDTO;
                 }
-                catch (Exception e){
-                    return null;
-                }
             }
+            return null;
         }
-        return null;
+        catch(Exception e) {
+            return null;
+        }
     }
 
     @Override

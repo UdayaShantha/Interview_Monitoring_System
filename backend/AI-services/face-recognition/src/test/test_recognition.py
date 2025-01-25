@@ -10,13 +10,13 @@ class TestFaceRecognition(unittest.TestCase):
         self.face_recognizer = FaceRecognizer()
     def test_face_detection(self):
         # Load test image
-        image = cv2.imread('test_data/test_image.jpg')
+        image = cv2.imread('C:/Users/User/Downloads/Face_Recognition/0057_2.jpg')
         faces = self.face_detector.detect_faces(image)
         self.assertTrue(len(faces) > 0, "No faces detected in test image")
     def test_face_recognition(self):
         # Load test images
-        known_image = cv2.imread('test_data/known_face.jpg')
-        unknown_image = cv2.imread('test_data/unknown_face.jpg')
+        known_image = cv2.imread('C:/Users/User/Downloads/Face_Recognition/0057_4.jpg')
+        unknown_image = cv2.imread('C:/Users/User/Downloads/Face_Recognition/0057_3.jpg')
 
         # Detect faces
         known_faces = self.face_detector.detect_faces(known_image)

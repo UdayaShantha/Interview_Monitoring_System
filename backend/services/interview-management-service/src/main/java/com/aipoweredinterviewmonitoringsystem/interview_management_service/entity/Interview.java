@@ -1,10 +1,12 @@
 package com.aipoweredinterviewmonitoringsystem.interview_management_service.entity;
 
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.aspectj.weaver.patterns.TypePatternQuestions;
 
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -19,13 +21,14 @@ import java.util.List;
 @NoArgsConstructor
 @Data
 public class Interview {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "interview_id")
-    private Long interviewId;
+    private long interviewId;
 
-    @Column(name = "candidate_id",nullable = false)
-    private Long candidateId;
+    @Column(name = "candidate_id", nullable = false, unique = true)
+    private long candidateId;
 
     @Column(name = "schedule_date",nullable = false)
     private LocalDate scheduleDate;
@@ -34,7 +37,7 @@ public class Interview {
     @Column(name = "status",nullable = false)
     private Status status;
 
-    @Column(name = "start_time",nullable = false)
+    @Column(name = "start_time",nullable = false,unique = true)
     private LocalTime startTime;
 
     @Column(name = "created_at")
@@ -42,6 +45,5 @@ public class Interview {
 
     @Column(name = "interview_duration",nullable = false,columnDefinition = "double precision default 0.0")
     private double duration = 0.0;
-
 
 }
