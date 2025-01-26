@@ -22,7 +22,6 @@ public class QuestionQA extends Question{
     @Column(name = "duration", nullable = false)
     private long duration;
 
-    @Lob
     @Column(name="qa_question_content",nullable = false,unique = true)
     private String content;
 
