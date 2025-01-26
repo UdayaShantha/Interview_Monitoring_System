@@ -1,6 +1,7 @@
 package com.aipoweredinterviewmonitoringsystem.question_management_service.service.impl;
 
 
+import com.aipoweredinterviewmonitoringsystem.question_management_service.advisor.QuestionNotFoundException;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.config.ModelMapperConfig;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.QuestionDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.paiginated.QuestionPaiginatedDTO;
@@ -19,6 +20,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+
+import java.util.Arrays;
 import java.util.List;
 
 import java.time.LocalDateTime;
@@ -70,7 +73,7 @@ public class QuestionServiceIMPL implements QuestionService {
                 return "Deleted question successfully";
             }
         }
-        return "Not such kind of Question";
+        throw new QuestionNotFoundException("Not such kind of Question");
     }
 
     @Override
@@ -78,20 +81,56 @@ public class QuestionServiceIMPL implements QuestionService {
         if (questionRepository.existsById(questionId)) {
             this.qid = questionId;
             if (commonQuestionRepository.existsById(questionId)) {
-                GetQuestionDTO getQuestionDTO = modelMapper.map(commonQuestionRepository.getCommonQuestionByQuestionId(questionId), GetQuestionDTO.class);
-                return getQuestionDTO;
+                Object result = commonQuestionRepository.getCommonQuestionByQuestionId(questionId);
+                if (result == null) {
+                    throw new QuestionNotFoundException("Question Not Found for ID: " + questionId);
+                }
+                Object[] data = (Object[]) result;
+                String content = (String) data[0];
+                QuestionType category = (QuestionType) data[1];
+                long duration = (long) data[2];
+                String keywordsString = (String) data[3];
+                List<String> keywords = Arrays.asList(keywordsString.split(","));
+                return new GetQuestionDTO(content, category, duration, keywords);
             }
             if (questionDARepository.existsById(questionId)) {
-                GetQuestionDTO getQuestionDTO = modelMapper.map(questionDARepository.getQuestionDAByQuestionId(questionId), GetQuestionDTO.class);
-                return getQuestionDTO;
+                Object result = questionDARepository.getQuestionDAByQuestionId(questionId);
+                if (result == null) {
+                    throw new QuestionNotFoundException("Question Not Found for ID: " + questionId);
+                }
+                Object[] data = (Object[]) result;
+                String content = (String) data[0];
+                QuestionType category = (QuestionType) data[1];
+                long duration = (long) data[2];
+                String keywordsString = (String) data[3];
+                List<String> keywords = Arrays.asList(keywordsString.split(","));
+                return new GetQuestionDTO(content, category, duration, keywords);
             }
             if (questionQARepository.existsById(questionId)) {
-                GetQuestionDTO getQuestionDTO = modelMapper.map(questionQARepository.getQuestionQAByQuestionId(questionId), GetQuestionDTO.class);
-                return getQuestionDTO;
+                Object result = questionQARepository.getQuestionQAByQuestionId(questionId);
+                if (result == null) {
+                    throw new QuestionNotFoundException("Question Not Found for ID: " + questionId);
+                }
+                Object[] data = (Object[]) result;
+                String content = (String) data[0];
+                QuestionType category = (QuestionType) data[1];
+                long duration = (long) data[2];
+                String keywordsString = (String) data[3];
+                List<String> keywords = Arrays.asList(keywordsString.split(","));
+                return new GetQuestionDTO(content, category, duration, keywords);
             }
             if (questionSERepository.existsById(questionId)) {
-                GetQuestionDTO getQuestionDTO = modelMapper.map(questionSERepository.getQuestionSEByQuestionId(questionId), GetQuestionDTO.class);
-                return getQuestionDTO;
+                Object result = questionSERepository.getQuestionSEByQuestionId(questionId);
+                if (result == null) {
+                    throw new QuestionNotFoundException("Question Not Found for ID: " + questionId);
+                }
+                Object[] data = (Object[]) result;
+                String content = (String) data[0];
+                QuestionType category = (QuestionType) data[1];
+                long duration = (long) data[2];
+                String keywordsString = (String) data[3];
+                List<String> keywords = Arrays.asList(keywordsString.split(","));
+                return new GetQuestionDTO(content, category, duration, keywords);
             }
         }
         return null;

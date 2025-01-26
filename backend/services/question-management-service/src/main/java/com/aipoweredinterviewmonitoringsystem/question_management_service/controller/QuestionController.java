@@ -1,5 +1,6 @@
 package com.aipoweredinterviewmonitoringsystem.question_management_service.controller;
 
+import com.aipoweredinterviewmonitoringsystem.question_management_service.advisor.QuestionNotFoundException;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.paiginated.QuestionPaiginatedDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.GetQuestionDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.SaveQuestionDTO;
@@ -43,33 +44,30 @@ public class QuestionController {
         }
     }
 
-    @DeleteMapping(path = {"/question/remove"},params = {"questionId"})
+    @DeleteMapping(path = {"/question/remove"}, params = {"questionId"})
     public ResponseEntity<StandardResponse> deleteQuestion(@RequestParam(value = "questionId") long questionId) {
         try {
             String message = questionService.deleteQuestion(questionId);
-            return new ResponseEntity<StandardResponse>(
-                    new StandardResponse(204,"Deleted",message),HttpStatus.OK
-            );
-        }
-        catch (Exception e) {
-            return new ResponseEntity<StandardResponse>(
-                    new StandardResponse(404,"Question Not Found",e.getMessage()),HttpStatus.NOT_FOUND
-            );
+            return new ResponseEntity<>(new StandardResponse(204, "Deleted", message), HttpStatus.OK);
+        } catch (QuestionNotFoundException e) {
+            return new ResponseEntity<>(new StandardResponse(404, "Question Not Found", e.getMessage()), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    @GetMapping(path = {"/get/question"},params = {"questionId"})
+    @GetMapping(path = {"/get/question"}, params = {"questionId"})
     public ResponseEntity<StandardResponse> getQuestion(@RequestParam(value = "questionId") long questionId) {
         try {
-            GetQuestionDTO getQuestionDTO=questionService.getQuestion(questionId);
-            return new ResponseEntity<StandardResponse>(
-                    new StandardResponse(200,"Success",getQuestionDTO),HttpStatus.OK
-            );
-        }
-        catch (Exception e) {
-            return new ResponseEntity<StandardResponse>(
-                    new StandardResponse(404,"Question Not Found",e.getMessage()),HttpStatus.NOT_FOUND
-            );
+            GetQuestionDTO getQuestionDTO = questionService.getQuestion(questionId);
+            if (getQuestionDTO == null) {
+                throw new QuestionNotFoundException("Question Not Found");
+            }
+            return new ResponseEntity<>(new StandardResponse(200, "Success", getQuestionDTO), HttpStatus.OK);
+        } catch (QuestionNotFoundException e) {
+            return new ResponseEntity<>(new StandardResponse(404, "Question Not Found", e.getMessage()), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
