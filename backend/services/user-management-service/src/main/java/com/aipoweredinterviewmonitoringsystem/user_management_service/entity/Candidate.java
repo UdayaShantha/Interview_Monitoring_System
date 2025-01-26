@@ -52,7 +52,7 @@ public class Candidate extends User{
     @Min(1)
     @Max(5)
     @Column(name = "candidate_rating")
-    private int rate;
+    private Integer rate;
 
     @Column(name = "candidate_comment")
     private String comment;

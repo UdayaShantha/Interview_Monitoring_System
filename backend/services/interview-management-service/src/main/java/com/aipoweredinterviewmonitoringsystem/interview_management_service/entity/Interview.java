@@ -40,6 +40,9 @@ public class Interview {
     @Column(name = "start_time",nullable = false,unique = true)
     private LocalTime startTime;
 
+    @Column(name = "end_time")
+    private LocalTime endTime;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
