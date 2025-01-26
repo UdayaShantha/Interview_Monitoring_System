@@ -17,13 +17,10 @@ import java.util.List;
 @EnableJpaRepositories
 @Repository
 public interface CandidateRepository extends JpaRepository<Candidate, Long> {
-
-    @Modifying
     @Transactional
     @Query("SELECT c.name FROM Candidate c WHERE c.userId = :userId")
     String findNameByUserId(long userId);
 
-    @Modifying
     @Transactional
     @Query("SELECT c.positionType FROM Candidate c WHERE c.userId = :userId")
     Candidate findPositionByuserId(long userId);
