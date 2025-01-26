@@ -211,30 +211,10 @@ public class QuestionServiceIMPL implements QuestionService {
             return null;
         }
     }
+
+
     @Override
     public QuestionPaiginatedDTO getQuestionsPaiginated(LocalDate date, int page, int size) {
-        try{
-            Page<Question> questions=questionRepository.findQuestionsByCreatedAtBefore(date, PageRequest.of(page,size, Sort.by("createdAt").descending()));
-            if(!questions.isEmpty()) {
-                for (Question question : questions) {
-                    if(commonQuestionRepository.existsById(question.getQuestionId())) {
-                        QuestionPaiginatedDTO questionPaiginatedDTO=modelMapper.map(commonQuestionRepository.getCommonQuestionsPaiginated(question.getQuestionId()),QuestionPaiginatedDTO.class);
-                        return questionPaiginatedDTO;
-                    }
-                    if(questionDARepository.existsById(question.getQuestionId())) {
-                        QuestionPaiginatedDTO questionPaiginatedDTO=modelMapper.map(questionDARepository.getQuestionDASPaiginated(question.getQuestionId()),QuestionPaiginatedDTO.class);
-                        return questionPaiginatedDTO;
-                    }
-                    if(questionQARepository.existsById(question.getQuestionId())) {
-                        QuestionPaiginatedDTO questionPaiginatedDTO= modelMapper.map(questionQARepository.getQuestionQASPaiginated(question.getQuestionId()),QuestionPaiginatedDTO.class);
-                        return questionPaiginatedDTO;
-                    }
-                    if(questionSERepository.existsById(question.getQuestionId())) {
-                        QuestionPaiginatedDTO questionPaiginatedDTO=modelMapper.map(questionSERepository.getQuestionSESPaiginated(question.getQuestionId()),QuestionPaiginatedDTO.class);
-                        return questionPaiginatedDTO;
-                    }
-
-    public QuestionPaiginatedDTO getQuestionsPaiginated(LocalDateTime date, int page, int size) {
         Page<Question> questions=questionRepository.findQuestionsByCreatedAtBefore(date, PageRequest.of(page,size, Sort.by("createdAt").descending()));
         if(!questions.isEmpty()) {
             for (Question question : questions) {
@@ -289,30 +269,10 @@ public class QuestionServiceIMPL implements QuestionService {
         return questionRepository.count();
     }
 
+
+
     @Override
     public QuestionPaiginatedDTO getFilteredQuestionsPaiginated(LocalDate date,QuestionType category, long duration, int page, int size) {
-        try{
-            if(category != null && duration == 0) {
-                Page<Question> questions = questionRepository.findQuestionsByCreatedAtBefore(date, PageRequest.of(page, size, Sort.by("createdAt").descending()));
-                if (!questions.isEmpty()) {
-                    for (Question question : questions) {
-                        if (commonQuestionRepository.existsById(question.getQuestionId()) && commonQuestionRepository.existsByCategory(category)) {
-                            QuestionPaiginatedDTO questionPaiginatedDTO=modelMapper.map(commonQuestionRepository.getCommonQuestionsPaiginatedByCategory(question.getQuestionId(),category),QuestionPaiginatedDTO.class);
-                            return questionPaiginatedDTO;
-                        }
-                        if (questionDARepository.existsById(question.getQuestionId()) && questionDARepository.existsByCategory(category)) {
-                            QuestionPaiginatedDTO questionPaiginatedDTO=modelMapper.map(questionDARepository.getCommonQuestionsPaiginatedByCategory(question.getQuestionId(),category),QuestionPaiginatedDTO.class);
-                            return questionPaiginatedDTO;
-                        }
-                        if (questionQARepository.existsById(question.getQuestionId()) && questionQARepository.existsByCategory(category)) {
-                            QuestionPaiginatedDTO questionPaiginatedDTO=modelMapper.map(questionQARepository.getCommonQuestionsPaiginatedByCategory(question.getQuestionId(),category),QuestionPaiginatedDTO.class);
-                            return questionPaiginatedDTO;
-                        }
-                        if (questionSERepository.existsById(question.getQuestionId()) && questionSERepository.existsByCategory(category)) {
-                            QuestionPaiginatedDTO questionPaiginatedDTO=modelMapper.map(questionSERepository.getCommonQuestionsPaiginatedByCategory(question.getQuestionId(),category),QuestionPaiginatedDTO.class);
-                            return questionPaiginatedDTO;
-                        }
-    public QuestionPaiginatedDTO getFilteredQuestionsPaiginated(LocalDateTime date,QuestionType category, long duration, int page, int size) {
         if(category != null && duration == 0) {
             Page<Question> questions = questionRepository.findQuestionsByCreatedAtBefore(date, PageRequest.of(page, size, Sort.by("createdAt").descending()));
             if (!questions.isEmpty()) {
