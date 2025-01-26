@@ -1,8 +1,6 @@
 package com.aipoweredinterviewmonitoringsystem.question_management_service.service.impl;
 
 
-import com.aipoweredinterviewmonitoringsystem.question_management_service.config.ModelMapperConfig;
-import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.QuestionDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.paiginated.QuestionPaiginatedDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.GetQuestionDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.SaveQuestionDTO;
@@ -19,13 +17,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import java.util.List;
+
+import java.time.LocalDate;
 
 import java.time.LocalDateTime;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 public class QuestionServiceIMPL implements QuestionService {
@@ -163,7 +158,7 @@ public class QuestionServiceIMPL implements QuestionService {
             commonQuestion.setContent(saveQuestionDTO.getContent());
             commonQuestion.setKeywords(saveQuestionDTO.getKeywords());
             commonQuestion.setCategory(saveQuestionDTO.getCategory());
-            commonQuestion.setCreatedAt(LocalDateTime.now());
+            commonQuestion.setCreatedAt(LocalDate.now());
             commonQuestionRepository.save(commonQuestion);
             return "Question saved successfully";
         }
@@ -173,7 +168,7 @@ public class QuestionServiceIMPL implements QuestionService {
             questionQA.setContent(saveQuestionDTO.getContent());
             questionQA.setKeywords(saveQuestionDTO.getKeywords());
             questionQA.setCategory(saveQuestionDTO.getCategory());
-            questionQA.setCreatedAt(LocalDateTime.now());
+            questionQA.setCreatedAt(LocalDate.now());
             questionQARepository.save(questionQA);
             return "Question saved successfully";
         }
@@ -183,7 +178,7 @@ public class QuestionServiceIMPL implements QuestionService {
             questionDA.setContent(saveQuestionDTO.getContent());
             questionDA.setKeywords(saveQuestionDTO.getKeywords());
             questionDA.setCategory(saveQuestionDTO.getCategory());
-            questionDA.setCreatedAt(LocalDateTime.now());
+            questionDA.setCreatedAt(LocalDate.now());
             questionDARepository.save(questionDA);
             return "Question saved successfully";
         }
@@ -193,7 +188,7 @@ public class QuestionServiceIMPL implements QuestionService {
             questionSE.setContent(saveQuestionDTO.getContent());
             questionSE.setKeywords(saveQuestionDTO.getKeywords());
             questionSE.setCategory(saveQuestionDTO.getCategory());
-            questionSE.setCreatedAt(LocalDateTime.now());
+            questionSE.setCreatedAt(LocalDate.now());
             questionSERepository.save(questionSE);
             return "Question saved successfully";
         }
@@ -202,7 +197,7 @@ public class QuestionServiceIMPL implements QuestionService {
         }
     }
     @Override
-    public QuestionPaiginatedDTO getQuestionsPaiginated(LocalDateTime date, int page, int size) {
+    public QuestionPaiginatedDTO getQuestionsPaiginated(LocalDate date, int page, int size) {
         try{
             Page<Question> questions=questionRepository.findQuestionsByCreatedAtBefore(date, PageRequest.of(page,size, Sort.by("createdAt").descending()));
             if(!questions.isEmpty()) {
@@ -263,7 +258,7 @@ public class QuestionServiceIMPL implements QuestionService {
     }
 
     @Override
-    public QuestionPaiginatedDTO getFilteredQuestionsPaiginated(LocalDateTime date,QuestionType category, long duration, int page, int size) {
+    public QuestionPaiginatedDTO getFilteredQuestionsPaiginated(LocalDate date,QuestionType category, long duration, int page, int size) {
         try{
             if(category != null && duration == 0) {
                 Page<Question> questions = questionRepository.findQuestionsByCreatedAtBefore(date, PageRequest.of(page, size, Sort.by("createdAt").descending()));

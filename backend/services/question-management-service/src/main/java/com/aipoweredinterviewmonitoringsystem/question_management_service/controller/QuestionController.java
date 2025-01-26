@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -89,7 +90,7 @@ public class QuestionController {
     }
 
     @GetMapping(path={"/get/questions/paiginated"},params = {"date","page","size"})
-    public ResponseEntity<StandardResponse> getQuestionsPaiginated(@RequestParam(value = "date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date,
+    public ResponseEntity<StandardResponse> getQuestionsPaiginated(@RequestParam(value = "date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
                                                                    @RequestParam(value = "page", defaultValue = "0") int page,
                                                                    @RequestParam(value="size", defaultValue = "6") int size)
     {
@@ -132,7 +133,7 @@ public class QuestionController {
     }
 
     @GetMapping(path={"/filter/questions/paiginated"},params = {"date","category","duration","page","size"})
-    public ResponseEntity<StandardResponse> getFilteredQuestionsPaiginated(@RequestParam(value = "date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date,
+    public ResponseEntity<StandardResponse> getFilteredQuestionsPaiginated(@RequestParam(value = "date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
                                                                            @RequestParam(value = "category")QuestionType category,
                                                                            @RequestParam(value="duration")long duration,
                                                                            @RequestParam(value = "page", defaultValue = "0") int page,
