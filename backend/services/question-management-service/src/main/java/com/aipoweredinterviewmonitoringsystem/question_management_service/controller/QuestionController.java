@@ -45,8 +45,8 @@ public class QuestionController {
 
     @DeleteMapping(path = {"/question/remove"},params = {"questionId"})
     public ResponseEntity<StandardResponse> deleteQuestion(@RequestParam(value = "questionId") long questionId) {
-        String message = questionService.deleteQuestion(questionId);
         try {
+            String message = questionService.deleteQuestion(questionId);
             return new ResponseEntity<StandardResponse>(
                     new StandardResponse(204,"Deleted",message),HttpStatus.OK
             );
@@ -60,8 +60,8 @@ public class QuestionController {
 
     @GetMapping(path = {"/get/question"},params = {"questionId"})
     public ResponseEntity<StandardResponse> getQuestion(@RequestParam(value = "questionId") long questionId) {
-        GetQuestionDTO getQuestionDTO=questionService.getQuestion(questionId);
         try {
+            GetQuestionDTO getQuestionDTO=questionService.getQuestion(questionId);
             return new ResponseEntity<StandardResponse>(
                     new StandardResponse(200,"Success",getQuestionDTO),HttpStatus.OK
             );
@@ -75,8 +75,8 @@ public class QuestionController {
 
     @PutMapping(path = {"/update/question"},params = {"questionId"})
     public ResponseEntity<StandardResponse> updateQuestion(@RequestBody GetQuestionDTO getQuestionDTO,@RequestParam(value = "questionId") long questionId) {
-        UpdateResponseDTO updateResponseDTO=questionService.updateQuestion(getQuestionDTO,questionId);
         try {
+            UpdateResponseDTO updateResponseDTO=questionService.updateQuestion(getQuestionDTO,questionId);
             return new ResponseEntity<StandardResponse>(
                     new StandardResponse(200,"Success",updateResponseDTO),HttpStatus.OK
             );
@@ -93,8 +93,8 @@ public class QuestionController {
                                                                    @RequestParam(value = "page", defaultValue = "0") int page,
                                                                    @RequestParam(value="size", defaultValue = "6") int size)
     {
-        QuestionPaiginatedDTO questionPaiginatedDTO=questionService.getQuestionsPaiginated(date,page,size);
         try {
+            QuestionPaiginatedDTO questionPaiginatedDTO=questionService.getQuestionsPaiginated(date,page,size);
             return new ResponseEntity<StandardResponse>(
                     new StandardResponse(200,"Success",questionPaiginatedDTO),HttpStatus.OK
             );
@@ -138,8 +138,8 @@ public class QuestionController {
                                                                            @RequestParam(value = "page", defaultValue = "0") int page,
                                                                            @RequestParam(value="size", defaultValue = "6") int size)
     {
-        QuestionPaiginatedDTO questionPaiginatedDTO=questionService.getFilteredQuestionsPaiginated(date,category,duration,page,size);
         try {
+            QuestionPaiginatedDTO questionPaiginatedDTO=questionService.getFilteredQuestionsPaiginated(date,category,duration,page,size);
             return new ResponseEntity<StandardResponse>(
                     new StandardResponse(200,"Success",questionPaiginatedDTO),HttpStatus.OK
             );

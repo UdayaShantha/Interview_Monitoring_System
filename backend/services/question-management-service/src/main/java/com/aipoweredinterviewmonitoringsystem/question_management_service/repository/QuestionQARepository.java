@@ -19,7 +19,6 @@ public interface QuestionQARepository extends JpaRepository<QuestionQA, Long> {
     @Query("DELETE FROM QuestionQA qa WHERE qa.questionId = :questionId")
     void deleteAllByQuestionId(long questionId);
 
-    @Modifying
     @Transactional
     @Query("SELECT qa.content,qa.category,qa.duration,qa.keywords FROM QuestionQA qa WHERE qa.questionId = :questionId")
     Object getQuestionQAByQuestionId(long questionId);
@@ -29,26 +28,22 @@ public interface QuestionQARepository extends JpaRepository<QuestionQA, Long> {
     @Query("UPDATE QuestionQA qa SET qa.content= :content, qa.category= :category, qa.duration= :duration, qa.keywords= :keywords WHERE qa.questionId= :questionId")
     Object updateQuestionQA(String content, QuestionType category, long duration, List<String> keywords, long questionId);
 
-    @Modifying
     @Transactional
     @Query("SELECT qa.content,qa.category,qa.duration FROM QuestionQA qa WHERE qa.questionId = :questionId")
     Object getQuestionQASPaiginated(long questionId);
 
     boolean existsByCategory(QuestionType category);
 
-    @Modifying
     @Transactional
     @Query("SELECT qa.content,qa.category,qa.duration FROM QuestionQA qa WHERE qa.questionId = :questionId AND qa.category= :category")
     Object getCommonQuestionsPaiginatedByCategory(long questionId, QuestionType category);
 
     boolean existsByDuration(long duration);
 
-    @Modifying
     @Transactional
     @Query("SELECT qa.content,qa.category,qa.duration FROM QuestionQA qa WHERE qa.questionId = :questionId AND qa.duration= :duration")
     Object getCommonQuestionsPaiginatedByDuration(long questionId, long duration);
 
-    @Modifying
     @Transactional
     @Query("SELECT qa.content,qa.category,qa.duration FROM QuestionQA qa WHERE qa.questionId = :questionId AND qa.duration= :duration AND qa.category= :category")
     Object getCommonQuestionsPaiginatedByDurationAndCategory(long questionId, long duration, QuestionType category);
