@@ -52,45 +52,31 @@ public class QuestionServiceIMPL implements QuestionService {
 
     @Override
     public String deleteQuestion(long questionId) {
-        if(questionRepository.existsById(questionId)){
+        try{
+            if(questionRepository.existsById(questionId)){
                 if (commonQuestionRepository.existsById(questionId)) {
-                    try{
-                        commonQuestionRepository.deleteAllByQuestionId(questionId);
-                        return "Deleted question successfully";
-                    }
-                    catch (Exception e){
-                        return e.getMessage();
-                    }
+                    commonQuestionRepository.deleteAllByQuestionId(questionId);
+                    return "Deleted question successfully";
                 }
                 if (questionDARepository.existsById(questionId)) {
-                    try{
-                        questionDARepository.deleteAllByQuestionId(questionId);
-                        return "Deleted question successfully";
-                    }
-                    catch (Exception e){
-                        return e.getMessage();
-                    }
+                    questionDARepository.deleteAllByQuestionId(questionId);
+                    return "Deleted question successfully";
                 }
                 if (questionQARepository.existsById(questionId)) {
-                    try{
-                        questionQARepository.deleteAllByQuestionId(questionId);
-                        return "Deleted question successfully";
-                    }
-                    catch (Exception e){
-                        return e.getMessage();
-                    }
+                    questionQARepository.deleteAllByQuestionId(questionId);
+                    return "Deleted question successfully";
                 }
                 if (questionSERepository.existsById(questionId)) {
-                    try{
-                        questionSERepository.deleteAllByQuestionId(questionId);
-                        return "Deleted question successfully";
-                    }
-                    catch (Exception e){
-                        return e.getMessage();
-                    }
+                    questionSERepository.deleteAllByQuestionId(questionId);
+                    return "Deleted question successfully";
                 }
+            }
+            return "Not such kind of Question";
         }
-        return "Not such kind of Question";
+        catch (Exception e){
+            return "Question deletion failure";
+        }
+
     }
 
     @Override
