@@ -2,10 +2,7 @@ import face_recognition
 import numpy as np
 import pickle
 
-
 class FaceRecognizer:
-    """Handles face recognition and verification"""
-
     def __init__(self, model_path=None):
         self.model = None
         self.known_encodings = []
@@ -14,7 +11,6 @@ class FaceRecognizer:
             self.load_model(model_path)
 
     def load_model(self, path):
-        """Load trained model from file"""
         with open(path, 'rb') as f:
             data = pickle.load(f)
             self.model = data['model']
@@ -22,10 +18,6 @@ class FaceRecognizer:
             self.known_labels = data['labels']
 
     def verify(self, image, face_location):
-        """
-        Verify if detected face matches known identities
-        Returns: (is_match, confidence_score)
-        """
         face_encoding = face_recognition.face_encodings(
             image, [face_location]
         )[0]

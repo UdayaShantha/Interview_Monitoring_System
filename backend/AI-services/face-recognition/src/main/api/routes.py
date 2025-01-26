@@ -1,5 +1,5 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import FastAPI, File, UploadFile,HTTPException,Depends
+from fastapi.security import HTTPBearer,HTTPAuthorizationCredentials
 from ..detection.face_detector import FaceDetector
 from ..recognition.face_recognizer import FaceRecognizer
 import numpy as np
@@ -10,10 +10,8 @@ security = HTTPBearer()
 face_detector = FaceDetector()
 face_recognizer = FaceRecognizer()
 
-
 @app.post("/verify/")
 async def verify_identity(file: UploadFile = File(...)):
-    """Verify identity from uploaded image"""
     contents = await file.read()
     nparr = np.frombuffer(contents, np.uint8)
     image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)

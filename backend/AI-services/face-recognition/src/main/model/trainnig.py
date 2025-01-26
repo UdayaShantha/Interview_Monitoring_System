@@ -5,12 +5,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 
-
 class FaceModelTrainer:
-
-    data_path="C:/Users/User/Downloads/Face_Recognition dataset"
-    path="E:/Interview_Monitoring_System/backend/AI-services/face-recognition/src/main/model/model.pickle"
-
     def __init__(self, data_path):
         self.data_path = data_path
         self.face_encodings = []

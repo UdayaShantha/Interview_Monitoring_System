@@ -95,93 +95,63 @@ public class QuestionServiceIMPL implements QuestionService {
 
     @Override
     public GetQuestionDTO getQuestion(long questionId) {
-        if(questionRepository.existsById(questionId)){
-            this.qid=questionId;
-            if (commonQuestionRepository.existsById(questionId)) {
-                try{
-                    GetQuestionDTO getQuestionDTO =modelMapper.map(commonQuestionRepository.getCommonQuestionByQuestionId(questionId),GetQuestionDTO.class);
+        try{
+            if (questionRepository.existsById(questionId)) {
+                this.qid = questionId;
+                if (commonQuestionRepository.existsById(questionId)) {
+                    GetQuestionDTO getQuestionDTO = modelMapper.map(commonQuestionRepository.getCommonQuestionByQuestionId(questionId), GetQuestionDTO.class);
                     return getQuestionDTO;
                 }
-                catch (Exception e){
-                    return null;
-                }
-            }
-            if (questionDARepository.existsById(questionId)) {
-                try{
-                    GetQuestionDTO getQuestionDTO =modelMapper.map(questionDARepository.getQuestionDAByQuestionId(questionId),GetQuestionDTO.class);
+                if (questionDARepository.existsById(questionId)) {
+                    GetQuestionDTO getQuestionDTO = modelMapper.map(questionDARepository.getQuestionDAByQuestionId(questionId), GetQuestionDTO.class);
                     return getQuestionDTO;
                 }
-                catch (Exception e){
-                    return null;
-                }
-            }
-            if (questionQARepository.existsById(questionId)) {
-                try{
-                    GetQuestionDTO getQuestionDTO =modelMapper.map(questionQARepository.getQuestionQAByQuestionId(questionId),GetQuestionDTO.class);
+                if (questionQARepository.existsById(questionId)) {
+                    GetQuestionDTO getQuestionDTO = modelMapper.map(questionQARepository.getQuestionQAByQuestionId(questionId), GetQuestionDTO.class);
                     return getQuestionDTO;
                 }
-                catch (Exception e){
-                    return null;
-                }
-            }
-            if (questionSERepository.existsById(questionId)) {
-                try{
-                    GetQuestionDTO getQuestionDTO =modelMapper.map(questionSERepository.getQuestionSEByQuestionId(questionId),GetQuestionDTO.class);
+                if (questionSERepository.existsById(questionId)) {
+                    GetQuestionDTO getQuestionDTO = modelMapper.map(questionSERepository.getQuestionSEByQuestionId(questionId), GetQuestionDTO.class);
                     return getQuestionDTO;
                 }
-                catch (Exception e){
-                    return null;
-                }
             }
+            return null;
         }
-        return null;
+        catch(Exception e) {
+            return null;
+        }
     }
 
     @Override
     public UpdateResponseDTO updateQuestion(GetQuestionDTO getQuestionDTO, long questionId) {
-        if(qid==questionId && getQuestion(questionId).equals(getQuestionDTO)){
-            if (commonQuestionRepository.existsById(questionId)) {
-                try{
+        try{
+            if(qid==questionId && getQuestion(questionId).equals(getQuestionDTO)){
+                if (commonQuestionRepository.existsById(questionId)) {
                     CommonQuestion  commonQuestion=modelMapper.map(getQuestionDTO,CommonQuestion.class);
                     UpdateResponseDTO updateResponseDTO =modelMapper.map(commonQuestionRepository.updateCommonQuestion(commonQuestion.getContent(),commonQuestion.getCategory(),commonQuestion.getDuration(),commonQuestion.getKeywords(),questionId),UpdateResponseDTO.class);
                     return updateResponseDTO;
                 }
-                catch (Exception e){
-                    return null;
-                }
-            }
-            if (questionDARepository.existsById(questionId)) {
-                try{
+                if (questionDARepository.existsById(questionId)) {
                     QuestionDA questionDA=modelMapper.map(getQuestionDTO,QuestionDA.class);
                     UpdateResponseDTO updateResponseDTO =modelMapper.map(questionDARepository.updateQuestionDA(questionDA.getContent(),questionDA.getCategory(),questionDA.getDuration(),questionDA.getKeywords(),questionId),UpdateResponseDTO.class);
                     return updateResponseDTO;
                 }
-                catch (Exception e){
-                    return null;
-                }
-            }
-            if (questionQARepository.existsById(questionId)) {
-                try{
+                if (questionQARepository.existsById(questionId)) {
                     QuestionQA questionQA=modelMapper.map(getQuestionDTO,QuestionQA.class);
                     UpdateResponseDTO updateResponseDTO =modelMapper.map(questionQARepository.updateQuestionQA(questionQA.getContent(),questionQA.getCategory(),questionQA.getDuration(),questionQA.getKeywords(),questionId),UpdateResponseDTO.class);
                     return updateResponseDTO;
                 }
-                catch (Exception e){
-                    return null;
-                }
-            }
-            if (questionSERepository.existsById(questionId)) {
-                try{
+                if (questionSERepository.existsById(questionId)) {
                     QuestionSE questionSE=modelMapper.map(getQuestionDTO,QuestionSE.class);
                     UpdateResponseDTO updateResponseDTO =modelMapper.map(questionSERepository.updateQuestionSE(questionSE.getContent(),questionSE.getCategory(),questionSE.getDuration(),questionSE.getKeywords(),questionId),UpdateResponseDTO.class);
                     return updateResponseDTO;
                 }
-                catch (Exception e){
-                    return null;
-                }
             }
+            return null;
         }
-        return null;
+        catch(Exception e){
+            return null;
+        }
     }
 
     @Override

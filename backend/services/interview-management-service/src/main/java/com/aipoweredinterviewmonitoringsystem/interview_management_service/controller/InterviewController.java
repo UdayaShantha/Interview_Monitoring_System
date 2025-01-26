@@ -1,6 +1,10 @@
 package com.aipoweredinterviewmonitoringsystem.interview_management_service.controller;
 
 
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.GetInterviewDTO;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewDTO;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewSaveDTO;
+
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.*;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.paginated.PaginatedInterviewGetAllDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
@@ -89,7 +93,7 @@ public class InterviewController {
                 HttpStatus.OK
         );
     }
-
+  
     @GetMapping("/candidate/{candidateId}")
     Interview getInterviewByCandidateId(@PathVariable(value = "candidateId") Long candidateId){
         return interviewService.getInterviewByCandidateId(candidateId);
@@ -104,6 +108,4 @@ public class InterviewController {
         );
 
     }
-
-
 }
