@@ -5,10 +5,7 @@ import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.pa
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.GetQuestionDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.SaveQuestionDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.UpdateResponseDTO;
-import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.CommonQuestion;
-import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.QuestionDA;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.QuestionQA;
-import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.QuestionSE;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.enums.QuestionType;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.service.QuestionService;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.util.StandardResponse;
@@ -19,9 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
 
 @RestController
 @CrossOrigin
@@ -150,4 +144,3 @@ public class QuestionController {
         }
     }
 }
-

@@ -4,10 +4,14 @@ import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCan
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateSaveDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateAndInterviewDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.paginated.PaginatedCandidateGetAllDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.response.PositionResponse;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.*;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.CandidateRepository;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.UserService;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.util.StandardResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,36 +24,48 @@ import java.util.List;
 public class UserController {
     @Autowired
     private UserService userService;
+    @Autowired
+    private CandidateRepository candidateRepository;
 
-//    @PostMapping("/candidate")
-//    public ResponseEntity<Candidate> saveCandidate(@RequestBody CandidateDTO candidateDTO) {
-//        try {
-//            Candidate savedCandidate = userService.saveCandidate(candidateDTO);
-//            return new ResponseEntity<>(savedCandidate, HttpStatus.CREATED);
-//        } catch (Exception e) {
-//            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//    }
 
     @PostMapping("/candidate")
     public ResponseEntity<StandardResponse> saveCandidate(@RequestBody CandidateSaveDTO candidateSaveDTO) {
-        CandidateSaveDTO savedCandidate = userService.saveCandidate(candidateSaveDTO);
-        return new ResponseEntity<StandardResponse>(
-                new StandardResponse(201,"Success",savedCandidate),
-                HttpStatus.CREATED
-        );
+        try {
+            CandidateSaveDTO savedCandidate = userService.saveCandidate(candidateSaveDTO);
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(201,"Success",savedCandidate),
+                    HttpStatus.CREATED
+            );
+        } catch (Exception e) {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(500,"Internal Server Error",e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
     @GetMapping("/candidate-interview/{id}")
     public ResponseEntity<StandardResponse> getCandidateAndInterviewById(@PathVariable(value = "id") Long userId) {
-        CandidateAndInterviewDTO candidateAndInterviewDTO = userService.getCandidateAndInterviewById(userId);
-        return new ResponseEntity<StandardResponse>(
-                new StandardResponse(200,"Success", candidateAndInterviewDTO),
-                HttpStatus.FOUND
-        );
+        try {
+            CandidateAndInterviewDTO candidateAndInterviewDTO = userService.getCandidateAndInterviewById(userId);
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(200, "Success", candidateAndInterviewDTO),
+                    HttpStatus.FOUND
+            );
+        } catch (RuntimeException e) {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(404, "Candidate Not Found", e.getMessage()),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (Exception e) {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(500, "Internal Server Error", e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
-    @GetMapping("/candidate/all")
+    @GetMapping ("/candidate/all/")
     public ResponseEntity<StandardResponse> getAllCandidates() {
         List<AllCandidatesDTO> allCandidates = userService.getAllCandidates();
         return new ResponseEntity<StandardResponse>(
@@ -57,6 +73,21 @@ public class UserController {
                 HttpStatus.FOUND
         );
     }
+
+    @GetMapping(
+            path = "/candidate/all/paginated",
+            params = {"page", "size"}
+    )
+    public ResponseEntity<StandardResponse> getAllCandidates(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        PaginatedCandidateGetAllDTO paginatedCandidateGetAllDTO = userService.getAllCandidatesPaginated(page, size);
+        return new ResponseEntity<StandardResponse>(
+                new StandardResponse(200, "Success", paginatedCandidateGetAllDTO),
+                HttpStatus.OK
+        );
+    }
+
 
     @DeleteMapping("/candidate/{id}")
     public ResponseEntity<StandardResponse> deleteCandidate(@PathVariable(value = "id") Long userId) {
@@ -67,9 +98,9 @@ public class UserController {
         );
     }
 
-    @PutMapping("/candidate/{id}")
-    public ResponseEntity<StandardResponse> updateCandidate(@PathVariable(value = "id") Long userId, @RequestBody CandidateDTO candidateDTO) {
-        CandidateDTO candidateUpdateDTO = userService.updateCandidate(userId,candidateDTO);
+    @PutMapping("candidate/{id}")
+    public ResponseEntity<StandardResponse> updateCandidate(@PathVariable(value = "id") Long userId, @RequestBody CandidateUpdateDTO candidateUpdateDTO) {
+        CandidateUpdateDTO updatedCandidate = userService.updateCandidate(userId, candidateUpdateDTO);
         return new ResponseEntity<StandardResponse>(
                 new StandardResponse(200,"Success",candidateUpdateDTO),
                 HttpStatus.OK
@@ -124,12 +155,27 @@ public class UserController {
     }
     @PostMapping(path={"/candidate/feedback"},params={"user_id","rate","comment"})
     public ResponseEntity<StandardResponse> saveCandidateFeedback(@RequestParam(value = "user_id") long user_id,
-                                                        @RequestParam(value = "rate") int rate,
-                                                        @RequestParam(value="comment") String comment){
+                                                                  @RequestParam(value = "rate") int rate,
+                                                                  @RequestParam(value="comment") String comment){
         String msg=userService.saveCandidateFeedback(user_id,rate,comment);
         try {
             return new ResponseEntity<StandardResponse>(
                     new StandardResponse(200,"Success",msg),HttpStatus.CREATED
+            );
+        }
+        catch (Exception e) {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(404,"User Not Found",e.getMessage()),HttpStatus.NOT_FOUND
+            );
+        }
+    }
+
+    @GetMapping("/candidate/position/{id}")
+    public ResponseEntity<StandardResponse> getCandidatePositionById(@PathVariable(value = "id") Long userId){
+        try {
+            String position = userService.getCandidatePositionById(userId);
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(200,"Success",position),HttpStatus.OK
             );
         }
         catch (Exception e) {

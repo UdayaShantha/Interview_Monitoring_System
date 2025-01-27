@@ -1,12 +1,17 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.service.impl;
 
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewSaveDTO;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.repository.InterviewRepository;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.*;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCandidatesDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateSaveDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateAndInterviewDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.paginated.PaginatedCandidateGetAllDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.response.PositionResponse;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.PositionType;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.feign.InterviewFeignClient;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.CandidateRepository;
@@ -19,8 +24,11 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.webjars.NotFoundException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -28,6 +36,8 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceIMPL implements UserService {
@@ -49,6 +59,8 @@ public class UserServiceIMPL implements UserService {
 
     @Autowired
     private InterviewFeignClient interviewFeignClient;
+
+
 
     @Override
     public CandidateSaveDTO saveCandidate(CandidateSaveDTO candidateSaveDTO) {
@@ -108,27 +120,60 @@ public class UserServiceIMPL implements UserService {
 
         return allCandidatesDTOS;
     }
+    @Override
+    public PaginatedCandidateGetAllDTO getAllCandidatesPaginated(int page, int size) {
+        Page<Candidate> candidates = candidateRepository.findAll(PageRequest.of(page, size));
+        if (!candidates.hasContent()) {
+            throw new EntityNotFoundException("No candidates found");
+        }
+
+        List<AllCandidatesDTO> allCandidatesDTOs = new ArrayList<>();
+        for (Candidate candidate : candidates.getContent()) {
+            allCandidatesDTOs.add(modelMapper.map(candidate, AllCandidatesDTO.class));
+        }
+
+        PaginatedCandidateGetAllDTO paginatedCandidateGetAllDTO = new PaginatedCandidateGetAllDTO(
+                allCandidatesDTOs,
+                candidates.getTotalElements()
+        );
+
+        return paginatedCandidateGetAllDTO;
+    }
 
     @Override
-    @Transactional
+    public String getCandidatePositionById(Long userId) {
+        Candidate candidate = candidateRepository.findById(userId).get();
+
+        return candidate.getPositionType().name();
+    }
+
+    @Override
     public String deleteCandidate(Long userId) {
         candidateRepository.deleteById(userId);
-        userRepository.deleteById(userId);
 
-
+        Interview interview = interviewFeignClient.getInterviewByCandidateId(userId);
+        if(interview != null){
+            Long interviewId = interview.getInterviewId();
+            interviewFeignClient.deleteInterview(interviewId);
+        }
         return "Candidate with id: " + userId + " deleted";
     }
 
     @Override
     @Transactional
-    public CandidateDTO updateCandidate(Long userId, CandidateDTO candidateDTO) {
-        Candidate candidate = candidateRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("No candidate found with id " + userId));
-
-        updateCandidateFromDTO(candidate, candidateDTO);
-
-        Candidate savedCandidate = candidateRepository.save(candidate);
-        return modelMapper.map(savedCandidate, CandidateDTO.class);
+    public CandidateUpdateDTO updateCandidate(Long userId, CandidateUpdateDTO candidateUpdateDTO) {
+        Candidate candidate = candidateRepository.findById(userId).get();
+        candidate.setUsername(candidateUpdateDTO.getUsername());
+        candidate.setPassword(candidateUpdateDTO.getPassword());
+        candidate.setName(candidateUpdateDTO.getName());
+        candidate.setNic(candidateUpdateDTO.getNic());
+        candidate.setEmail(candidateUpdateDTO.getEmail());
+        candidate.setAddress(candidateUpdateDTO.getAddress());
+        candidate.setPhone(candidateUpdateDTO.getPhone());
+        candidate.setBirthday(candidateUpdateDTO.getBirthday());
+        candidate.setPositionType(candidateUpdateDTO.getPositionType());
+        candidateRepository.save(candidate);
+        return modelMapper.map(candidate, CandidateUpdateDTO.class);
     }
 
     @Override
@@ -199,17 +244,6 @@ public class UserServiceIMPL implements UserService {
     }
 
 
-    private void updateCandidateFromDTO(Candidate candidate, CandidateDTO dto) {
-        candidate.setName(dto.getName());
-        candidate.setPhone(dto.getPhone());
-        candidate.setNic(dto.getNic());
-        candidate.setAddress(dto.getAddress());
-        candidate.setEmail(dto.getEmail());
-        candidate.setBirthday(dto.getBirthday());
-        candidate.setPositionType(dto.getPositionType());
-        candidate.setPhotos(dto.getPhotos());
-    }
+
+
 }
-
-
-
