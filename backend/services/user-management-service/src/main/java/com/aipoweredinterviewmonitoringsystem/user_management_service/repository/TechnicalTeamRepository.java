@@ -18,7 +18,6 @@ public interface TechnicalTeamRepository extends CrudRepository<TechnicalTeam, L
     @Query("UPDATE TechnicalTeam t SET t.comment = :comment WHERE t.userId = :userId")
     void saveComment(@Param("userId") long userId, @Param("comment") String comment);
 
-    @Modifying
     @Transactional
     @Query("SELECT t.name FROM TechnicalTeam t WHERE t.userId = :userId")
     String findNameByUserId(@Param("userId") long userId);

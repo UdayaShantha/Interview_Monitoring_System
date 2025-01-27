@@ -4,7 +4,6 @@ import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.G
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewSaveDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
-import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.ScheduleDate;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.repository.InterviewRepository;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.service.InterviewService;
@@ -14,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -81,7 +81,7 @@ public class InterviewServiceIMPL implements InterviewService {
     }
 
     @Override
-    public List<InterviewDTO> getAllInterviewsByStatus(Status status) {
+    public List<InterviewDTO> getAllInterviewsByStatus(String status) {
         List<Interview> interviews = interviewRepository.findAllByStatusEquals(status);
         List<InterviewDTO> interviewDTOs = new ArrayList<>();
         for (Interview interview : interviews) {
@@ -89,26 +89,5 @@ public class InterviewServiceIMPL implements InterviewService {
         }
         return interviewDTOs;
     }
-
-    @Override
-    public List<InterviewDTO> getAllInterviewsByScheduleDate(LocalDate scheduleDate) {
-        List<Interview> interviews = interviewRepository.findAllByScheduleDate(scheduleDate);
-        List<InterviewDTO> interviewDTOs = new ArrayList<>();
-        for (Interview interview : interviews) {
-            interviewDTOs.add(modelMapper.map(interview, InterviewDTO.class));
-        }
-        return interviewDTOs;
-    }
-
-    @Override
-    public List<InterviewDTO> getAllInterviewsByScheduleFilter(ScheduleDate scheduleFilter) {
-        List<Interview> interviews = interviewRepository.findAllByScheduleFilter(scheduleFilter);
-        List<InterviewDTO> interviewDTOs = new ArrayList<>();
-        for (Interview interview : interviews) {
-            interviewDTOs.add(modelMapper.map(interview, InterviewDTO.class));
-        }
-        return interviewDTOs;
-    }
-
 
 }

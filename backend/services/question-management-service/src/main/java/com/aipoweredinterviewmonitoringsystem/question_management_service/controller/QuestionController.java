@@ -1,5 +1,6 @@
 package com.aipoweredinterviewmonitoringsystem.question_management_service.controller;
 
+import com.aipoweredinterviewmonitoringsystem.question_management_service.advisor.QuestionNotFoundException;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.paiginated.QuestionPaiginatedDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.GetQuestionDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.SaveQuestionDTO;
@@ -17,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -43,40 +45,37 @@ public class QuestionController {
         }
     }
 
-    @DeleteMapping(path = {"/question/remove"},params = {"questionId"})
+    @DeleteMapping(path = {"/question/remove"}, params = {"questionId"})
     public ResponseEntity<StandardResponse> deleteQuestion(@RequestParam(value = "questionId") long questionId) {
-        String message = questionService.deleteQuestion(questionId);
         try {
-            return new ResponseEntity<StandardResponse>(
-                    new StandardResponse(204,"Deleted",message),HttpStatus.OK
-            );
-        }
-        catch (Exception e) {
-            return new ResponseEntity<StandardResponse>(
-                    new StandardResponse(404,"Question Not Found",e.getMessage()),HttpStatus.NOT_FOUND
-            );
+            String message = questionService.deleteQuestion(questionId);
+            return new ResponseEntity<>(new StandardResponse(204, "Deleted", message), HttpStatus.OK);
+        } catch (QuestionNotFoundException e) {
+            return new ResponseEntity<>(new StandardResponse(404, "Question Not Found", e.getMessage()), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    @GetMapping(path = {"/get/question"},params = {"questionId"})
+    @GetMapping(path = {"/get/question"}, params = {"questionId"})
     public ResponseEntity<StandardResponse> getQuestion(@RequestParam(value = "questionId") long questionId) {
-        GetQuestionDTO getQuestionDTO=questionService.getQuestion(questionId);
         try {
-            return new ResponseEntity<StandardResponse>(
-                    new StandardResponse(200,"Success",getQuestionDTO),HttpStatus.OK
-            );
-        }
-        catch (Exception e) {
-            return new ResponseEntity<StandardResponse>(
-                    new StandardResponse(404,"Question Not Found",e.getMessage()),HttpStatus.NOT_FOUND
-            );
+            GetQuestionDTO getQuestionDTO = questionService.getQuestion(questionId);
+            if (getQuestionDTO == null) {
+                throw new QuestionNotFoundException("Question Not Found");
+            }
+            return new ResponseEntity<>(new StandardResponse(200, "Success", getQuestionDTO), HttpStatus.OK);
+        } catch (QuestionNotFoundException e) {
+            return new ResponseEntity<>(new StandardResponse(404, "Question Not Found", e.getMessage()), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PutMapping(path = {"/update/question"},params = {"questionId"})
     public ResponseEntity<StandardResponse> updateQuestion(@RequestBody GetQuestionDTO getQuestionDTO,@RequestParam(value = "questionId") long questionId) {
-        UpdateResponseDTO updateResponseDTO=questionService.updateQuestion(getQuestionDTO,questionId);
         try {
+            UpdateResponseDTO updateResponseDTO=questionService.updateQuestion(getQuestionDTO,questionId);
             return new ResponseEntity<StandardResponse>(
                     new StandardResponse(200,"Success",updateResponseDTO),HttpStatus.OK
             );
@@ -89,12 +88,12 @@ public class QuestionController {
     }
 
     @GetMapping(path={"/get/questions/paiginated"},params = {"date","page","size"})
-    public ResponseEntity<StandardResponse> getQuestionsPaiginated(@RequestParam(value = "date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date,
+    public ResponseEntity<StandardResponse> getQuestionsPaiginated(@RequestParam(value = "date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
                                                                    @RequestParam(value = "page", defaultValue = "0") int page,
                                                                    @RequestParam(value="size", defaultValue = "6") int size)
     {
-        QuestionPaiginatedDTO questionPaiginatedDTO=questionService.getQuestionsPaiginated(date,page,size);
         try {
+            QuestionPaiginatedDTO questionPaiginatedDTO=questionService.getQuestionsPaiginated(date,page,size);
             return new ResponseEntity<StandardResponse>(
                     new StandardResponse(200,"Success",questionPaiginatedDTO),HttpStatus.OK
             );
@@ -132,14 +131,14 @@ public class QuestionController {
     }
 
     @GetMapping(path={"/filter/questions/paiginated"},params = {"date","category","duration","page","size"})
-    public ResponseEntity<StandardResponse> getFilteredQuestionsPaiginated(@RequestParam(value = "date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date,
+    public ResponseEntity<StandardResponse> getFilteredQuestionsPaiginated(@RequestParam(value = "date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
                                                                            @RequestParam(value = "category")QuestionType category,
                                                                            @RequestParam(value="duration")long duration,
                                                                            @RequestParam(value = "page", defaultValue = "0") int page,
                                                                            @RequestParam(value="size", defaultValue = "6") int size)
     {
-        QuestionPaiginatedDTO questionPaiginatedDTO=questionService.getFilteredQuestionsPaiginated(date,category,duration,page,size);
         try {
+            QuestionPaiginatedDTO questionPaiginatedDTO=questionService.getFilteredQuestionsPaiginated(date,category,duration,page,size);
             return new ResponseEntity<StandardResponse>(
                     new StandardResponse(200,"Success",questionPaiginatedDTO),HttpStatus.OK
             );

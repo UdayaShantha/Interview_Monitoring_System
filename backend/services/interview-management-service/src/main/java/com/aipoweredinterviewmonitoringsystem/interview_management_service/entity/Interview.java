@@ -1,15 +1,17 @@
 package com.aipoweredinterviewmonitoringsystem.interview_management_service.entity;
 
-import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.ScheduleDate;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 
 @Entity
 @Table(name = "interview")
@@ -40,11 +42,6 @@ public class Interview {
 
     @Column(name = "interview_duration",nullable = false,columnDefinition = "double precision default 0.0")
     private double duration = 0.0;
-
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "schedule_filter",nullable = false)
-    private ScheduleDate scheduleFilter;
 
 
 }

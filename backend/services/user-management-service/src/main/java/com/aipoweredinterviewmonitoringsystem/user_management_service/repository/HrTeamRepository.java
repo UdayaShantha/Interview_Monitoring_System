@@ -18,7 +18,6 @@ public interface HrTeamRepository extends JpaRepository<HrTeam, Long> {
     @Query("UPDATE HrTeam h SET h.comment = :comment WHERE h.userId = :userId")
     void saveComment(@Param("userId") long userId, @Param("comment") String comment);
 
-    @Modifying
     @Transactional
     @Query("SELECT h.name FROM HrTeam h WHERE h.userId = :userId")
     String findNameByUserId(@Param("userId") long userId);
