@@ -9,6 +9,7 @@ import java.time.LocalDate;
 
 public interface QuestionRepository extends JpaRepository<Question, Long> {
 
-    Page<Question> findQuestionsByCreatedAtBefore(LocalDate date, Pageable pageable);
+    Page<Question> findQuestionsByCreatedAt(LocalDate date, Pageable pageable);
 
+    Page<Question> findQuestionsByCreatedAtBefore(LocalDate date, Pageable pageable);
 }

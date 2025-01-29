@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -121,13 +122,14 @@ public class QuestionController {
         return questionService.getAllQuestionCount();
     }
 
-    @GetMapping(path={"/filter/questions/paiginated"},params = {"date","category","duration","page","size"})
-    public ResponseEntity<StandardResponse> getFilteredQuestionsPaiginated(@RequestParam(value = "date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-                                                                           @RequestParam(value = "category")QuestionType category,
-                                                                           @RequestParam(value="duration")long duration,
+    @GetMapping(path={"/filter/questions/paiginated"},params = {"duration","page","size"})
+    public ResponseEntity<StandardResponse> getFilteredQuestionsPaiginated(@RequestParam(value = "date" , required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+                                                                           @RequestParam(value = "category" , required = false) QuestionType category,
+                                                                           @RequestParam(value="duration" , defaultValue = "0")long duration,
                                                                            @RequestParam(value = "page", defaultValue = "0") int page,
                                                                            @RequestParam(value="size", defaultValue = "6") int size)
     {
+
         try {
             QuestionPaiginatedDTO questionPaiginatedDTO=questionService.getFilteredQuestionsPaiginated(date,category,duration,page,size);
             return new ResponseEntity<StandardResponse>(

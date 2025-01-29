@@ -47,4 +47,9 @@ public interface QuestionQARepository extends JpaRepository<QuestionQA, Long> {
     @Transactional
     @Query("SELECT qa.content,qa.category,qa.duration FROM QuestionQA qa WHERE qa.questionId = :questionId AND qa.duration= :duration AND qa.category= :category")
     Object getCommonQuestionsPaiginatedByDurationAndCategory(long questionId, long duration, QuestionType category);
+
+
+    boolean existsByQuestionIdAndDuration(long questionId, long duration);
+
+    boolean existsByQuestionIdAndCategory(long questionId, QuestionType category);
 }

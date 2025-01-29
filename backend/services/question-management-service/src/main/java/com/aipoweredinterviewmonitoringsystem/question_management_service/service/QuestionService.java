@@ -6,11 +6,14 @@ import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.re
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.SaveQuestionDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.UpdateResponseDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.enums.QuestionType;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-public interface QuestionService {
+@Service
+public interface
+QuestionService {
     String deleteQuestion(long questionId);
 
     GetQuestionDTO getQuestion(long questionId);
