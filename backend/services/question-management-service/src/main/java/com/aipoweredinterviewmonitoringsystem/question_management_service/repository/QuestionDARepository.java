@@ -25,8 +25,8 @@ public interface QuestionDARepository extends JpaRepository<QuestionDA, Long> {
 
     @Modifying
     @Transactional
-    @Query("UPDATE QuestionDA da SET da.content= :content, da.category= :category, da.duration= :duration, da.keywords= :keywords WHERE da.questionId= :questionId")
-    Object updateQuestionDA(String content, QuestionType category, long duration, List<String> keywords, long questionId);
+    @Query("UPDATE QuestionDA q SET q.content= :content, q.category= :category, q.duration= :duration, q.keywords= :keywords WHERE q.questionId= :questionId")
+    int updateQuestionDA(String content, QuestionType category, long duration, String keywords, long questionId);
 
     @Transactional
     @Query("SELECT da.content,da.category,da.duration FROM QuestionDA da WHERE da.questionId = :questionId")
