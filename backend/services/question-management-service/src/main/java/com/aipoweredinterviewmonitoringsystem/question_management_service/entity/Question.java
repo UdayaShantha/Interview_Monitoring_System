@@ -2,10 +2,7 @@ package com.aipoweredinterviewmonitoringsystem.question_management_service.entit
 
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.enums.QuestionType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -14,6 +11,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@ToString
 @Table(name = "questions")
 @Inheritance(strategy = InheritanceType.JOINED)
 public class Question {

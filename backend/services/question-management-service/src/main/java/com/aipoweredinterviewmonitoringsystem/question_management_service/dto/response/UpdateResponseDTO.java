@@ -9,9 +9,11 @@ import java.util.List;
 @NoArgsConstructor
 @Setter
 @Getter
+@ToString
 public class UpdateResponseDTO {
     private String content;
     private QuestionType category;
     private long duration;
+
 
 }

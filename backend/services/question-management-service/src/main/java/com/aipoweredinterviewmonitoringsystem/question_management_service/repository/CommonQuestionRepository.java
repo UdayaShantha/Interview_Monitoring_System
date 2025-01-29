@@ -1,5 +1,6 @@
 package com.aipoweredinterviewmonitoringsystem.question_management_service.repository;
 
+import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.UpdateResponseDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.CommonQuestion;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.Question;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.enums.QuestionType;
@@ -52,4 +53,10 @@ public interface CommonQuestionRepository extends JpaRepository<CommonQuestion,L
     @Transactional
     @Query("SELECT c.content,c.category,c.duration FROM CommonQuestion c WHERE c.questionId = :questionId AND c.duration= :duration AND c.category= :category")
     Object getCommonQuestionsPaiginatedByDurationAndCategory(long questionId, long duration, QuestionType category);
+
+
+    boolean existsByQuestionIdAndDuration(long questionId, long duration);
+
+    boolean existsByQuestionIdAndCategory(long questionId, QuestionType category);
+
 }

@@ -23,6 +23,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -56,7 +57,7 @@ public class QuestionServiceIMPL implements QuestionService {
 
     @Override
     public String deleteQuestion(long questionId) {
-        if(questionRepository.existsById(questionId)){
+        if (questionRepository.existsById(questionId)) {
             if (commonQuestionRepository.existsById(questionId)) {
                 commonQuestionRepository.deleteAllByQuestionId(questionId);
                 return "Deleted question successfully";
@@ -139,25 +140,25 @@ public class QuestionServiceIMPL implements QuestionService {
 
     @Override
     public UpdateResponseDTO updateQuestion(GetQuestionDTO getQuestionDTO, long questionId) {
-        if(qid==questionId && getQuestion(questionId).equals(getQuestionDTO)){
+        if (qid == questionId && getQuestion(questionId).equals(getQuestionDTO)) {
             if (commonQuestionRepository.existsById(questionId)) {
-                CommonQuestion  commonQuestion=modelMapper.map(getQuestionDTO,CommonQuestion.class);
-                UpdateResponseDTO updateResponseDTO =modelMapper.map(commonQuestionRepository.updateCommonQuestion(commonQuestion.getContent(),commonQuestion.getCategory(),commonQuestion.getDuration(),commonQuestion.getKeywords(),questionId),UpdateResponseDTO.class);
+                CommonQuestion commonQuestion = modelMapper.map(getQuestionDTO, CommonQuestion.class);
+                UpdateResponseDTO updateResponseDTO = modelMapper.map(commonQuestionRepository.updateCommonQuestion(commonQuestion.getContent(), commonQuestion.getCategory(), commonQuestion.getDuration(), commonQuestion.getKeywords(), questionId), UpdateResponseDTO.class);
                 return updateResponseDTO;
             }
             if (questionDARepository.existsById(questionId)) {
-                QuestionDA questionDA=modelMapper.map(getQuestionDTO,QuestionDA.class);
-                UpdateResponseDTO updateResponseDTO =modelMapper.map(questionDARepository.updateQuestionDA(questionDA.getContent(),questionDA.getCategory(),questionDA.getDuration(),questionDA.getKeywords(),questionId),UpdateResponseDTO.class);
+                QuestionDA questionDA = modelMapper.map(getQuestionDTO, QuestionDA.class);
+                UpdateResponseDTO updateResponseDTO = modelMapper.map(questionDARepository.updateQuestionDA(questionDA.getContent(), questionDA.getCategory(), questionDA.getDuration(), questionDA.getKeywords(), questionId), UpdateResponseDTO.class);
                 return updateResponseDTO;
             }
             if (questionQARepository.existsById(questionId)) {
-                QuestionQA questionQA=modelMapper.map(getQuestionDTO,QuestionQA.class);
-                UpdateResponseDTO updateResponseDTO =modelMapper.map(questionQARepository.updateQuestionQA(questionQA.getContent(),questionQA.getCategory(),questionQA.getDuration(),questionQA.getKeywords(),questionId),UpdateResponseDTO.class);
+                QuestionQA questionQA = modelMapper.map(getQuestionDTO, QuestionQA.class);
+                UpdateResponseDTO updateResponseDTO = modelMapper.map(questionQARepository.updateQuestionQA(questionQA.getContent(), questionQA.getCategory(), questionQA.getDuration(), questionQA.getKeywords(), questionId), UpdateResponseDTO.class);
                 return updateResponseDTO;
             }
             if (questionSERepository.existsById(questionId)) {
-                QuestionSE questionSE=modelMapper.map(getQuestionDTO,QuestionSE.class);
-                UpdateResponseDTO updateResponseDTO =modelMapper.map(questionSERepository.updateQuestionSE(questionSE.getContent(),questionSE.getCategory(),questionSE.getDuration(),questionSE.getKeywords(),questionId),UpdateResponseDTO.class);
+                QuestionSE questionSE = modelMapper.map(getQuestionDTO, QuestionSE.class);
+                UpdateResponseDTO updateResponseDTO = modelMapper.map(questionSERepository.updateQuestionSE(questionSE.getContent(), questionSE.getCategory(), questionSE.getDuration(), questionSE.getKeywords(), questionId), UpdateResponseDTO.class);
                 return updateResponseDTO;
             }
         }
@@ -176,8 +177,7 @@ public class QuestionServiceIMPL implements QuestionService {
             commonQuestion.setCreatedAt(LocalDate.now());
             commonQuestionRepository.save(commonQuestion);
             return "Question saved successfully";
-        }
-        else if (saveQuestionDTO.getCategory() == QuestionType.QA) {
+        } else if (saveQuestionDTO.getCategory() == QuestionType.QA) {
             QuestionQA questionQA = new QuestionQA();
             questionQA.setDuration(saveQuestionDTO.getDuration());
             questionQA.setContent(saveQuestionDTO.getContent());
@@ -186,8 +186,7 @@ public class QuestionServiceIMPL implements QuestionService {
             questionQA.setCreatedAt(LocalDate.now());
             questionQARepository.save(questionQA);
             return "Question saved successfully";
-        }
-        else if (saveQuestionDTO.getCategory() == QuestionType.DATA_ANALYTICS) {
+        } else if (saveQuestionDTO.getCategory() == QuestionType.DATA_ANALYTICS) {
             QuestionDA questionDA = new QuestionDA();
             questionDA.setDuration(saveQuestionDTO.getDuration());
             questionDA.setContent(saveQuestionDTO.getContent());
@@ -196,8 +195,7 @@ public class QuestionServiceIMPL implements QuestionService {
             questionDA.setCreatedAt(LocalDate.now());
             questionDARepository.save(questionDA);
             return "Question saved successfully";
-        }
-        else if (saveQuestionDTO.getCategory() == QuestionType.SOFTWARE_ENGINEERING) {
+        } else if (saveQuestionDTO.getCategory() == QuestionType.SOFTWARE_ENGINEERING) {
             QuestionSE questionSE = new QuestionSE();
             questionSE.setDuration(saveQuestionDTO.getDuration());
             questionSE.setContent(saveQuestionDTO.getContent());
@@ -206,8 +204,7 @@ public class QuestionServiceIMPL implements QuestionService {
             questionSE.setCreatedAt(LocalDate.now());
             questionSERepository.save(questionSE);
             return "Question saved successfully";
-        }
-        else {
+        } else {
             return null;
         }
     }
@@ -215,8 +212,8 @@ public class QuestionServiceIMPL implements QuestionService {
 
     @Override
     public QuestionPaiginatedDTO getQuestionsPaiginated(LocalDate date, int page, int size) {
-        Page<Question> questions=questionRepository.findQuestionsByCreatedAtBefore(date, PageRequest.of(page,size, Sort.by("createdAt").descending()));
-        if(!questions.isEmpty()) {
+        Page<Question> questions = questionRepository.findQuestionsByCreatedAtBefore(date, PageRequest.of(page, size, Sort.by("createdAt").descending()));
+        if (!questions.isEmpty()) {
             for (Question question : questions) {
                 if (commonQuestionRepository.existsById(question.getQuestionId())) {
                     QuestionPaiginatedDTO questionPaiginatedDTO = modelMapper.map(commonQuestionRepository.getCommonQuestionsPaiginated(question.getQuestionId()), QuestionPaiginatedDTO.class);
@@ -236,7 +233,7 @@ public class QuestionServiceIMPL implements QuestionService {
                 }
             }
         }
-            return null;
+        return null;
     }
 
     @Override
@@ -270,101 +267,135 @@ public class QuestionServiceIMPL implements QuestionService {
     }
 
 
-
     @Override
-    public QuestionPaiginatedDTO getFilteredQuestionsPaiginated(LocalDate date,QuestionType category, long duration, int page, int size) {
-        if(category != null && duration == 0) {
-            Page<Question> questions = questionRepository.findQuestionsByCreatedAtBefore(date, PageRequest.of(page, size, Sort.by("createdAt").descending()));
-            if (!questions.isEmpty()) {
-                for (Question question : questions) {
-                    if (commonQuestionRepository.existsById(question.getQuestionId()) && commonQuestionRepository.existsByCategory(category)) {
-                        QuestionPaiginatedDTO questionPaiginatedDTO=modelMapper.map(commonQuestionRepository.getCommonQuestionsPaiginatedByCategory(question.getQuestionId(),category),QuestionPaiginatedDTO.class);
-                        return questionPaiginatedDTO;
-                    }
-                    if (questionDARepository.existsById(question.getQuestionId()) && questionDARepository.existsByCategory(category)) {
-                        QuestionPaiginatedDTO questionPaiginatedDTO=modelMapper.map(questionDARepository.getCommonQuestionsPaiginatedByCategory(question.getQuestionId(),category),QuestionPaiginatedDTO.class);
-                        return questionPaiginatedDTO;
-                    }
-                    if (questionQARepository.existsById(question.getQuestionId()) && questionQARepository.existsByCategory(category)) {
-                        QuestionPaiginatedDTO questionPaiginatedDTO=modelMapper.map(questionQARepository.getCommonQuestionsPaiginatedByCategory(question.getQuestionId(),category),QuestionPaiginatedDTO.class);
-                        return questionPaiginatedDTO;
-                    }
-                    if (questionSERepository.existsById(question.getQuestionId()) && questionSERepository.existsByCategory(category)) {
-                        QuestionPaiginatedDTO questionPaiginatedDTO=modelMapper.map(questionSERepository.getCommonQuestionsPaiginatedByCategory(question.getQuestionId(),category),QuestionPaiginatedDTO.class);
-                        return questionPaiginatedDTO;
-                    }
+    public QuestionPaiginatedDTO getFilteredQuestionsPaiginated(LocalDate date, QuestionType category, long duration, int page, int size) {
+        //create the list
+        List<UpdateResponseDTO> questionDTOList = new ArrayList<>();
+
+        // Fetch questions based on creation date and pagination
+        Page<Question> questions = null  ;
+        if(date == null){
+            questions = questionRepository.findAll(PageRequest.of(page, size, Sort.by("createdAt").descending()));
+        }else {
+            questions = questionRepository.findQuestionsByCreatedAt(
+                    date, PageRequest.of(page, size, Sort.by("createdAt").descending())
+            );
+        }
+
+        // Collect all matching questions
+        for (Question question : questions) {
+            System.out.println("questions" + question);
+//            System.out.println(duration);
+            if (category != null && duration == 0) {
+                if (commonQuestionRepository.existsById(question.getQuestionId()) && commonQuestionRepository.existsByQuestionIdAndCategory(question.getQuestionId(), category)) {
+                    questionDTOList.add(modelMapper.map(
+                                    commonQuestionRepository.findById(question.getQuestionId()), UpdateResponseDTO.class
+                            )
+                    );
+                }
+                if (questionDARepository.existsById(question.getQuestionId()) && questionDARepository.existsByQuestionIdAndCategory(question.getQuestionId(), category)) {
+                    questionDTOList.add(modelMapper.map(
+                                    questionDARepository.findById(question.getQuestionId()), UpdateResponseDTO.class
+                            )
+                    );
+                }
+                if (questionQARepository.existsById(question.getQuestionId()) && questionQARepository.existsByCategory(category)) {
+                    questionDTOList.add(modelMapper.map(
+                                    questionQARepository.findById(question.getQuestionId()), UpdateResponseDTO.class
+                            )
+                    );
+                }
+                if (questionSERepository.existsById(question.getQuestionId()) && questionSERepository.existsByQuestionIdAndCategory(question.getQuestionId(), category)) {
+                    questionDTOList.add(modelMapper.map(
+                                    questionSERepository.findById(question.getQuestionId()), UpdateResponseDTO.class
+                            )
+                    );
+                }
+            }
+
+            if (category == null && duration != 0) {
+                if (commonQuestionRepository.existsById(question.getQuestionId()) && commonQuestionRepository.existsByQuestionIdAndDuration(question.getQuestionId(), duration)) {
+                    questionDTOList.add(modelMapper.map(
+                                    commonQuestionRepository.findById(question.getQuestionId()), UpdateResponseDTO.class
+                            )
+                    );
+                }
+                if (questionDARepository.existsById(question.getQuestionId()) && questionDARepository.existsByQuestionIdAndDuration(question.getQuestionId(), duration)) {
+                    questionDTOList.add(modelMapper.map(
+                                    questionDARepository.findById(question.getQuestionId()), UpdateResponseDTO.class
+                            )
+                    );
+                }
+                if (questionQARepository.existsById(question.getQuestionId()) && questionQARepository.existsByQuestionIdAndDuration(question.getQuestionId(), duration)) {
+                    questionDTOList.add(modelMapper.map(
+                                    questionQARepository.findById(question.getQuestionId()), UpdateResponseDTO.class
+                            )
+                    );
+                }
+                if (questionSERepository.existsById(question.getQuestionId()) && questionSERepository.existsByQuestionIdAndDuration(question.getQuestionId(), duration)) {
+                    questionDTOList.add(modelMapper.map(
+                                    questionSERepository.findById(question.getQuestionId()), UpdateResponseDTO.class
+                            )
+                    );
+                }
+            }
+
+            if (category != null && duration != 0) {
+                if (commonQuestionRepository.existsById(question.getQuestionId()) && commonQuestionRepository.existsByQuestionIdAndDuration(question.getQuestionId(), duration) && commonQuestionRepository.existsByQuestionIdAndCategory(question.getQuestionId(), category)) {
+                    questionDTOList.add(modelMapper.map(
+                                    commonQuestionRepository.findById(question.getQuestionId()), UpdateResponseDTO.class
+                            )
+                    );
+                }
+                if (questionDARepository.existsById(question.getQuestionId()) && questionDARepository.existsByQuestionIdAndDuration(question.getQuestionId(), duration) && questionDARepository.existsByQuestionIdAndCategory(question.getQuestionId(), category)) {
+                    questionDTOList.add(modelMapper.map(
+                                    questionDARepository.findById(question.getQuestionId()), UpdateResponseDTO.class
+                            )
+                    );
+                }
+                if (questionQARepository.existsById(question.getQuestionId()) && questionQARepository.existsByQuestionIdAndDuration(question.getQuestionId(), duration) && questionQARepository.existsByQuestionIdAndCategory(question.getQuestionId(), category)) {
+                    questionDTOList.add(modelMapper.map(
+                                    questionQARepository.findById(question.getQuestionId()), UpdateResponseDTO.class
+                            )
+                    );
+                }
+                if (questionSERepository.existsById(question.getQuestionId()) && questionSERepository.existsByQuestionIdAndDuration(question.getQuestionId(), duration) && questionSERepository.existsByQuestionIdAndCategory(question.getQuestionId(), category)) {
+                    questionDTOList.add(modelMapper.map(
+                                    questionSERepository.findById(question.getQuestionId()), UpdateResponseDTO.class
+                            )
+                    );
+                }
+            }
+
+            if (category == null && duration == 0) {
+                if (commonQuestionRepository.existsById(question.getQuestionId())) {
+                    questionDTOList.add(modelMapper.map(
+                                    commonQuestionRepository.findById(question.getQuestionId()), UpdateResponseDTO.class
+                            )
+                    );
+                }
+                if (questionDARepository.existsById(question.getQuestionId())) {
+                    questionDTOList.add(modelMapper.map(
+                                    questionDARepository.findById(question.getQuestionId()), UpdateResponseDTO.class
+                            )
+                    );
+                }
+                if (questionQARepository.existsById(question.getQuestionId())) {
+                    questionDTOList.add(modelMapper.map(
+                                    questionQARepository.findById(question.getQuestionId()), UpdateResponseDTO.class
+                            )
+                    );
+                }
+                if (questionSERepository.existsById(question.getQuestionId())) {
+                    questionDTOList.add(modelMapper.map(
+                                    questionSERepository.findById(question.getQuestionId()), UpdateResponseDTO.class
+                            )
+                    );
                 }
             }
         }
-        if(category == null && duration != 0){
-            Page<Question> questions = questionRepository.findQuestionsByCreatedAtBefore(date, PageRequest.of(page, size, Sort.by("createdAt").descending()));
-            if (!questions.isEmpty()) {
-                for (Question question : questions) {
-                    if (commonQuestionRepository.existsById(question.getQuestionId()) && commonQuestionRepository.existsByDuration(duration)) {
-                        QuestionPaiginatedDTO questionPaiginatedDTO=modelMapper.map(commonQuestionRepository.getCommonQuestionsPaiginatedByDuration(question.getQuestionId(),duration),QuestionPaiginatedDTO.class);
-                        return questionPaiginatedDTO;
-                    }
-                    if (questionDARepository.existsById(question.getQuestionId()) && questionDARepository.existsByDuration(duration)) {
-                        QuestionPaiginatedDTO questionPaiginatedDTO=modelMapper.map(questionDARepository.getCommonQuestionsPaiginatedByDuration(question.getQuestionId(),duration),QuestionPaiginatedDTO.class);
-                        return questionPaiginatedDTO;
-                    }
-                    if (questionQARepository.existsById(question.getQuestionId()) && questionQARepository.existsByDuration(duration)) {
-                        QuestionPaiginatedDTO questionPaiginatedDTO=modelMapper.map(questionQARepository.getCommonQuestionsPaiginatedByDuration(question.getQuestionId(),duration),QuestionPaiginatedDTO.class);
-                        return questionPaiginatedDTO;
-                    }
-                    if (questionSERepository.existsById(question.getQuestionId()) && questionSERepository.existsByDuration(duration)) {
-                        QuestionPaiginatedDTO questionPaiginatedDTO=modelMapper.map(questionSERepository.getCommonQuestionsPaiginatedByDuration(question.getQuestionId(),duration),QuestionPaiginatedDTO.class);
-                        return questionPaiginatedDTO;
-                    }
-                }
-            }
-        }
-        if (category != null && duration != 0) {
-            Page<Question> questions = questionRepository.findQuestionsByCreatedAtBefore(date, PageRequest.of(page, size, Sort.by("createdAt").descending()));
-            if (!questions.isEmpty()) {
-                for (Question question : questions) {
-                    if (commonQuestionRepository.existsById(question.getQuestionId()) && commonQuestionRepository.existsByDuration(duration) && commonQuestionRepository.existsByCategory(category)) {
-                        QuestionPaiginatedDTO questionPaiginatedDTO = modelMapper.map(commonQuestionRepository.getCommonQuestionsPaiginatedByDurationAndCategory(question.getQuestionId(), duration, category), QuestionPaiginatedDTO.class);
-                        return questionPaiginatedDTO;
-                    }
-                    if (questionDARepository.existsById(question.getQuestionId()) && questionDARepository.existsByDuration(duration) && questionDARepository.existsByCategory(category)) {
-                        QuestionPaiginatedDTO questionPaiginatedDTO = modelMapper.map(questionDARepository.getCommonQuestionsPaiginatedByDurationAndCategory(question.getQuestionId(), duration, category), QuestionPaiginatedDTO.class);
-                        return questionPaiginatedDTO;
-                    }
-                    if (questionQARepository.existsById(question.getQuestionId()) && questionQARepository.existsByDuration(duration) && questionQARepository.existsByCategory(category)) {
-                        QuestionPaiginatedDTO questionPaiginatedDTO = modelMapper.map(questionQARepository.getCommonQuestionsPaiginatedByDurationAndCategory(question.getQuestionId(), duration, category), QuestionPaiginatedDTO.class);
-                        return questionPaiginatedDTO;
-                    }
-                    if (questionSERepository.existsById(question.getQuestionId()) && questionSERepository.existsByDuration(duration) && questionSERepository.existsByCategory(category)) {
-                        QuestionPaiginatedDTO questionPaiginatedDTO = modelMapper.map(questionSERepository.getCommonQuestionsPaiginatedByDurationAndCategory(question.getQuestionId(), duration, category), QuestionPaiginatedDTO.class);
-                        return questionPaiginatedDTO;
-                    }
-                }
-            }
-        }
-        if(category == null && duration == 0){
-            Page<Question> questions=questionRepository.findQuestionsByCreatedAtBefore(date, PageRequest.of(page,size, Sort.by("createdAt").descending()));
-            if(!questions.isEmpty()) {
-                for (Question question : questions) {
-                    if(commonQuestionRepository.existsById(question.getQuestionId())) {
-                        QuestionPaiginatedDTO questionPaiginatedDTO=modelMapper.map(commonQuestionRepository.getCommonQuestionsPaiginated(question.getQuestionId()),QuestionPaiginatedDTO.class);
-                        return questionPaiginatedDTO;
-                    }
-                    if(questionDARepository.existsById(question.getQuestionId())) {
-                        QuestionPaiginatedDTO questionPaiginatedDTO=modelMapper.map(questionDARepository.getQuestionDASPaiginated(question.getQuestionId()),QuestionPaiginatedDTO.class);
-                        return questionPaiginatedDTO;
-                    }
-                    if(questionQARepository.existsById(question.getQuestionId())) {
-                        QuestionPaiginatedDTO questionPaiginatedDTO= modelMapper.map(questionQARepository.getQuestionQASPaiginated(question.getQuestionId()),QuestionPaiginatedDTO.class);
-                        return questionPaiginatedDTO;
-                    }
-                    if(questionSERepository.existsById(question.getQuestionId())) {
-                        QuestionPaiginatedDTO questionPaiginatedDTO=modelMapper.map(questionSERepository.getQuestionSESPaiginated(question.getQuestionId()),QuestionPaiginatedDTO.class);
-                        return questionPaiginatedDTO;
-                    }
-                }
-            }
-        }
-        return null;
+        QuestionPaiginatedDTO list = new QuestionPaiginatedDTO();
+        list.setUpdateResponseDTOS(questionDTOList);
+        return list;
     }
 }
