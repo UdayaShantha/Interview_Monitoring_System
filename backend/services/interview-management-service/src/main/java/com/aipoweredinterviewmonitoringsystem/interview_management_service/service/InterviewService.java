@@ -3,6 +3,8 @@ package com.aipoweredinterviewmonitoringsystem.interview_management_service.serv
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.*;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.paginated.PaginatedInterviewGetAllDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Result;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
 
 import java.util.List;
 
@@ -17,11 +19,23 @@ public interface InterviewService {
 
     InterviewUpdateDTO updateInterview(Long interviewId, InterviewUpdateDTO interviewUpdateDTO);
 
-    List<InterviewDTO> getAllInterviewsByStatus(String status);
+    List<InterviewDTO> getAllInterviewsByStatus(Status status);
 
     Interview getInterviewByCandidateId(Long candidateId);
 
     PaginatedInterviewGetAllDTO getAllInterviewsPaginated(int page, int size);
 
     InterviewStatusUpdateDTO updateInterviewStatus(Long interviewId, InterviewStatusUpdateDTO interviewStatusUpdateDTO);
+
+    double getCompletedInterviewPercentage();
+
+    double calculateSuccessRate();
+
+    double calculateTodayProjection();
+
+    double calculateUnfinishedInterviewsPercentage();
+
+    double getTodayCancelledInterviewsPercentage();
+
+    List<InterviewDTO> getAllInterviewsByResult(Result result);
 }

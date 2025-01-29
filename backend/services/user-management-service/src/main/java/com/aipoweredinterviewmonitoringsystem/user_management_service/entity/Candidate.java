@@ -57,4 +57,3 @@ public class Candidate extends User{
     @Column(name = "candidate_comment")
     private String comment;
 }
-

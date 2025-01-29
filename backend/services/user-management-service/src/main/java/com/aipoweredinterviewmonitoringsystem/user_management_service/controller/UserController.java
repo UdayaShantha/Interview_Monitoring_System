@@ -155,8 +155,8 @@ public class UserController {
     }
     @PostMapping(path={"/candidate/feedback"},params={"user_id","rate","comment"})
     public ResponseEntity<StandardResponse> saveCandidateFeedback(@RequestParam(value = "user_id") long user_id,
-                                                        @RequestParam(value = "rate") int rate,
-                                                        @RequestParam(value="comment") String comment){
+                                                                  @RequestParam(value = "rate") int rate,
+                                                                  @RequestParam(value="comment") String comment){
         String msg=userService.saveCandidateFeedback(user_id,rate,comment);
         try {
             return new ResponseEntity<StandardResponse>(
