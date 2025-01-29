@@ -7,8 +7,8 @@ import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.re
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.UpdateResponseDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.enums.QuestionType;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 public interface QuestionService {
     String deleteQuestion(long questionId);
@@ -19,7 +19,7 @@ public interface QuestionService {
 
     String saveQuestion(SaveQuestionDTO saveQuestionDTO);
 
-    QuestionPaiginatedDTO getQuestionsPaiginated(LocalDateTime date, int page, int size);
+    QuestionPaiginatedDTO getQuestionsPaiginated(LocalDate date, int page, int size);
 
     long getCommonQuestionCount();
 
@@ -31,5 +31,5 @@ public interface QuestionService {
 
     long getAllQuestionCount();
 
-    QuestionPaiginatedDTO getFilteredQuestionsPaiginated(LocalDateTime date,QuestionType category, long duration, int page, int size);
+    QuestionPaiginatedDTO getFilteredQuestionsPaiginated(LocalDate date,QuestionType category, long duration, int page, int size);
 }
