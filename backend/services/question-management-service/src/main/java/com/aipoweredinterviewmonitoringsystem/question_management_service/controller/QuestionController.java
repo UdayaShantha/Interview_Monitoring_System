@@ -71,18 +71,15 @@ public class QuestionController {
         }
     }
 
-    @PutMapping(path = {"/update/question"},params = {"questionId"})
-    public ResponseEntity<StandardResponse> updateQuestion(@RequestBody GetQuestionDTO getQuestionDTO,@RequestParam(value = "questionId") long questionId) {
+    @PutMapping(path = {"/update/question"}, params = {"questionId"})
+    public ResponseEntity<StandardResponse> updateQuestion(@RequestBody GetQuestionDTO getQuestionDTO, @RequestParam(value = "questionId") long questionId) {
         try {
-            UpdateResponseDTO updateResponseDTO=questionService.updateQuestion(getQuestionDTO,questionId);
-            return new ResponseEntity<StandardResponse>(
-                    new StandardResponse(200,"Success",updateResponseDTO),HttpStatus.OK
-            );
-        }
-        catch (Exception e) {
-            return new ResponseEntity<StandardResponse>(
-                    new StandardResponse(204,"No Content",e.getMessage()),HttpStatus.NOT_FOUND
-            );
+            UpdateResponseDTO updateResponseDTO = questionService.updateQuestion(getQuestionDTO, questionId);
+            return new ResponseEntity<>(new StandardResponse(200, "Success", updateResponseDTO), HttpStatus.OK);
+        } catch (QuestionNotFoundException e) {
+            return new ResponseEntity<>(new StandardResponse(404, "Question Not Found", e.getMessage()), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

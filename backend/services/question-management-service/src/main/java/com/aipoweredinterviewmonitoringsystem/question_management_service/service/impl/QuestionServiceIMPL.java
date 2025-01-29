@@ -14,6 +14,7 @@ import com.aipoweredinterviewmonitoringsystem.question_management_service.entity
 
 import com.aipoweredinterviewmonitoringsystem.question_management_service.repository.*;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.service.QuestionService;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -51,8 +52,6 @@ public class QuestionServiceIMPL implements QuestionService {
     @Autowired
     private ModelMapper modelMapper;
 
-    private long qid;
-
     @Override
     public String deleteQuestion(long questionId) {
         if(questionRepository.existsById(questionId)){
@@ -79,7 +78,6 @@ public class QuestionServiceIMPL implements QuestionService {
     @Override
     public GetQuestionDTO getQuestion(long questionId) {
         if (questionRepository.existsById(questionId)) {
-            this.qid = questionId;
             if (commonQuestionRepository.existsById(questionId)) {
                 Object result = commonQuestionRepository.getCommonQuestionByQuestionId(questionId);
                 if (result == null) {
@@ -136,31 +134,55 @@ public class QuestionServiceIMPL implements QuestionService {
         return null;
     }
 
+    @Transactional
     @Override
     public UpdateResponseDTO updateQuestion(GetQuestionDTO getQuestionDTO, long questionId) {
-        if(qid==questionId && getQuestion(questionId).equals(getQuestionDTO)){
+        GetQuestionDTO getQuestionDTO1=getQuestion(questionId);
+        if(getQuestionDTO1 != null) {
+            int updatedRows = 0;
             if (commonQuestionRepository.existsById(questionId)) {
-                CommonQuestion  commonQuestion=modelMapper.map(getQuestionDTO,CommonQuestion.class);
-                UpdateResponseDTO updateResponseDTO =modelMapper.map(commonQuestionRepository.updateCommonQuestion(commonQuestion.getContent(),commonQuestion.getCategory(),commonQuestion.getDuration(),commonQuestion.getKeywords(),questionId),UpdateResponseDTO.class);
-                return updateResponseDTO;
+                updatedRows = commonQuestionRepository.updateCommonQuestion(
+                        getQuestionDTO.getContent(),
+                        getQuestionDTO.getCategory(),
+                        getQuestionDTO.getDuration(),
+                        String.join(",", getQuestionDTO.getKeywords()),  // Convert list to string
+                        questionId
+                );
+            } else if (questionDARepository.existsById(questionId)) {
+                updatedRows = questionDARepository.updateQuestionDA(
+                        getQuestionDTO.getContent(),
+                        getQuestionDTO.getCategory(),
+                        getQuestionDTO.getDuration(),
+                        String.join(",", getQuestionDTO.getKeywords()),
+                        questionId
+                );
+            } else if (questionQARepository.existsById(questionId)) {
+                updatedRows = questionQARepository.updateQuestionQA(
+                        getQuestionDTO.getContent(),
+                        getQuestionDTO.getCategory(),
+                        getQuestionDTO.getDuration(),
+                        String.join(",", getQuestionDTO.getKeywords()),
+                        questionId
+                );
+            } else if (questionSERepository.existsById(questionId)) {
+                updatedRows = questionSERepository.updateQuestionSE(
+                        getQuestionDTO.getContent(),
+                        getQuestionDTO.getCategory(),
+                        getQuestionDTO.getDuration(),
+                        String.join(",", getQuestionDTO.getKeywords()),
+                        questionId
+                );
             }
-            if (questionDARepository.existsById(questionId)) {
-                QuestionDA questionDA=modelMapper.map(getQuestionDTO,QuestionDA.class);
-                UpdateResponseDTO updateResponseDTO =modelMapper.map(questionDARepository.updateQuestionDA(questionDA.getContent(),questionDA.getCategory(),questionDA.getDuration(),questionDA.getKeywords(),questionId),UpdateResponseDTO.class);
-                return updateResponseDTO;
+            if (updatedRows == 0) {
+                throw new RuntimeException("Failed to update question with ID: " + questionId);
             }
-            if (questionQARepository.existsById(questionId)) {
-                QuestionQA questionQA=modelMapper.map(getQuestionDTO,QuestionQA.class);
-                UpdateResponseDTO updateResponseDTO =modelMapper.map(questionQARepository.updateQuestionQA(questionQA.getContent(),questionQA.getCategory(),questionQA.getDuration(),questionQA.getKeywords(),questionId),UpdateResponseDTO.class);
-                return updateResponseDTO;
-            }
-            if (questionSERepository.existsById(questionId)) {
-                QuestionSE questionSE=modelMapper.map(getQuestionDTO,QuestionSE.class);
-                UpdateResponseDTO updateResponseDTO =modelMapper.map(questionSERepository.updateQuestionSE(questionSE.getContent(),questionSE.getCategory(),questionSE.getDuration(),questionSE.getKeywords(),questionId),UpdateResponseDTO.class);
-                return updateResponseDTO;
-            }
+            return new UpdateResponseDTO(
+                    getQuestionDTO.getContent(),
+                    getQuestionDTO.getCategory(),
+                    getQuestionDTO.getDuration()
+            );
         }
-        return null;
+        throw new QuestionNotFoundException("Question Not Found for ID: " + questionId);
     }
 
     @Override
