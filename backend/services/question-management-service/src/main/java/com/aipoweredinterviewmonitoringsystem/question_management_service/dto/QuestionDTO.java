@@ -6,6 +6,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @NoArgsConstructor
@@ -15,6 +16,6 @@ import java.time.LocalDateTime;
 public class QuestionDTO {
     private long questionId;
     private QuestionType category;
-    private LocalDateTime createdAt;
+    private LocalDate createdAt;
 
 }
