@@ -73,7 +73,8 @@ public class UserController {
     }
 
     @GetMapping("/candidate-interview/{id}")
-    public ResponseEntity<StandardResponse> getCandidateAndInterviewById(@PathVariable(value = "id") Long userId) {
+    public ResponseEntity<StandardResponse> getCandidateAndInterviewById(@PathVariable(value = "id") Long userId,@RequestHeader(value = "loggedInUser") String username) {
+        System.out.println("loggedInUser : "+username);
         try {
             CandidateAndInterviewDTO candidateAndInterviewDTO = userService.getCandidateAndInterviewById(userId);
             return new ResponseEntity<StandardResponse>(
