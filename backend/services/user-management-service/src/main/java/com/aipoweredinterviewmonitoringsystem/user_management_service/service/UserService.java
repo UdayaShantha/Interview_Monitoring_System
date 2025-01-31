@@ -7,6 +7,10 @@ import java.util.List;
 
 public interface UserService {
 
+    String generateToken(String username);
+
+    void validateToken(String token);
+
     CandidateSaveDTO saveCandidate(CandidateSaveDTO candidateSaveDTO);
 
     CandidateAndInterviewDTO getCandidateAndInterviewById(Long userId);

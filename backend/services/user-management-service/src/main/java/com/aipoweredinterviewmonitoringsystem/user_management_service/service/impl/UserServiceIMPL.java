@@ -18,6 +18,7 @@ import com.aipoweredinterviewmonitoringsystem.user_management_service.repository
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.HrTeamRepository;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.TechnicalTeamRepository;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.UserRepository;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.service.JwtService;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.UserService;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.util.StandardResponse;
 import jakarta.persistence.EntityNotFoundException;
@@ -27,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.webjars.NotFoundException;
 
@@ -60,11 +62,27 @@ public class UserServiceIMPL implements UserService {
     @Autowired
     private InterviewFeignClient interviewFeignClient;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private JwtService jwtService;
+
+
+    @Override
+    public String generateToken(String username) {
+        return jwtService.generateToken(username);
+    }
+
+    @Override
+    public void validateToken(String token) {
+        jwtService.validateToken(token);
+    }
 
     @Override
     public CandidateSaveDTO saveCandidate(CandidateSaveDTO candidateSaveDTO) {
         Candidate candidate = modelMapper.map(candidateSaveDTO, Candidate.class);
+        candidate.setPassword(passwordEncoder.encode(candidate.getPassword()));
         candidate.setUserType(UserType.CANDIDATE);
         candidate.setCreatedAt(LocalDateTime.now());
         Candidate savedCandidate = candidateRepository.save(candidate);

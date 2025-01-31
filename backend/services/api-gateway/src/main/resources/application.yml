@@ -1,0 +1,42 @@
+server:
+  port: 9191
+
+spring:
+  application:
+    name: API-GATEWAY
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true # Enable service discovery with Eureka
+      routes:
+        - id: USER-MANAGEMENT-SERVICE
+          uri: lb://USER-MANAGEMENT-SERVICE
+          predicates:
+            - Path=/api/v1/users/**
+          filters:
+            - AuthenticationFilter
+
+
+        - id: INTERVIEW-MANAGEMENT-SERVICE
+          uri: lb://INTERVIEW-MANAGEMENT-SERVICE
+          predicates:
+            - Path=/api/v1/interviews/**
+          filters:
+            - AuthenticationFilter
+
+        - id: QUESTION-MANAGEMENT-SERVICE
+          uri: lb://QUESTION-MANAGEMENT-SERVICE
+          predicates:
+            - Path=/api/v1/questions/**
+            - Path=/api/v1/keywords/**
+
+        - id: REPORT-GENERATION-SERVICE
+          uri: lb://REPORT-GENERATION-SERVICE
+          predicates:
+            - Path=/api/v1/reports/**
+
+eureka:
+  client:
+    service-url:
+      default-zone: http://localhost:8761/eureka/

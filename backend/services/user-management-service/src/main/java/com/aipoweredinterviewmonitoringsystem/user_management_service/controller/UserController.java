@@ -4,16 +4,22 @@ import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCan
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateSaveDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateAndInterviewDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.auth.AuthRequest;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.paginated.PaginatedCandidateGetAllDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.response.PositionResponse;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.*;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.User;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.CandidateRepository;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.service.JwtService;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.UserService;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.util.StandardResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,8 +33,30 @@ public class UserController {
     @Autowired
     private CandidateRepository candidateRepository;
 
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
-    @PostMapping("/candidate")
+
+    @PostMapping("/token")
+    public String getToken(@RequestBody AuthRequest authRequest) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
+        ;
+        if (authentication.isAuthenticated()) {
+            return userService.generateToken(authRequest.getUsername());
+        }else {
+            throw new RuntimeException("Invalid username or password");
+        }
+
+    }
+
+    @GetMapping("/validate")
+    public String validateToken(@RequestParam(value = "token") String token) {
+        userService.validateToken(token);
+        return "Token is valid";
+    }
+
+    @PostMapping("/candidate/save")
     public ResponseEntity<StandardResponse> saveCandidate(@RequestBody CandidateSaveDTO candidateSaveDTO) {
         try {
             CandidateSaveDTO savedCandidate = userService.saveCandidate(candidateSaveDTO);
@@ -70,7 +98,7 @@ public class UserController {
         List<AllCandidatesDTO> allCandidates = userService.getAllCandidates();
         return new ResponseEntity<StandardResponse>(
                 new StandardResponse(200,"Success",allCandidates),
-                HttpStatus.FOUND
+                HttpStatus.OK
         );
     }
 
