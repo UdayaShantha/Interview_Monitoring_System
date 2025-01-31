@@ -22,7 +22,7 @@ QuestionService {
 
     String saveQuestion(SaveQuestionDTO saveQuestionDTO);
 
-    QuestionPaiginatedDTO getQuestionsPaiginated(LocalDate date, int page, int size);
+    QuestionPaiginatedDTO getQuestionsPaiginated(int page, int size);
 
     long getCommonQuestionCount();
 

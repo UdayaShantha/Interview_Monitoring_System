@@ -79,13 +79,12 @@ public class QuestionController {
         }
     }
 
-    @GetMapping(path={"/get/questions/paiginated"},params = {"date","page","size"})
-    public ResponseEntity<StandardResponse> getQuestionsPaiginated(@RequestParam(value = "date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-                                                                   @RequestParam(value = "page", defaultValue = "0") int page,
+    @GetMapping(path={"/get/questions/paiginated"},params = {"page","size"})
+    public ResponseEntity<StandardResponse> getQuestionsPaiginated(@RequestParam(value = "page", defaultValue = "0") int page,
                                                                    @RequestParam(value="size", defaultValue = "6") int size)
     {
         try {
-            QuestionPaiginatedDTO questionPaiginatedDTO=questionService.getQuestionsPaiginated(date,page,size);
+            QuestionPaiginatedDTO questionPaiginatedDTO=questionService.getQuestionsPaiginated(page,size);
             return new ResponseEntity<StandardResponse>(
                     new StandardResponse(200,"Success",questionPaiginatedDTO),HttpStatus.OK
             );
