@@ -87,6 +87,8 @@
 			<version>0.55</version>
 		</dependency>
 
+
+
 	</dependencies>
 
 	<dependencyManagement>
@@ -117,6 +119,9 @@
 					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
+
+
+
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>

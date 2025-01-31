@@ -13,7 +13,9 @@ import jakarta.persistence.EntityNotFoundException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class InterviewServiceIMPL implements InterviewService {
@@ -107,7 +110,7 @@ public class InterviewServiceIMPL implements InterviewService {
             Interview interview = interviewRepository.findById(interviewId).get();
 
             // Validate if the status from the DTO is in the allowed list
-            List<Status> allowedStatuses = Arrays.asList(Status.UPCOMING, Status.IN_PROGRESS, Status.COMPLETED, Status.POSTPONED);
+            List<Status> allowedStatuses = Arrays.asList(Status.UPCOMING, Status.COMPLETED, Status.POSTPONED);
             if (!allowedStatuses.contains(interviewStatusUpdateDTO.getStatus())) {
                 throw new IllegalArgumentException("Invalid status selected");
             }
@@ -264,6 +267,71 @@ public class InterviewServiceIMPL implements InterviewService {
         }
         return interviewDTOs;
     }
+
+
+    @Override
+    public Page<GetAllInterviewsDTO> filterInterviews(String positionType, Status status, LocalDate scheduleDate, String scheduleTimeStatus, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Interview> filteredInterviews = interviewRepository.findAll(pageable);
+
+        List<Interview> interviewList = filteredInterviews.getContent();
+
+        if (positionType != null && !positionType.isEmpty()) {
+            interviewList = interviewList.stream()
+                    .filter(interview -> {
+                        ResponseEntity<StandardResponse> response = userFeignClient.getCandidatePositionById(interview.getCandidateId());
+                        return response.getBody() != null && response.getBody().getData() != null &&
+                                response.getBody().getData().toString().equalsIgnoreCase(positionType);
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        if (status != null) {
+            interviewList = interviewList.stream()
+                    .filter(interview -> interview.getStatus() == status)
+                    .collect(Collectors.toList());
+        }
+
+        if (scheduleDate != null) {
+            interviewList = interviewList.stream()
+                    .filter(interview -> interview.getScheduleDate().equals(scheduleDate))
+                    .collect(Collectors.toList());
+        }
+
+        if (scheduleTimeStatus != null && !scheduleTimeStatus.isEmpty()) {
+            LocalDate today = LocalDate.now();
+            interviewList = interviewList.stream()
+                    .filter(interview -> {
+                        LocalDate interviewDate = interview.getScheduleDate();
+                        switch (scheduleTimeStatus.toLowerCase()) {
+                            case "today":
+                                return interviewDate.isEqual(today);
+                            case "tomorrow":
+                                return interviewDate.isEqual(today.plusDays(1));
+                            case "thisweek":
+                                return interviewDate.isAfter(today.minusDays(1)) &&
+                                        interviewDate.isBefore(today.plusDays(7));
+                            case "thismonth":
+                                return interviewDate.getMonth() == today.getMonth() &&
+                                        interviewDate.getYear() == today.getYear();
+                            default:
+                                return false;
+                        }
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        List<GetAllInterviewsDTO> interviewDTOs = interviewList.stream()
+                .map(interview -> {
+                    GetAllInterviewsDTO dto = modelMapper.map(interview, GetAllInterviewsDTO.class);
+                    dto.setPositionType(userFeignClient.getCandidatePositionById(interview.getCandidateId()).getBody().getData().toString());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(interviewDTOs, pageable, filteredInterviews.getTotalElements());
+    }
+
 
 
 

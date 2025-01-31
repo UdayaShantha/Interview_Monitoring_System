@@ -5,7 +5,9 @@ import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.p
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Result;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
+import org.springframework.data.domain.Page;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface InterviewService {
@@ -38,4 +40,10 @@ public interface InterviewService {
     double getTodayCancelledInterviewsPercentage();
 
     List<InterviewDTO> getAllInterviewsByResult(Result result);
+
+    Page<GetAllInterviewsDTO> filterInterviews(String positionType, Status status, LocalDate scheduleDate, String scheduleTimeStatus, int page, int size);
+
+
+
+
 }
