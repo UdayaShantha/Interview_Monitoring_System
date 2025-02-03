@@ -3,6 +3,7 @@ package com.aipoweredinterviewmonitoringsystem.question_management_service.contr
 import com.aipoweredinterviewmonitoringsystem.question_management_service.advisor.QuestionNotFoundException;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.paiginated.QuestionPaiginatedDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.GetQuestionDTO;
+import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.QuestionResponseDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.SaveQuestionDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.UpdateResponseDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.CommonQuestion;
@@ -146,5 +147,18 @@ public class QuestionController {
             );
         }
     }
-}
 
+    @GetMapping(value={"/get/interview/questions"},params = {"positionType"})
+    public ResponseEntity<StandardResponse> getInterviewQuestionsShuffle(@RequestParam(value = "positionType") String positionType) {
+        try {
+            List<QuestionResponseDTO> questionResponseDTOS = questionService.getInterviewQuestionsShuffle(positionType);
+            if (questionResponseDTOS.isEmpty()) {
+                throw new QuestionNotFoundException("Question Not Found");
+            }
+            return new ResponseEntity<>(new StandardResponse(200, "Success", questionResponseDTOS), HttpStatus.OK);
+        }catch (Exception e) {
+            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+}

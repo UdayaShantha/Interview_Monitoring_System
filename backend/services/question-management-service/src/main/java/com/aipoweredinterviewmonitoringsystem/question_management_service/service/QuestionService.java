@@ -3,12 +3,14 @@ package com.aipoweredinterviewmonitoringsystem.question_management_service.servi
 
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.paiginated.QuestionPaiginatedDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.GetQuestionDTO;
+import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.QuestionResponseDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.SaveQuestionDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.UpdateResponseDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.enums.QuestionType;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface QuestionService {
     String deleteQuestion(long questionId);
@@ -32,4 +34,6 @@ public interface QuestionService {
     long getAllQuestionCount();
 
     QuestionPaiginatedDTO getFilteredQuestionsPaiginated(LocalDate date,QuestionType category, long duration, int page, int size);
+
+    List<QuestionResponseDTO> getInterviewQuestionsShuffle(String positionType);
 }

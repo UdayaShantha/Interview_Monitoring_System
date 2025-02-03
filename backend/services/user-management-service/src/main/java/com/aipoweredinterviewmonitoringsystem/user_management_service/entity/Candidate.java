@@ -1,6 +1,7 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.entity;
 
 
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.PositionType;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
 import jakarta.persistence.*;
@@ -56,5 +57,8 @@ public class Candidate extends User{
 
     @Column(name = "candidate_comment")
     private String comment;
+
+    @OneToOne(mappedBy = "candidate")
+    private Interview interview;
 }
 

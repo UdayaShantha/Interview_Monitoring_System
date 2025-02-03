@@ -14,9 +14,9 @@ import java.util.List;
 
 @Repository
 @EnableJpaRepositories
+@Transactional
 public interface QuestionSERepository extends JpaRepository<QuestionSE, Long> {
     @Modifying
-    @Transactional
     @Query("DELETE FROM QuestionSE se WHERE se.questionId = :questionId")
     void deleteAllByQuestionId(long questionId);
 
@@ -24,27 +24,30 @@ public interface QuestionSERepository extends JpaRepository<QuestionSE, Long> {
     Object getQuestionSEByQuestionId(long questionId);
 
     @Modifying
-    @Transactional
     @Query("UPDATE QuestionSE q SET q.content= :content, q.category= :category, q.duration= :duration, q.keywords= :keywords WHERE q.questionId= :questionId")
     int updateQuestionSE(String content, QuestionType category, long duration, String keywords, long questionId);
 
-    @Transactional
     @Query("SELECT se.content,se.category,se.duration FROM QuestionSE se WHERE se.questionId = :questionId")
     Object getQuestionSESPaiginated(long questionId);
 
     boolean existsByCategory(QuestionType category);
 
-    @Transactional
     @Query("SELECT se.content,se.category,se.duration FROM QuestionSE se WHERE se.questionId = :questionId AND se.category= :category")
     Object getCommonQuestionsPaiginatedByCategory(long questionId, QuestionType category);
 
     boolean existsByDuration(long duration);
 
-    @Transactional
     @Query("SELECT se.content,se.category,se.duration FROM QuestionSE se WHERE se.questionId = :questionId AND se.duration= :duration")
     Object getCommonQuestionsPaiginatedByDuration(long questionId, long duration);
 
-    @Transactional
     @Query("SELECT se.content,se.category,se.duration FROM QuestionSE se WHERE se.questionId = :questionId AND se.duration= :duration AND se.category= :category")
     Object getCommonQuestionsPaiginatedByDurationAndCategory(long questionId, long duration, QuestionType category);
+
+    @Query("SELECT se.content FROM QuestionSE se ORDER BY RAND() LIMIT :count_se")
+    List<String> getQuestionsSEByPoistionAndCount(int count_se);
+
+    boolean getQuestionSEByContentEquals(String content);
+
+    @Query("SELECT se.duration FROM QuestionSE se WHERE se.content= :content")
+    int getQuestionSEDurationByContentEquals(String content);
 }

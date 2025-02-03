@@ -13,38 +13,40 @@ import java.util.List;
 
 @Repository
 @EnableJpaRepositories
+@Transactional
 public interface QuestionQARepository extends JpaRepository<QuestionQA, Long> {
     @Modifying
-    @Transactional
     @Query("DELETE FROM QuestionQA qa WHERE qa.questionId = :questionId")
     void deleteAllByQuestionId(long questionId);
 
-    @Transactional
     @Query("SELECT qa.content,qa.category,qa.duration,qa.keywords FROM QuestionQA qa WHERE qa.questionId = :questionId")
     Object getQuestionQAByQuestionId(long questionId);
 
     @Modifying
-    @Transactional
     @Query("UPDATE QuestionQA q SET q.content= :content, q.category= :category, q.duration= :duration, q.keywords= :keywords WHERE q.questionId= :questionId")
     int updateQuestionQA(String content, QuestionType category, long duration, String keywords, long questionId);
 
-    @Transactional
     @Query("SELECT qa.content,qa.category,qa.duration FROM QuestionQA qa WHERE qa.questionId = :questionId")
     Object getQuestionQASPaiginated(long questionId);
 
     boolean existsByCategory(QuestionType category);
 
-    @Transactional
     @Query("SELECT qa.content,qa.category,qa.duration FROM QuestionQA qa WHERE qa.questionId = :questionId AND qa.category= :category")
     Object getCommonQuestionsPaiginatedByCategory(long questionId, QuestionType category);
 
     boolean existsByDuration(long duration);
 
-    @Transactional
     @Query("SELECT qa.content,qa.category,qa.duration FROM QuestionQA qa WHERE qa.questionId = :questionId AND qa.duration= :duration")
     Object getCommonQuestionsPaiginatedByDuration(long questionId, long duration);
 
-    @Transactional
     @Query("SELECT qa.content,qa.category,qa.duration FROM QuestionQA qa WHERE qa.questionId = :questionId AND qa.duration= :duration AND qa.category= :category")
     Object getCommonQuestionsPaiginatedByDurationAndCategory(long questionId, long duration, QuestionType category);
+
+    @Query("SELECT qa.content FROM QuestionQA qa ORDER BY RAND() LIMIT :count_qa")
+    List<String> getQuestionsQAByPoistionAndCount(int count_qa);
+
+    boolean getQuestionQAByContentEquals(String content);
+
+    @Query("SELECT qa.duration FROM QuestionQA qa WHERE qa.content= :content")
+    int getQuestionQADurationByContentEquals(String content);
 }
