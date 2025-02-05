@@ -10,4 +10,9 @@ public interface UserFeignClient {
     ResponseEntity<StandardResponse> getCandidatePositionById(@PathVariable(value = "id") Long userId);
 
 
+   /* @GetMapping("api/v1/users/candidates/positions")
+    ResponseEntity<StandardResponse> getCandidatesByPosition(@RequestParam(value = "position") String positionType);*/
+
+
+
 }
