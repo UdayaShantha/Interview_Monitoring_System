@@ -1,7 +1,6 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.dto;
 
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.PositionType;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

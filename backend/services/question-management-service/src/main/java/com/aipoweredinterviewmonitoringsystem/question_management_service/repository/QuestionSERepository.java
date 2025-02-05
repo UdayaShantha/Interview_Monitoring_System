@@ -43,6 +43,7 @@ public interface QuestionSERepository extends JpaRepository<QuestionSE, Long> {
     @Query("SELECT se.content,se.category,se.duration FROM QuestionSE se WHERE se.questionId = :questionId AND se.duration= :duration AND se.category= :category")
     Object getCommonQuestionsPaiginatedByDurationAndCategory(long questionId, long duration, QuestionType category);
 
+
     @Query("SELECT se.content FROM QuestionSE se ORDER BY RAND() LIMIT :count_se")
     List<String> getQuestionsSEByPoistionAndCount(int count_se);
 
@@ -50,4 +51,10 @@ public interface QuestionSERepository extends JpaRepository<QuestionSE, Long> {
 
     @Query("SELECT se.duration FROM QuestionSE se WHERE se.content= :content")
     int getQuestionSEDurationByContentEquals(String content);
+
+
+    boolean existsByQuestionIdAndDuration(long questionId, long duration);
+
+    boolean existsByQuestionIdAndCategory(long questionId, QuestionType category);
+
 }

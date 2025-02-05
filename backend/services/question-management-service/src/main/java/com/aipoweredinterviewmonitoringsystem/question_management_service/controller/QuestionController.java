@@ -6,10 +6,7 @@ import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.re
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.QuestionResponseDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.SaveQuestionDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.UpdateResponseDTO;
-import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.CommonQuestion;
-import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.QuestionDA;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.QuestionQA;
-import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.QuestionSE;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.enums.QuestionType;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.service.QuestionService;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.util.StandardResponse;
@@ -17,12 +14,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
 
 @RestController
 @CrossOrigin
@@ -85,13 +80,12 @@ public class QuestionController {
         }
     }
 
-    @GetMapping(path={"/get/questions/paiginated"},params = {"date","page","size"})
-    public ResponseEntity<StandardResponse> getQuestionsPaiginated(@RequestParam(value = "date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-                                                                   @RequestParam(value = "page", defaultValue = "0") int page,
+    @GetMapping(path={"/get/questions/paiginated"},params = {"page","size"})
+    public ResponseEntity<StandardResponse> getQuestionsPaiginated(@RequestParam(value = "page", defaultValue = "0") int page,
                                                                    @RequestParam(value="size", defaultValue = "6") int size)
     {
         try {
-            QuestionPaiginatedDTO questionPaiginatedDTO=questionService.getQuestionsPaiginated(date,page,size);
+            QuestionPaiginatedDTO questionPaiginatedDTO=questionService.getQuestionsPaiginated(page,size);
             return new ResponseEntity<StandardResponse>(
                     new StandardResponse(200,"Success",questionPaiginatedDTO),HttpStatus.OK
             );
@@ -128,13 +122,14 @@ public class QuestionController {
         return questionService.getAllQuestionCount();
     }
 
-    @GetMapping(path={"/filter/questions/paiginated"},params = {"date","category","duration","page","size"})
-    public ResponseEntity<StandardResponse> getFilteredQuestionsPaiginated(@RequestParam(value = "date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-                                                                           @RequestParam(value = "category")QuestionType category,
-                                                                           @RequestParam(value="duration")long duration,
+    @GetMapping(path={"/filter/questions/paiginated"},params = {"duration","page","size"})
+    public ResponseEntity<StandardResponse> getFilteredQuestionsPaiginated(@RequestParam(value = "date" , required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+                                                                           @RequestParam(value = "category" , required = false) QuestionType category,
+                                                                           @RequestParam(value="duration" , defaultValue = "0")long duration,
                                                                            @RequestParam(value = "page", defaultValue = "0") int page,
                                                                            @RequestParam(value="size", defaultValue = "6") int size)
     {
+
         try {
             QuestionPaiginatedDTO questionPaiginatedDTO=questionService.getFilteredQuestionsPaiginated(date,category,duration,page,size);
             return new ResponseEntity<StandardResponse>(
@@ -147,6 +142,7 @@ public class QuestionController {
             );
         }
     }
+
 
     @GetMapping(value={"/get/interview/questions"},params = {"positionType"})
     public ResponseEntity<StandardResponse> getInterviewQuestionsShuffle(@RequestParam(value = "positionType") String positionType) {
@@ -162,3 +158,6 @@ public class QuestionController {
     }
 
 }
+
+}
+

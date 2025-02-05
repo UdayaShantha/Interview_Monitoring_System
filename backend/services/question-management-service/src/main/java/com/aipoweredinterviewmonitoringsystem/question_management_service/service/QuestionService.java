@@ -7,12 +7,15 @@ import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.re
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.SaveQuestionDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.UpdateResponseDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.enums.QuestionType;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface QuestionService {
+@Service
+public interface
+QuestionService {
     String deleteQuestion(long questionId);
 
     GetQuestionDTO getQuestion(long questionId);
@@ -21,7 +24,7 @@ public interface QuestionService {
 
     String saveQuestion(SaveQuestionDTO saveQuestionDTO);
 
-    QuestionPaiginatedDTO getQuestionsPaiginated(LocalDate date, int page, int size);
+    QuestionPaiginatedDTO getQuestionsPaiginated(int page, int size);
 
     long getCommonQuestionCount();
 
@@ -35,5 +38,7 @@ public interface QuestionService {
 
     QuestionPaiginatedDTO getFilteredQuestionsPaiginated(LocalDate date,QuestionType category, long duration, int page, int size);
 
+
     List<QuestionResponseDTO> getInterviewQuestionsShuffle(String positionType);
 }
+

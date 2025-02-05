@@ -30,4 +30,3 @@ public interface UserService {
 
     String getCandidatePositionById(Long userId);
 }
-

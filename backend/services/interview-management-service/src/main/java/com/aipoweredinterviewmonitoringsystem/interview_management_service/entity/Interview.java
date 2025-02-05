@@ -1,13 +1,15 @@
 package com.aipoweredinterviewmonitoringsystem.interview_management_service.entity;
 
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Result;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 import org.aspectj.weaver.patterns.TypePatternQuestions;
 import org.springframework.context.annotation.Profile;
+
 
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -22,7 +24,6 @@ import java.util.List;
 @NoArgsConstructor
 @Data
 public class Interview {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "interview_id")
@@ -53,5 +54,9 @@ public class Interview {
 
     @Column(name = "interview_duration",nullable = false,columnDefinition = "double precision default 0.0")
     private double duration = 0.0;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "result",nullable = false)
+    private Result result;
 
 }

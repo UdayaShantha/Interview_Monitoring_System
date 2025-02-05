@@ -2,14 +2,12 @@ package com.aipoweredinterviewmonitoringsystem.user_management_service.dto;
 
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.User;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.PositionType;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.Date;
 import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
@@ -26,4 +24,5 @@ public class CandidateDTO {
     private PositionType positionType;
     private LocalTime startTime;
     private LocalDate scheduleDate;
+
 }

@@ -4,6 +4,7 @@ import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.*
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.paginated.PaginatedInterviewGetAllDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.response.QuestionResponseDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Result;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.feign.UserFeignClient;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.repository.InterviewRepository;
@@ -189,7 +190,7 @@ public class InterviewServiceIMPL implements InterviewService {
     }
 
     @Override
-    public List<InterviewDTO> getAllInterviewsByStatus(String status) {
+    public List<InterviewDTO> getAllInterviewsByStatus(Status status) {
         List<Interview> interviews = interviewRepository.findAllByStatusEquals(status);
         List<InterviewDTO> interviewDTOs = new ArrayList<>();
         for (Interview interview : interviews) {
@@ -204,6 +205,94 @@ public class InterviewServiceIMPL implements InterviewService {
             return interviewRepository.findByCandidateId(candidateId);
         }
         return null;
+    }
+
+    @Override
+    public double getCompletedInterviewPercentage() {
+
+        long totalInterviews = interviewRepository.count();
+        long completedInterviews = interviewRepository.countByStatus(Status.COMPLETED);
+
+        if (totalInterviews == 0) {
+            return 0.0;
+        }
+
+        return (double) completedInterviews / totalInterviews * 100;
+    }
+
+    @Override
+    public double calculateSuccessRate() {
+
+        List<Interview> completedInterviews = interviewRepository.findAllByStatusEquals(Status.COMPLETED);
+        int totalCompleted = completedInterviews.size();
+
+        if (totalCompleted == 0) {
+            return 0.0;
+        }
+        long selectedCount = completedInterviews.stream()
+                .filter(interview -> interview.getResult() == Result.SELECTED)
+                .count();
+
+        return (selectedCount / (double) totalCompleted) * 100;
+    }
+
+
+    @Override
+    public double calculateTodayProjection() {
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+
+        List<Interview> todayInterviews = interviewRepository.findAllByScheduleDateEquals(today);
+
+        int totalInterviews = todayInterviews.size();
+
+
+        long completedInterviews = todayInterviews.stream()
+                .filter(interview ->
+                        interview.getStatus() == Status.COMPLETED ||
+                                (interview.getStartTime() != null && interview.getStartTime().isBefore(now))
+                ).count();
+
+
+        return totalInterviews > 0 ? ((double) completedInterviews / totalInterviews) * 100 : 0.0;
+    }
+
+
+
+    @Override
+    public double calculateUnfinishedInterviewsPercentage() {
+        long totalInterviewsToday = interviewRepository.countTotalInterviewsToday();
+        long unfinishedInterviewsToday = interviewRepository.countUnfinishedInterviewsToday();
+
+        if (totalInterviewsToday == 0) {
+            return 0.0;
+        }
+
+        return ((double) unfinishedInterviewsToday / totalInterviewsToday) * 100;
+    }
+
+    @Override
+    public double getTodayCancelledInterviewsPercentage() {
+        LocalDate today = LocalDate.now();
+        long cancelledCount = interviewRepository.countByStatusAndDate(Status.CANCELLED, today);
+        long totalCount = interviewRepository.countByDate(today);
+
+        if (totalCount == 0) {
+            return 0.0;
+        }
+
+        return (double) cancelledCount / totalCount * 100;
+    }
+
+
+    @Override
+    public List<InterviewDTO> getAllInterviewsByResult(Result result) {
+        List<Interview> interviews = interviewRepository.findAllByResultEquals(result);
+        List<InterviewDTO> interviewDTOs = new ArrayList<>();
+        for (Interview interview : interviews) {
+            interviewDTOs.add(modelMapper.map(interview, InterviewDTO.class));
+        }
+        return interviewDTOs;
     }
 
 
