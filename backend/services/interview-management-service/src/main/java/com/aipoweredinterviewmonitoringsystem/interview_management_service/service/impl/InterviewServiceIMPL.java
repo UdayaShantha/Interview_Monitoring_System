@@ -60,8 +60,7 @@ public class InterviewServiceIMPL implements InterviewService {
 
         List<GetAllInterviewsDTO> interviewDTOs = new ArrayList<>();
         for (Interview interview : interviews) {
-            Candidate candidate=interview.getCandidate();
-            Long candidateId = candidate.getUserId();
+            Long candidateId = interview.getCandidateId();
             if (candidateId != null && candidateId > 0) { // check if candidate ID is valid
                 ResponseEntity<StandardResponse> response = userFeignClient.getCandidatePositionById(candidateId);
                 if (response.getBody() != null && response.getBody().getData() != null) {
@@ -87,8 +86,7 @@ public class InterviewServiceIMPL implements InterviewService {
 
         List<GetAllInterviewsDTO> interviewDTOs = new ArrayList<>();
         for (Interview interview : interviews) {
-            Candidate candidate=interview.getCandidate();
-            Long candidateId = candidate.getUserId();
+            Long candidateId = interview.getCandidateId();
             if (candidateId != null && candidateId > 0) { // check if candidate ID is valid
                 ResponseEntity<StandardResponse> response = userFeignClient.getCandidatePositionById(candidateId);
                 if (response.getBody() != null && response.getBody().getData() != null) {
@@ -120,9 +118,9 @@ public class InterviewServiceIMPL implements InterviewService {
 
 
             // Validate if the status from the DTO is in the allowed list
-            List<Status> allowedStatuses = Arrays.asList(Status.UPCOMING, Status.COMPLETED, Status.POSTPONED);
+            List<Status> allowedStatus = Arrays.asList(Status.UPCOMING, Status.COMPLETED, Status.POSTPONED);
 
-            if (!allowedStatuses.contains(interviewStatusUpdateDTO.getStatus())) {
+            if (!allowedStatus.contains(interviewStatusUpdateDTO.getStatus())) {
                 throw new IllegalArgumentException("Invalid status selected");
             }
             interview.setStatus(interviewStatusUpdateDTO.getStatus());
@@ -139,7 +137,8 @@ public class InterviewServiceIMPL implements InterviewService {
     public List<QuestionResponseDTO> getInterviewQuestions(long interviewId) {
         if(interviewRepository.existsById(interviewId)){
             List<QuestionResponseDTO> questionResponseDTOs = new ArrayList<>();
-            Candidate candidate=interviewRepository.findById(interviewId).get().getCandidate();
+            long candidateID=interviewRepository.findById(interviewId).get().getCandidateId();
+            Candidate candidate=interviewRepository.findCandidateByCandidateId(candidateID);
             if(candidate.getPositionType().equals("SOFTWARE_ENGINEER")){
                 questionResponseDTOs.add(
                         webClient.get().uri("localhost:8083/api/v1/questions//get/interview/questions").retrieve().bodyToMono(QuestionResponseDTO.class).block()

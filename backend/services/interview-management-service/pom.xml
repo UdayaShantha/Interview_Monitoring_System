@@ -94,9 +94,15 @@
 			<artifactId>spring-webflux</artifactId>
 			<version>6.2.0</version>
 		</dependency>
+        <dependency>
+            <groupId>com.aipoweredinterviewmonitoringsystem</groupId>
+            <artifactId>user-management-service</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
 
 
-	</dependencies>
+    </dependencies>
 
 	<dependencyManagement>
 		<dependencies>
@@ -126,9 +132,6 @@
 					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
-
-
-
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
