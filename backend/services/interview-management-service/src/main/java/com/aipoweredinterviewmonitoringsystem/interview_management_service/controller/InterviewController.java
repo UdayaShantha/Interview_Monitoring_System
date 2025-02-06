@@ -19,10 +19,13 @@ import com.aipoweredinterviewmonitoringsystem.interview_management_service.servi
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.util.StandardResponse;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -187,6 +190,24 @@ public class InterviewController {
                 HttpStatus.OK
         );
     }
+
+
+    @GetMapping("/filter")
+    public ResponseEntity<StandardResponse> filterInterviews(
+            @RequestParam(required = false) String positionType,
+            @RequestParam(required = false) Status status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate scheduleDate,
+            @RequestParam(required = false) String scheduleTimeStatus,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<GetAllInterviewsDTO> filteredInterviews = interviewService.filterInterviews(positionType, status, scheduleDate, scheduleTimeStatus, page, size);
+        return new ResponseEntity<>(
+                new StandardResponse(200, "Success", filteredInterviews),
+                HttpStatus.OK
+        );
+    }
+
 
 
 

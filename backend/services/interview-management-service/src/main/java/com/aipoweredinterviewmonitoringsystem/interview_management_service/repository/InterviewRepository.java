@@ -53,4 +53,5 @@ public interface InterviewRepository extends JpaRepository<Interview, Long> {
     @Query("SELECT COUNT(i) FROM Interview i WHERE i.scheduleDate = :today")
     long countByDate(LocalDate today);
 
+
 }
