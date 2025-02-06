@@ -7,6 +7,7 @@ import com.aipoweredinterviewmonitoringsystem.question_management_service.config
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.QuestionDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.paiginated.QuestionPaiginatedDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.GetQuestionDTO;
+import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.QuestionResponseDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.SaveQuestionDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.dto.response.UpdateResponseDTO;
 import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.*;
@@ -24,9 +25,13 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 
+
+import java.util.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 
 
 import java.time.LocalDate;
@@ -53,6 +58,8 @@ public class QuestionServiceIMPL implements QuestionService {
 
     @Autowired
     private ModelMapper modelMapper;
+
+//    private static final int MAX_DURATION = 45 * 60;
 
     @Override
     public String deleteQuestion(long questionId) {
@@ -139,6 +146,54 @@ public class QuestionServiceIMPL implements QuestionService {
     @Transactional
     @Override
     public UpdateResponseDTO updateQuestion(GetQuestionDTO getQuestionDTO, long questionId) {
+
+        GetQuestionDTO getQuestionDTO1=getQuestion(questionId);
+        if(getQuestionDTO1 != null) {
+            int updatedRows = 0;
+            if (commonQuestionRepository.existsById(questionId)) {
+                updatedRows = commonQuestionRepository.updateCommonQuestion(
+                        getQuestionDTO.getContent(),
+                        getQuestionDTO.getCategory(),
+                        getQuestionDTO.getDuration(),
+                        String.join(",", getQuestionDTO.getKeywords()),
+                        questionId
+                );
+            } else if (questionDARepository.existsById(questionId)) {
+                updatedRows = questionDARepository.updateQuestionDA(
+                        getQuestionDTO.getContent(),
+                        getQuestionDTO.getCategory(),
+                        getQuestionDTO.getDuration(),
+                        String.join(",", getQuestionDTO.getKeywords()),
+                        questionId
+                );
+            } else if (questionQARepository.existsById(questionId)) {
+                updatedRows = questionQARepository.updateQuestionQA(
+                        getQuestionDTO.getContent(),
+                        getQuestionDTO.getCategory(),
+                        getQuestionDTO.getDuration(),
+                        String.join(",", getQuestionDTO.getKeywords()),
+                        questionId
+                );
+            } else if (questionSERepository.existsById(questionId)) {
+                updatedRows = questionSERepository.updateQuestionSE(
+                        getQuestionDTO.getContent(),
+                        getQuestionDTO.getCategory(),
+                        getQuestionDTO.getDuration(),
+                        String.join(",", getQuestionDTO.getKeywords()),
+                        questionId
+                );
+            }
+            if (updatedRows == 0) {
+                throw new RuntimeException("Failed to update question with ID: " + questionId);
+            }
+            return new UpdateResponseDTO(
+                    getQuestionDTO.getContent(),
+                    getQuestionDTO.getCategory(),
+                    getQuestionDTO.getDuration()
+            );
+        }
+        throw new QuestionNotFoundException("Question Not Found for ID: " + questionId);
+
         return null;
 //        if (qid == questionId && getQuestion(questionId).equals(getQuestionDTO)) {
 //            if (commonQuestionRepository.existsById(questionId)) {
@@ -210,6 +265,7 @@ public class QuestionServiceIMPL implements QuestionService {
 //                throw new QuestionNotFoundException("Question Not Found for ID: " + questionId);
 //            }
 //        }
+
     }
 
 
@@ -461,4 +517,78 @@ public class QuestionServiceIMPL implements QuestionService {
         list.setUpdateResponseDTOS(questionDTOList);
         return list;
     }
+
+//  Question Shuffling algorithm --->
+    @Override
+    public List<QuestionResponseDTO> getInterviewQuestionsShuffle(String positionType) {
+        if(positionType != null){
+            List<QuestionResponseDTO> questionResponseDTOList=new ArrayList<>();
+            if(positionType.equalsIgnoreCase("SOFTWARE_ENGINEER")){
+                int count_c=5;
+                int count_se=8;
+                questionResponseDTOList.add(
+                        modelMapper.map(commonQuestionRepository.getCommonQuestionByCount(count_c),QuestionResponseDTO.class)
+                );
+                questionResponseDTOList.add(
+                        modelMapper.map(questionSERepository.getQuestionsSEByPoistionAndCount(count_se),QuestionResponseDTO.class)
+                );
+            }
+            if(positionType.equalsIgnoreCase("QA")){
+                int count_c=5;
+                int count_qa=7;
+                questionResponseDTOList.add(
+                        modelMapper.map(commonQuestionRepository.getCommonQuestionByCount(count_c),QuestionResponseDTO.class)
+                );
+                questionResponseDTOList.add(
+                        modelMapper.map(questionQARepository.getQuestionsQAByPoistionAndCount(count_qa),QuestionResponseDTO.class)
+                );
+            }
+            if(positionType.equalsIgnoreCase("DATA_ANALYTICS")){
+                int count_c=5;
+                int count_da=8;
+                questionResponseDTOList.add(
+                        modelMapper.map(commonQuestionRepository.getCommonQuestionByCount(count_c),QuestionResponseDTO.class)
+                );
+                questionResponseDTOList.add(
+                        modelMapper.map(questionDARepository.getQuestionsDAByPositionAndCount(count_da),QuestionResponseDTO.class)
+                );
+            }
+            fisherYatesShuffle(questionResponseDTOList);
+//          return adjustDuration(questionResponseDTOList, MAX_DURATION);
+            return questionResponseDTOList;
+        }
+        throw new QuestionNotFoundException("Questions not found");
+    }
+
+    private void fisherYatesShuffle(List<QuestionResponseDTO> questionResponseDTOList) {
+        Random random = new Random();
+        for (int i = questionResponseDTOList.size() - 1; i > 0; i--) {
+            int j = random.nextInt(i + 1);
+            Collections.swap(questionResponseDTOList, i, j);
+        }
+    }
+
+//    private List<QuestionResponseDTO> adjustDuration(List<QuestionResponseDTO> questionResponseDTOList, int maxDuration) {
+//        int totalDuration = 0;
+//        for(QuestionResponseDTO questionResponseDTO : questionResponseDTOList) {
+//            if(commonQuestionRepository.getCommonQuestionByContentEquals(questionResponseDTO.getContent())){
+//                totalDuration += commonQuestionRepository.getCommonQuestionDurationByContentEquals(questionResponseDTO.getContent());
+//            }
+//            if(questionDARepository.getQuestionDAByContentEquals(questionResponseDTO.getContent())){
+//                totalDuration += questionDARepository.getQuestionDADurationByContentEquals(questionResponseDTO.getContent());
+//            }
+//            if(questionSERepository.getQuestionSEByContentEquals(questionResponseDTO.getContent())){
+//                totalDuration += questionSERepository.getQuestionSEDurationByContentEquals(questionResponseDTO.getContent());
+//            }
+//            if(questionQARepository.getQuestionQAByContentEquals(questionResponseDTO.getContent())){
+//                totalDuration += questionQARepository.getQuestionQADurationByContentEquals(questionResponseDTO.getContent());
+//            }
+//        }
+//        if (totalDuration <= maxDuration){
+//            return questionResponseDTOList;
+//        }
+//
+//        // Sort by duration (longest first)
+//
+//    }
 }

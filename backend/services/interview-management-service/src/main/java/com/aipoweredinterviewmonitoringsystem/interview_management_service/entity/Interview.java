@@ -7,6 +7,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import org.aspectj.weaver.patterns.TypePatternQuestions;
+import org.springframework.context.annotation.Profile;
+
+
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -25,8 +29,12 @@ public class Interview {
     @Column(name = "interview_id")
     private long interviewId;
 
-    @Column(name = "candidate_id", nullable = false, unique = true)
-    private long candidateId;
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "candidate_id", referencedColumnName = "user_id",nullable = false,unique = true)
+    private Candidate candidate;
+
+//    @Column(name = "candidate_id", nullable = false, unique = true)
+//    private long candidateId;
 
     @Column(name = "schedule_date",nullable = false)
     private LocalDate scheduleDate;

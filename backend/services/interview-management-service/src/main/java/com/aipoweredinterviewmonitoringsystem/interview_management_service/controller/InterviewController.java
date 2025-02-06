@@ -1,13 +1,23 @@
 package com.aipoweredinterviewmonitoringsystem.interview_management_service.controller;
 
 
+
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.advisor.QuestionNotFoundException;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.GetInterviewDTO;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewDTO;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewSaveDTO;
+
+
+
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.*;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.paginated.PaginatedInterviewGetAllDTO;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.response.QuestionResponseDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Result;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.service.InterviewService;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.util.StandardResponse;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -101,13 +111,27 @@ public class InterviewController {
     }
 
     @PutMapping("/status/{interviewId}")
-    public ResponseEntity<StandardResponse> updateInterviewStatus(@PathVariable(value = "interviewId") Long interviewId, @RequestBody InterviewStatusUpdateDTO interviewStatusUpdateDTO) {
+    public ResponseEntity<StandardResponse> updateInterviewStatus(@PathVariable(value = "interviewId") long interviewId, @RequestBody InterviewStatusUpdateDTO interviewStatusUpdateDTO) {
         InterviewStatusUpdateDTO updatedInterview = interviewService.updateInterviewStatus(interviewId,interviewStatusUpdateDTO);
         return new ResponseEntity<StandardResponse>(
                 new StandardResponse(200,"Success",updatedInterview),
                 HttpStatus.OK
         );
 
+    }
+
+
+    @GetMapping(value={"/get/interview/questions"},params = {"interviewId"})
+    public ResponseEntity<StandardResponse> getInterviewQuestions(@RequestParam(value = "interviewId") long interviewId) {
+        try {
+            List<QuestionResponseDTO> questionResponseDTOS = interviewService.getInterviewQuestions(interviewId);
+            if (questionResponseDTOS.isEmpty()) {
+                throw new QuestionNotFoundException("Question Not Found");
+            }
+            return new ResponseEntity<>(new StandardResponse(200, "Success", questionResponseDTOS), HttpStatus.OK);
+        }catch (Exception e) {
+            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @GetMapping("/completed-percentage")

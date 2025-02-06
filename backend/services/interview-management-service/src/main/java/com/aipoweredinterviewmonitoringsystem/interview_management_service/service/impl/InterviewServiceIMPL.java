@@ -2,6 +2,7 @@ package com.aipoweredinterviewmonitoringsystem.interview_management_service.serv
 
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.*;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.paginated.PaginatedInterviewGetAllDTO;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.response.QuestionResponseDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Result;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
@@ -9,6 +10,7 @@ import com.aipoweredinterviewmonitoringsystem.interview_management_service.feign
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.repository.InterviewRepository;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.service.InterviewService;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.util.StandardResponse;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 import jakarta.persistence.EntityNotFoundException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -40,6 +43,9 @@ public class InterviewServiceIMPL implements InterviewService {
     @Autowired
     public UserFeignClient userFeignClient;
 
+    @Autowired
+    private WebClient webClient;
+
     public InterviewSaveDTO saveInterview(InterviewSaveDTO interviewSaveDTO) {
         Interview interview = modelMapper.map(interviewSaveDTO, Interview.class);
         interview.setStatus(Status.UPCOMING);
@@ -48,14 +54,14 @@ public class InterviewServiceIMPL implements InterviewService {
         return modelMapper.map(savedInterview, InterviewSaveDTO.class);
     }
 
-
     @Override
     public List<GetAllInterviewsDTO> getAllInterviews() {
         List<Interview> interviews = interviewRepository.findAll();
 
         List<GetAllInterviewsDTO> interviewDTOs = new ArrayList<>();
         for (Interview interview : interviews) {
-            Long candidateId = interview.getCandidateId();
+            Candidate candidate=interview.getCandidate();
+            Long candidateId = candidate.getUserId();
             if (candidateId != null && candidateId > 0) { // check if candidate ID is valid
                 ResponseEntity<StandardResponse> response = userFeignClient.getCandidatePositionById(candidateId);
                 if (response.getBody() != null && response.getBody().getData() != null) {
@@ -81,7 +87,8 @@ public class InterviewServiceIMPL implements InterviewService {
 
         List<GetAllInterviewsDTO> interviewDTOs = new ArrayList<>();
         for (Interview interview : interviews) {
-            Long candidateId = interview.getCandidateId();
+            Candidate candidate=interview.getCandidate();
+            Long candidateId = candidate.getUserId();
             if (candidateId != null && candidateId > 0) { // check if candidate ID is valid
                 ResponseEntity<StandardResponse> response = userFeignClient.getCandidatePositionById(candidateId);
                 if (response.getBody() != null && response.getBody().getData() != null) {
@@ -109,12 +116,15 @@ public class InterviewServiceIMPL implements InterviewService {
         if(interviewRepository.existsById(interviewId)){
             Interview interview = interviewRepository.findById(interviewId).get();
 
+            List<Status> allowedStatuses = Arrays.asList(Status.UPCOMING, Status.IN_PROGRESS, Status.COMPLETED, Status.POSTPONED);
+
+
             // Validate if the status from the DTO is in the allowed list
             List<Status> allowedStatuses = Arrays.asList(Status.UPCOMING, Status.COMPLETED, Status.POSTPONED);
+
             if (!allowedStatuses.contains(interviewStatusUpdateDTO.getStatus())) {
                 throw new IllegalArgumentException("Invalid status selected");
             }
-
             interview.setStatus(interviewStatusUpdateDTO.getStatus());
             Interview updatedInterview = interviewRepository.save(interview);
             interviewStatusUpdateDTO = modelMapper.map(updatedInterview, InterviewStatusUpdateDTO.class);
@@ -125,6 +135,32 @@ public class InterviewServiceIMPL implements InterviewService {
         }
     }
 
+    @Override
+    public List<QuestionResponseDTO> getInterviewQuestions(long interviewId) {
+        if(interviewRepository.existsById(interviewId)){
+            List<QuestionResponseDTO> questionResponseDTOs = new ArrayList<>();
+            Candidate candidate=interviewRepository.findById(interviewId).get().getCandidate();
+            if(candidate.getPositionType().equals("SOFTWARE_ENGINEER")){
+                questionResponseDTOs.add(
+                        webClient.get().uri("localhost:8083/api/v1/questions//get/interview/questions").retrieve().bodyToMono(QuestionResponseDTO.class).block()
+                );
+            }
+            if(candidate.getPositionType().equals("QA")){
+                questionResponseDTOs.add(
+                        webClient.get().uri("localhost:8083/api/v1/questions//get/interview/questions").retrieve().bodyToMono(QuestionResponseDTO.class).block()
+                );
+            }
+            if(candidate.getPositionType().equals("DATA_ANALYTICS")){
+                questionResponseDTOs.add(
+                        webClient.get().uri("localhost:8083/api/v1/questions//get/interview/questions").retrieve().bodyToMono(QuestionResponseDTO.class).block()
+                );
+            }
+            return questionResponseDTOs;
+        }
+        else{
+            throw new RuntimeException("No such interview");
+        }
+    }
 
     @Override
     public GetInterviewDTO getInterviewById(Long interviewId) {

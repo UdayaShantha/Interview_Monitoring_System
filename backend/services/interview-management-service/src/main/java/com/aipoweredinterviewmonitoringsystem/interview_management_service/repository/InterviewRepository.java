@@ -1,8 +1,12 @@
 package com.aipoweredinterviewmonitoringsystem.interview_management_service.repository;
 
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
+
+import jakarta.transaction.Transactional;
+
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Result;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,6 +16,11 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
 import java.util.List;
 
+@EnableJpaRepositories
+@Repository
+@Transactional
+
+
 public interface InterviewRepository extends JpaRepository<Interview, Long> {
     List<Interview> findAllByStatusEquals(Status status);
 
@@ -20,6 +29,9 @@ public interface InterviewRepository extends JpaRepository<Interview, Long> {
     boolean existsByCandidateId(Long candidateId);
 
     Page<Interview> findAll(Pageable pageable);
+
+
+    Object getCandidateByInterviewId(long id);
 
     List<Interview> findAllByResultEquals(Result result);
 
