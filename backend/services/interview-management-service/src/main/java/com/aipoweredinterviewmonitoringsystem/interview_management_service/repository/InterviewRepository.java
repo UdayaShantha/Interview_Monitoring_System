@@ -2,7 +2,7 @@ package com.aipoweredinterviewmonitoringsystem.interview_management_service.repo
 
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
 
-import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
+
 import jakarta.transaction.Transactional;
 
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Result;
@@ -55,6 +55,6 @@ public interface InterviewRepository extends JpaRepository<Interview, Long> {
     @Query("SELECT COUNT(i) FROM Interview i WHERE i.scheduleDate = :today")
     long countByDate(LocalDate today);
 
-    @Query("SELECT DISTINCT'*' FROM  Candidate c WHERE c.userId= :candidateId")
-    Candidate findCandidateByCandidateId(long candidateID);
+//    @Query("SELECT DISTINCT'*' FROM  Candidate c WHERE c.userId= :candidateId")
+//    Candidate findCandidateByCandidateId(long candidateID);
 }

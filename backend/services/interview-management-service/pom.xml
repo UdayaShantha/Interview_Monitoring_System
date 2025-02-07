@@ -94,15 +94,14 @@
 			<artifactId>spring-webflux</artifactId>
 			<version>6.2.0</version>
 		</dependency>
-        <dependency>
-            <groupId>com.aipoweredinterviewmonitoringsystem</groupId>
-            <artifactId>user-management-service</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-webflux</artifactId>
+		</dependency>
 
 
-    </dependencies>
+	</dependencies>
 
 	<dependencyManagement>
 		<dependencies>

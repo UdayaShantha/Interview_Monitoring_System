@@ -10,7 +10,6 @@ import com.aipoweredinterviewmonitoringsystem.interview_management_service.feign
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.repository.InterviewRepository;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.service.InterviewService;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.util.StandardResponse;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 import jakarta.persistence.EntityNotFoundException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +48,7 @@ public class InterviewServiceIMPL implements InterviewService {
     public InterviewSaveDTO saveInterview(InterviewSaveDTO interviewSaveDTO) {
         Interview interview = modelMapper.map(interviewSaveDTO, Interview.class);
         interview.setStatus(Status.UPCOMING);
+        interview.setResult(Result.PENDING);
         interview.setCreatedAt(LocalDateTime.now());
         Interview savedInterview = interviewRepository.save(interview);
         return modelMapper.map(savedInterview, InterviewSaveDTO.class);
@@ -133,23 +133,25 @@ public class InterviewServiceIMPL implements InterviewService {
         }
     }
 
+
+
     @Override
     public List<QuestionResponseDTO> getInterviewQuestions(long interviewId) {
         if(interviewRepository.existsById(interviewId)){
             List<QuestionResponseDTO> questionResponseDTOs = new ArrayList<>();
             long candidateID=interviewRepository.findById(interviewId).get().getCandidateId();
-            Candidate candidate=interviewRepository.findCandidateByCandidateId(candidateID);
-            if(candidate.getPositionType().equals("SOFTWARE_ENGINEER")){
+
+            if(userFeignClient.getCandidatePositionById(candidateID).getBody().getData().toString().equals("SOFTWARE_ENGINEER")){
                 questionResponseDTOs.add(
                         webClient.get().uri("localhost:8083/api/v1/questions//get/interview/questions").retrieve().bodyToMono(QuestionResponseDTO.class).block()
                 );
             }
-            if(candidate.getPositionType().equals("QA")){
+            if(userFeignClient.getCandidatePositionById(candidateID).getBody().getData().toString().equals("QA")){
                 questionResponseDTOs.add(
                         webClient.get().uri("localhost:8083/api/v1/questions//get/interview/questions").retrieve().bodyToMono(QuestionResponseDTO.class).block()
                 );
             }
-            if(candidate.getPositionType().equals("DATA_ANALYTICS")){
+            if(userFeignClient.getCandidatePositionById(candidateID).getBody().getData().toString().equals("DATA_ANALYTICS")){
                 questionResponseDTOs.add(
                         webClient.get().uri("localhost:8083/api/v1/questions//get/interview/questions").retrieve().bodyToMono(QuestionResponseDTO.class).block()
                 );
