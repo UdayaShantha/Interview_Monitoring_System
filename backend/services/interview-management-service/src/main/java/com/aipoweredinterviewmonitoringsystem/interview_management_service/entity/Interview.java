@@ -2,7 +2,6 @@ package com.aipoweredinterviewmonitoringsystem.interview_management_service.enti
 
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Result;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
