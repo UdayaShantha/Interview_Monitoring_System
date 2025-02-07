@@ -1,8 +1,6 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.service.impl;
 
-import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewSaveDTO;
-import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
-import com.aipoweredinterviewmonitoringsystem.interview_management_service.repository.InterviewRepository;
+
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.*;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCandidatesDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
@@ -63,6 +61,7 @@ public class UserServiceIMPL implements UserService {
 
 
     @Override
+    @Transactional
     public CandidateSaveDTO saveCandidate(CandidateSaveDTO candidateSaveDTO) {
         Candidate candidate = modelMapper.map(candidateSaveDTO, Candidate.class);
         candidate.setUserType(UserType.CANDIDATE);
@@ -151,11 +150,14 @@ public class UserServiceIMPL implements UserService {
     public String deleteCandidate(Long userId) {
         candidateRepository.deleteById(userId);
 
-        Interview interview = interviewFeignClient.getInterviewByCandidateId(userId);
-        if(interview != null){
-            Long interviewId = interview.getInterviewId();
+        ResponseEntity<StandardResponse> response = interviewFeignClient.getInterviewById(userId);
+
+        if (response.getBody() != null && response.getBody().getData() != null) {
+            Map<String, Object> data = (Map<String, Object>) response.getBody().getData();
+            Long interviewId = (Long)data.get("id");
             interviewFeignClient.deleteInterview(interviewId);
         }
+
         return "Candidate with id: " + userId + " deleted";
     }
 

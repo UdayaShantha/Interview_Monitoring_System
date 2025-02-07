@@ -17,7 +17,6 @@ import com.aipoweredinterviewmonitoringsystem.interview_management_service.entit
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.service.InterviewService;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.util.StandardResponse;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
