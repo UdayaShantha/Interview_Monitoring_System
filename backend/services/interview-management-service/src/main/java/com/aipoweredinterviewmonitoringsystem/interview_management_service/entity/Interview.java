@@ -2,6 +2,7 @@ package com.aipoweredinterviewmonitoringsystem.interview_management_service.enti
 
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Result;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -29,12 +30,12 @@ public class Interview {
     @Column(name = "interview_id")
     private long interviewId;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "candidate_id", referencedColumnName = "user_id",nullable = false,unique = true)
-    private Candidate candidate;
+//    @OneToOne(cascade = CascadeType.ALL)
+//    @JoinColumn(name = "candidate", referencedColumnName = "user_id",nullable = false,unique = true)
+//    private Candidate candidate;
 
-//    @Column(name = "candidate_id", nullable = false, unique = true)
-//    private long candidateId;
+    @Column(name = "candidate_id", nullable = false, unique = true)
+    private long candidateId;
 
     @Column(name = "schedule_date",nullable = false)
     private LocalDate scheduleDate;

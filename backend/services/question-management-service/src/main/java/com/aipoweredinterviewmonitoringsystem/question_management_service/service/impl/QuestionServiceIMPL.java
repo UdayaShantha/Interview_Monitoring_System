@@ -146,7 +146,6 @@ public class QuestionServiceIMPL implements QuestionService {
     @Transactional
     @Override
     public UpdateResponseDTO updateQuestion(GetQuestionDTO getQuestionDTO, long questionId) {
-
         GetQuestionDTO getQuestionDTO1=getQuestion(questionId);
         if(getQuestionDTO1 != null) {
             int updatedRows = 0;
@@ -193,8 +192,6 @@ public class QuestionServiceIMPL implements QuestionService {
             );
         }
         throw new QuestionNotFoundException("Question Not Found for ID: " + questionId);
-
-        return null;
 //        if (qid == questionId && getQuestion(questionId).equals(getQuestionDTO)) {
 //            if (commonQuestionRepository.existsById(questionId)) {
 //                CommonQuestion commonQuestion = modelMapper.map(getQuestionDTO, CommonQuestion.class);
@@ -265,7 +262,6 @@ public class QuestionServiceIMPL implements QuestionService {
 //                throw new QuestionNotFoundException("Question Not Found for ID: " + questionId);
 //            }
 //        }
-
     }
 
 

@@ -4,6 +4,7 @@ package com.aipoweredinterviewmonitoringsystem.user_management_service.entity;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.PositionType;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -58,8 +59,11 @@ public class Candidate extends User{
     @Column(name = "candidate_comment")
     private String comment;
 
+//    @OneToOne(mappedBy = "candidate")
+//    private Interview interview;
 
     @OneToOne(mappedBy = "candidate")
+    @JsonIgnore
     private Interview interview;
 }
 

@@ -207,8 +207,4 @@ public class InterviewController {
                 HttpStatus.OK
         );
     }
-
-
-
-
 }
