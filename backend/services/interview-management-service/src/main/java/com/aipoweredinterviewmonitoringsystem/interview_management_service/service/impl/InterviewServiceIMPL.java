@@ -244,28 +244,19 @@ public class InterviewServiceIMPL implements InterviewService {
         return (selectedCount / (double) totalCompleted) * 100;
     }
 
-
     @Override
     public double calculateTodayProjection() {
         LocalDate today = LocalDate.now();
         LocalTime now = LocalTime.now();
-
         List<Interview> todayInterviews = interviewRepository.findAllByScheduleDateEquals(today);
-
         int totalInterviews = todayInterviews.size();
-
-
         long completedInterviews = todayInterviews.stream()
                 .filter(interview ->
                         interview.getStatus() == Status.COMPLETED ||
                                 (interview.getStartTime() != null && interview.getStartTime().isBefore(now))
                 ).count();
-
-
         return totalInterviews > 0 ? ((double) completedInterviews / totalInterviews) * 100 : 0.0;
     }
-
-
 
     @Override
     public double calculateUnfinishedInterviewsPercentage() {
@@ -275,7 +266,6 @@ public class InterviewServiceIMPL implements InterviewService {
         if (totalInterviewsToday == 0) {
             return 0.0;
         }
-
         return ((double) unfinishedInterviewsToday / totalInterviewsToday) * 100;
     }
 
@@ -288,10 +278,8 @@ public class InterviewServiceIMPL implements InterviewService {
         if (totalCount == 0) {
             return 0.0;
         }
-
         return (double) cancelledCount / totalCount * 100;
     }
-
 
     @Override
     public List<InterviewDTO> getAllInterviewsByResult(Result result) {
@@ -303,14 +291,11 @@ public class InterviewServiceIMPL implements InterviewService {
         return interviewDTOs;
     }
 
-
     @Override
     public Page<GetAllInterviewsDTO> filterInterviews(String positionType, Status status, LocalDate scheduleDate, String scheduleTimeStatus, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Interview> filteredInterviews = interviewRepository.findAll(pageable);
-
         List<Interview> interviewList = filteredInterviews.getContent();
-
         if (positionType != null && !positionType.isEmpty()) {
             interviewList = interviewList.stream()
                     .filter(interview -> {
@@ -320,19 +305,16 @@ public class InterviewServiceIMPL implements InterviewService {
                     })
                     .collect(Collectors.toList());
         }
-
         if (status != null) {
             interviewList = interviewList.stream()
                     .filter(interview -> interview.getStatus() == status)
                     .collect(Collectors.toList());
         }
-
         if (scheduleDate != null) {
             interviewList = interviewList.stream()
                     .filter(interview -> interview.getScheduleDate().equals(scheduleDate))
                     .collect(Collectors.toList());
         }
-
         if (scheduleTimeStatus != null && !scheduleTimeStatus.isEmpty()) {
             LocalDate today = LocalDate.now();
             interviewList = interviewList.stream()
@@ -355,7 +337,6 @@ public class InterviewServiceIMPL implements InterviewService {
                     })
                     .collect(Collectors.toList());
         }
-
         List<GetAllInterviewsDTO> interviewDTOs = interviewList.stream()
                 .map(interview -> {
                     GetAllInterviewsDTO dto = modelMapper.map(interview, GetAllInterviewsDTO.class);
@@ -363,11 +344,6 @@ public class InterviewServiceIMPL implements InterviewService {
                     return dto;
                 })
                 .collect(Collectors.toList());
-
         return new PageImpl<>(interviewDTOs, pageable, filteredInterviews.getTotalElements());
     }
-
-
-
-
 }
