@@ -24,10 +24,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-
-
 import java.util.*;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -37,6 +34,7 @@ import java.util.List;
 import java.time.LocalDate;
 
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
 @Service
 public class QuestionServiceIMPL implements QuestionService {
@@ -517,40 +515,57 @@ public class QuestionServiceIMPL implements QuestionService {
 //  Question Shuffling algorithm --->
     @Override
     public List<QuestionResponseDTO> getInterviewQuestionsShuffle(String positionType) {
-        if(positionType != null){
-            List<QuestionResponseDTO> questionResponseDTOList=new ArrayList<>();
-            if(positionType.equalsIgnoreCase("SOFTWARE_ENGINEER")){
-                int count_c=5;
-                int count_se=8;
-                questionResponseDTOList.add(
-                        modelMapper.map(commonQuestionRepository.getCommonQuestionByCount(count_c),QuestionResponseDTO.class)
+        if (positionType != null) {
+            List<QuestionResponseDTO> questionResponseDTOList = new ArrayList<>();
+            if (positionType.equalsIgnoreCase("SOFTWARE_ENGINEER")) {
+                int count_c = 5;
+                int count_se = 8;
+                questionResponseDTOList.addAll(
+                        commonQuestionRepository.getCommonQuestionByCount(count_c)
+                                .stream()
+                                .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
+                                .collect(Collectors.toList())
                 );
-                questionResponseDTOList.add(
-                        modelMapper.map(questionSERepository.getQuestionsSEByPoistionAndCount(count_se),QuestionResponseDTO.class)
-                );
-            }
-            if(positionType.equalsIgnoreCase("QA")){
-                int count_c=5;
-                int count_qa=7;
-                questionResponseDTOList.add(
-                        modelMapper.map(commonQuestionRepository.getCommonQuestionByCount(count_c),QuestionResponseDTO.class)
-                );
-                questionResponseDTOList.add(
-                        modelMapper.map(questionQARepository.getQuestionsQAByPoistionAndCount(count_qa),QuestionResponseDTO.class)
+                questionResponseDTOList.addAll(
+                        questionSERepository.getQuestionsSEByPoistionAndCount(count_se)
+                                .stream()
+                                .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
+                                .collect(Collectors.toList())
                 );
             }
-            if(positionType.equalsIgnoreCase("DATA_ANALYTICS")){
-                int count_c=5;
-                int count_da=8;
-                questionResponseDTOList.add(
-                        modelMapper.map(commonQuestionRepository.getCommonQuestionByCount(count_c),QuestionResponseDTO.class)
+            if (positionType.equalsIgnoreCase("QA")) {
+                int count_c = 5;
+                int count_qa = 7;
+                questionResponseDTOList.addAll(
+                        commonQuestionRepository.getCommonQuestionByCount(count_c)
+                                .stream()
+                                .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
+                                .collect(Collectors.toList())
                 );
-                questionResponseDTOList.add(
-                        modelMapper.map(questionDARepository.getQuestionsDAByPositionAndCount(count_da),QuestionResponseDTO.class)
+                questionResponseDTOList.addAll(
+                        questionQARepository.getQuestionsQAByPoistionAndCount(count_qa)
+                                .stream()
+                                .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
+                                .collect(Collectors.toList())
+                );
+            }
+            if (positionType.equalsIgnoreCase("DATA_ANALYTICS")) {
+                int count_c = 5;
+                int count_da = 8;
+                questionResponseDTOList.addAll(
+                        commonQuestionRepository.getCommonQuestionByCount(count_c)
+                                .stream()
+                                .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
+                                .collect(Collectors.toList())
+                );
+                questionResponseDTOList.addAll(
+                        questionDARepository.getQuestionsDAByPositionAndCount(count_da)
+                                .stream()
+                                .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
+                                .collect(Collectors.toList())
                 );
             }
             fisherYatesShuffle(questionResponseDTOList);
-//          return adjustDuration(questionResponseDTOList, MAX_DURATION);
             return questionResponseDTOList;
         }
         throw new QuestionNotFoundException("Questions not found");
@@ -564,27 +579,4 @@ public class QuestionServiceIMPL implements QuestionService {
         }
     }
 
-//    private List<QuestionResponseDTO> adjustDuration(List<QuestionResponseDTO> questionResponseDTOList, int maxDuration) {
-//        int totalDuration = 0;
-//        for(QuestionResponseDTO questionResponseDTO : questionResponseDTOList) {
-//            if(commonQuestionRepository.getCommonQuestionByContentEquals(questionResponseDTO.getContent())){
-//                totalDuration += commonQuestionRepository.getCommonQuestionDurationByContentEquals(questionResponseDTO.getContent());
-//            }
-//            if(questionDARepository.getQuestionDAByContentEquals(questionResponseDTO.getContent())){
-//                totalDuration += questionDARepository.getQuestionDADurationByContentEquals(questionResponseDTO.getContent());
-//            }
-//            if(questionSERepository.getQuestionSEByContentEquals(questionResponseDTO.getContent())){
-//                totalDuration += questionSERepository.getQuestionSEDurationByContentEquals(questionResponseDTO.getContent());
-//            }
-//            if(questionQARepository.getQuestionQAByContentEquals(questionResponseDTO.getContent())){
-//                totalDuration += questionQARepository.getQuestionQADurationByContentEquals(questionResponseDTO.getContent());
-//            }
-//        }
-//        if (totalDuration <= maxDuration){
-//            return questionResponseDTOList;
-//        }
-//
-//        // Sort by duration (longest first)
-//
-//    }
 }

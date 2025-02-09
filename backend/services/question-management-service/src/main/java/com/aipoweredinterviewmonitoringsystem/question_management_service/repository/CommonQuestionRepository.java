@@ -49,14 +49,8 @@ public interface CommonQuestionRepository extends JpaRepository<CommonQuestion,L
     @Query("SELECT c.content,c.category,c.duration FROM CommonQuestion c WHERE c.questionId = :questionId AND c.duration= :duration AND c.category= :category")
     Object getCommonQuestionsPaiginatedByDurationAndCategory(long questionId, long duration, QuestionType category);
 
-    @Query(value = "SELECT c.content FROM CommonQuestion c ORDER BY RAND() LIMIT :count_c")
-    List<String> getCommonQuestionByCount(int count_c);
-
-    boolean getCommonQuestionByContentEquals(String content);
-
-    @Query("SELECT c.duration FROM CommonQuestion c WHERE c.content= :content")
-    int getCommonQuestionDurationByContentEquals(String content);
-
+    @Query(value = "SELECT c FROM CommonQuestion c ORDER BY RANDOM() LIMIT :count_c")
+    List<CommonQuestion> getCommonQuestionByCount(int count_c);
 
     boolean existsByQuestionIdAndDuration(long questionId, long duration);
 

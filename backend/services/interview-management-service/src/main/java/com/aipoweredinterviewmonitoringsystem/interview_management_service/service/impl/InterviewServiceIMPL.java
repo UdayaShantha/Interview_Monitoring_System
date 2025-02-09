@@ -140,27 +140,24 @@ public class InterviewServiceIMPL implements InterviewService {
         if(interviewRepository.existsById(interviewId)){
             List<QuestionResponseDTO> questionResponseDTOs = new ArrayList<>();
             long candidateID=interviewRepository.findById(interviewId).get().getCandidateId();
-
             if(userFeignClient.getCandidatePositionById(candidateID).getBody().getData().toString().equals("SOFTWARE_ENGINEER")){
                 questionResponseDTOs.add(
-                        webClient.get().uri("localhost:8083/api/v1/questions//get/interview/questions").retrieve().bodyToMono(QuestionResponseDTO.class).block()
+                        webClient.get().uri("http://localhost:8083/api/v1/questions/get/interview/questions").retrieve().bodyToMono(QuestionResponseDTO.class).block()
                 );
             }
             if(userFeignClient.getCandidatePositionById(candidateID).getBody().getData().toString().equals("QA")){
                 questionResponseDTOs.add(
-                        webClient.get().uri("localhost:8083/api/v1/questions//get/interview/questions").retrieve().bodyToMono(QuestionResponseDTO.class).block()
+                        webClient.get().uri("http://localhost:8083/api/v1/questions/get/interview/questions").retrieve().bodyToMono(QuestionResponseDTO.class).block()
                 );
             }
             if(userFeignClient.getCandidatePositionById(candidateID).getBody().getData().toString().equals("DATA_ANALYTICS")){
                 questionResponseDTOs.add(
-                        webClient.get().uri("localhost:8083/api/v1/questions//get/interview/questions").retrieve().bodyToMono(QuestionResponseDTO.class).block()
+                        webClient.get().uri("http://localhost:8083/api/v1/questions/get/interview/questions").retrieve().bodyToMono(QuestionResponseDTO.class).block()
                 );
             }
             return questionResponseDTOs;
         }
-        else{
-            throw new RuntimeException("No such interview");
-        }
+        throw new RuntimeException("No such interview");
     }
 
     @Override

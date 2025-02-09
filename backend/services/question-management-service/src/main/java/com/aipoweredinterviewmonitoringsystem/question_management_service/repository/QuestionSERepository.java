@@ -44,14 +44,13 @@ public interface QuestionSERepository extends JpaRepository<QuestionSE, Long> {
     Object getCommonQuestionsPaiginatedByDurationAndCategory(long questionId, long duration, QuestionType category);
 
 
-    @Query("SELECT se.content FROM QuestionSE se ORDER BY RAND() LIMIT :count_se")
-    List<String> getQuestionsSEByPoistionAndCount(int count_se);
+    @Query("SELECT se FROM QuestionSE se ORDER BY RANDOM() LIMIT :count_se")
+    List<QuestionSE> getQuestionsSEByPoistionAndCount(int count_se);
 
     boolean getQuestionSEByContentEquals(String content);
 
     @Query("SELECT se.duration FROM QuestionSE se WHERE se.content= :content")
     int getQuestionSEDurationByContentEquals(String content);
-
 
     boolean existsByQuestionIdAndDuration(long questionId, long duration);
 
