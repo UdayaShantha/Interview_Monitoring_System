@@ -42,9 +42,8 @@ public interface QuestionQARepository extends JpaRepository<QuestionQA, Long> {
     @Query("SELECT qa.content,qa.category,qa.duration FROM QuestionQA qa WHERE qa.questionId = :questionId AND qa.duration= :duration AND qa.category= :category")
     Object getCommonQuestionsPaiginatedByDurationAndCategory(long questionId, long duration, QuestionType category);
 
-
-    @Query("SELECT qa.content FROM QuestionQA qa ORDER BY RAND() LIMIT :count_qa")
-    List<String> getQuestionsQAByPoistionAndCount(int count_qa);
+    @Query("SELECT qa FROM QuestionQA qa ORDER BY RANDOM() LIMIT :count_qa")
+    List<QuestionQA> getQuestionsQAByPoistionAndCount(int count_qa);
 
     boolean getQuestionQAByContentEquals(String content);
 

@@ -29,7 +29,7 @@ import java.util.List;
 
 @RestController
 @CrossOrigin
-@RequestMapping("api/v1/interviews")
+@RequestMapping("/api/v1/interviews")
 public class InterviewController {
 
     @Autowired
@@ -93,7 +93,6 @@ public class InterviewController {
         );
 
     }
-
 
     @GetMapping("by-status/{status}")
     public ResponseEntity<StandardResponse> getInterviewByStatus(@PathVariable(value = "status") Status status) {
