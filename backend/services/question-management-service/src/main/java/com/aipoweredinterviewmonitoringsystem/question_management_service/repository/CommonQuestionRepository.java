@@ -56,4 +56,11 @@ public interface CommonQuestionRepository extends JpaRepository<CommonQuestion,L
 
     boolean existsByQuestionIdAndCategory(long questionId, QuestionType category);
 
+    boolean existsByContent(String content);
+
+    @Query(value = "SELECT c.duration FROM CommonQuestion c WHERE c.content= :content")
+    int getCommonQuestionDurationByContent(String content);
+
+//    @Query(value = "SELECT c FROM CommonQuestion c WHERE SUM(c.duration)= :durationC ORDER BY RANDOM() LIMIT :count_c")
+//    List<CommonQuestion> getCommonQuestionByCountANDDuration(int countC, int durationC);
 }

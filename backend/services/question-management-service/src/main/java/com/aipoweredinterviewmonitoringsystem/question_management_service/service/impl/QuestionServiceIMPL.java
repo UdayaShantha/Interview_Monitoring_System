@@ -513,63 +513,63 @@ public class QuestionServiceIMPL implements QuestionService {
     }
 
 //  Question Shuffling algorithm --->
-    @Override
-    public List<QuestionResponseDTO> getInterviewQuestionsShuffle(String positionType) {
-        if (positionType != null) {
-            List<QuestionResponseDTO> questionResponseDTOList = new ArrayList<>();
-            if (positionType.equalsIgnoreCase("SOFTWARE_ENGINEER")) {
-                int count_c = 5;
-                int count_se = 8;
-                questionResponseDTOList.addAll(
-                        commonQuestionRepository.getCommonQuestionByCount(count_c)
-                                .stream()
-                                .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
-                                .collect(Collectors.toList())
-                );
-                questionResponseDTOList.addAll(
-                        questionSERepository.getQuestionsSEByPoistionAndCount(count_se)
-                                .stream()
-                                .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
-                                .collect(Collectors.toList())
-                );
-            }
-            if (positionType.equalsIgnoreCase("QA")) {
-                int count_c = 5;
-                int count_qa = 7;
-                questionResponseDTOList.addAll(
-                        commonQuestionRepository.getCommonQuestionByCount(count_c)
-                                .stream()
-                                .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
-                                .collect(Collectors.toList())
-                );
-                questionResponseDTOList.addAll(
-                        questionQARepository.getQuestionsQAByPoistionAndCount(count_qa)
-                                .stream()
-                                .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
-                                .collect(Collectors.toList())
-                );
-            }
-            if (positionType.equalsIgnoreCase("DATA_ANALYTICS")) {
-                int count_c = 5;
-                int count_da = 8;
-                questionResponseDTOList.addAll(
-                        commonQuestionRepository.getCommonQuestionByCount(count_c)
-                                .stream()
-                                .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
-                                .collect(Collectors.toList())
-                );
-                questionResponseDTOList.addAll(
-                        questionDARepository.getQuestionsDAByPositionAndCount(count_da)
-                                .stream()
-                                .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
-                                .collect(Collectors.toList())
-                );
-            }
-            fisherYatesShuffle(questionResponseDTOList);
-            return questionResponseDTOList;
+@Override
+public List<QuestionResponseDTO> getInterviewQuestionsShuffle(String positionType) {
+    if (positionType != null) {
+        List<QuestionResponseDTO> questionResponseDTOList = new ArrayList<>();
+        if (positionType.equalsIgnoreCase("SOFTWARE_ENGINEER")) {
+            int count_c = 5;
+            int count_se = 8;
+            questionResponseDTOList.addAll(
+                    commonQuestionRepository.getCommonQuestionByCount(count_c)
+                            .stream()
+                            .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
+                            .collect(Collectors.toList())
+            );
+            questionResponseDTOList.addAll(
+                    questionSERepository.getQuestionsSEByPoistionAndCount(count_se)
+                            .stream()
+                            .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
+                            .collect(Collectors.toList())
+            );
         }
-        throw new QuestionNotFoundException("Questions not found");
+        if (positionType.equalsIgnoreCase("QA")) {
+            int count_c = 5;
+            int count_qa = 7;
+            questionResponseDTOList.addAll(
+                    commonQuestionRepository.getCommonQuestionByCount(count_c)
+                            .stream()
+                            .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
+                            .collect(Collectors.toList())
+            );
+            questionResponseDTOList.addAll(
+                    questionQARepository.getQuestionsQAByPoistionAndCount(count_qa)
+                            .stream()
+                            .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
+                            .collect(Collectors.toList())
+            );
+        }
+        if (positionType.equalsIgnoreCase("DATA_ANALYTICS")) {
+            int count_c = 5;
+            int count_da = 8;
+            questionResponseDTOList.addAll(
+                    commonQuestionRepository.getCommonQuestionByCount(count_c)
+                            .stream()
+                            .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
+                            .collect(Collectors.toList())
+            );
+            questionResponseDTOList.addAll(
+                    questionDARepository.getQuestionsDAByPositionAndCount(count_da)
+                            .stream()
+                            .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
+                            .collect(Collectors.toList())
+            );
+        }
+        fisherYatesShuffle(questionResponseDTOList);
+        return checkTotalDuration(questionResponseDTOList, positionType);
     }
+    throw new QuestionNotFoundException("Questions not found");
+}
 
     private void fisherYatesShuffle(List<QuestionResponseDTO> questionResponseDTOList) {
         Random random = new Random();
@@ -579,4 +579,83 @@ public class QuestionServiceIMPL implements QuestionService {
         }
     }
 
+    private List<QuestionResponseDTO> checkTotalDuration(List<QuestionResponseDTO> questionResponseDTOList,String positionType) {
+        int total_duration=0;
+        if(questionResponseDTOList.size()==0){
+            throw new QuestionNotFoundException("Questions not found");
+        }
+        for(QuestionResponseDTO questionResponseDTO:questionResponseDTOList){
+            if(commonQuestionRepository.existsByContent(questionResponseDTO.getContent())){
+                total_duration+=commonQuestionRepository.getCommonQuestionDurationByContent(questionResponseDTO.getContent());
+            }
+            if(questionDARepository.existsByContent(questionResponseDTO.getContent())){
+                total_duration+=questionDARepository.getQuestionDADurationByContent(questionResponseDTO.getContent());
+            }
+            if(questionQARepository.existsByContent(questionResponseDTO.getContent())){
+                total_duration+=questionQARepository.getQuestionQADurationByContent(questionResponseDTO.getContent());
+            }
+            if(questionSERepository.existsByContent(questionResponseDTO.getContent())){
+                total_duration+=questionSERepository.getQuestionSEDurationByContent(questionResponseDTO.getContent());
+            }
+        }
+        if(total_duration==0){
+            throw new QuestionNotFoundException("Questions not found");
+        }
+        else if(total_duration>45){
+            while(total_duration<=45){
+                questionResponseDTOList.remove(questionResponseDTOList.size()-1);
+            }
+            return questionResponseDTOList;
+        }
+//        if (positionType.equalsIgnoreCase("SOFTWARE_ENGINEER")) {
+//            int count_c = 5,duration_c=15;
+//            int count_se = 8,duration_se=28;
+//            questionResponseDTOList.addAll(
+//                    commonQuestionRepository.getCommonQuestionByCountANDDuration(count_c,duration_c)
+//                            .stream()
+//                            .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
+//                            .collect(Collectors.toList())
+//            );
+//            questionResponseDTOList.addAll(
+//                    questionSERepository.getQuestionsSEByPoistionAndCountANDDuration(count_se,duration_se)
+//                            .stream()
+//                            .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
+//                            .collect(Collectors.toList())
+//            );
+//        }
+//        if (positionType.equalsIgnoreCase("QA")) {
+//            int count_c = 5,duration_c=18;
+//            int count_qa = 7,duration_qa=25;
+//            questionResponseDTOList.addAll(
+//                    commonQuestionRepository.getCommonQuestionByCountANDDuration(count_c,duration_c)
+//                            .stream()
+//                            .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
+//                            .collect(Collectors.toList())
+//            );
+//            questionResponseDTOList.addAll(
+//                    questionQARepository.getQuestionsQAByPoistionAndCountANDDuration(count_qa,duration_qa)
+//                            .stream()
+//                            .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
+//                            .collect(Collectors.toList())
+//            );
+//        }
+//        if (positionType.equalsIgnoreCase("DATA_ANALYTICS")) {
+//            int count_c = 5,duration_c=15;
+//            int count_da = 8,duration_da=28;
+//            questionResponseDTOList.addAll(
+//                    commonQuestionRepository.getCommonQuestionByCountANDDuration(count_c,duration_c)
+//                            .stream()
+//                            .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
+//                            .collect(Collectors.toList())
+//            );
+//            questionResponseDTOList.addAll(
+//                    questionDARepository.getQuestionsDAByPositionAndCountANDDuration(count_da,duration_da)
+//                            .stream()
+//                            .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
+//                            .collect(Collectors.toList())
+//            );
+//        }
+
+        return questionResponseDTOList;
+    }
 }
