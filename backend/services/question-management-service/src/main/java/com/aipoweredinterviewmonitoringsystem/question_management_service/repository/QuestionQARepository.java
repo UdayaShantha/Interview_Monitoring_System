@@ -54,4 +54,11 @@ public interface QuestionQARepository extends JpaRepository<QuestionQA, Long> {
 
     boolean existsByQuestionIdAndCategory(long questionId, QuestionType category);
 
+    boolean existsByContent(String content);
+
+    @Query(value = "SELECT qa.duration FROM QuestionQA qa WHERE qa.content= :content")
+    int getQuestionQADurationByContent(String content);
+
+//    @Query("SELECT qa FROM QuestionQA qa WHERE SUM(qa.duration)= :durationQa ORDER BY RANDOM() LIMIT :count_qa")
+//    List<QuestionQA> getQuestionsQAByPoistionAndCountANDDuration(int countQa, int durationQa);
 }
