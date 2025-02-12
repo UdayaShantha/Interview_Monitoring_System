@@ -1,0 +1,87 @@
+/* Navbar Styling - Minimalistic, No Container Box */
+.navbar {
+  position: fixed;
+  top: 20px;
+  right: 30px;
+  z-index: 1000;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  background: none;
+}
+
+/* Navigation Links */
+.navbar ul {
+  display: flex;
+  list-style: none;
+  gap: 25px;
+  padding: 0;
+  margin: 0;
+}
+
+.navbar li {
+  font-size: 18px;
+  font-weight: bold;
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+.navbar .nav-link {
+  text-decoration: none;
+  color: #146e1d;
+  font-weight: bold;
+  font-size: 18px;
+  position: relative;
+  transition: color 0.3s ease-in-out;
+}
+
+/* Hover Effect - Underline Animation */
+.navbar .nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -3px;
+  width: 0;
+  height: 2px;
+  background-color: #00796b;
+  transition: width 0.3s ease-in-out;
+}
+
+.navbar .nav-link:hover::after {
+  width: 100%;
+}
+
+.navbar .nav-link:hover {
+  color: #00796b;
+}
+
+/* Active Link Styling */
+.navbar .active {
+  color: #00796b;
+  font-weight: bold;
+  border-bottom: 2px solid #00796b;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .navbar {
+    top: 10px;
+    right: 20px;
+    gap: 15px;
+  }
+
+  .navbar .nav-link {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    top: 5px;
+    right: 15px;
+    gap: 10px;
+  }
+
+  .navbar .nav-link {
+    font-size: 14px;
+  }
+}
