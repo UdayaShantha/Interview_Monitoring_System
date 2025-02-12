@@ -6,6 +6,7 @@ import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.r
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Result;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.feign.QuestionFeignClient;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.feign.UserFeignClient;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.repository.InterviewRepository;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.service.InterviewService;
@@ -43,7 +44,7 @@ public class InterviewServiceIMPL implements InterviewService {
     public UserFeignClient userFeignClient;
 
     @Autowired
-    private WebClient webClient;
+    private QuestionFeignClient questionFeignClient;
 
     public InterviewSaveDTO saveInterview(InterviewSaveDTO interviewSaveDTO) {
         Interview interview = modelMapper.map(interviewSaveDTO, Interview.class);
@@ -142,17 +143,17 @@ public class InterviewServiceIMPL implements InterviewService {
             long candidateID=interviewRepository.findById(interviewId).get().getCandidateId();
             if(userFeignClient.getCandidatePositionById(candidateID).getBody().getData().toString().equals("SOFTWARE_ENGINEER")){
                 questionResponseDTOs.add(
-                        webClient.get().uri("http://localhost:8083/api/v1/questions/get/interview/questions").retrieve().bodyToMono(QuestionResponseDTO.class).block()
+                        modelMapper.map(questionFeignClient.getInterviewQuestionsShuffle("SOFTWARE_ENGINEER").getBody().getData().toString(),QuestionResponseDTO.class)
                 );
             }
             if(userFeignClient.getCandidatePositionById(candidateID).getBody().getData().toString().equals("QA")){
                 questionResponseDTOs.add(
-                        webClient.get().uri("http://localhost:8083/api/v1/questions/get/interview/questions").retrieve().bodyToMono(QuestionResponseDTO.class).block()
+                        modelMapper.map(questionFeignClient.getInterviewQuestionsShuffle("QA").getBody().getData().toString(),QuestionResponseDTO.class)
                 );
             }
             if(userFeignClient.getCandidatePositionById(candidateID).getBody().getData().toString().equals("DATA_ANALYTICS")){
                 questionResponseDTOs.add(
-                        webClient.get().uri("http://localhost:8083/api/v1/questions/get/interview/questions").retrieve().bodyToMono(QuestionResponseDTO.class).block()
+                        modelMapper.map(questionFeignClient.getInterviewQuestionsShuffle("DATA_ANALYTICS").getBody().getData().toString(),QuestionResponseDTO.class)
                 );
             }
             return questionResponseDTOs;
