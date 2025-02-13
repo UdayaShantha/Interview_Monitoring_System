@@ -1,5 +1,6 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.dto.response;
 
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.PositionType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,5 +11,5 @@ import lombok.Setter;
 @Getter
 @Setter
 public class PositionResponse {
-    private String position;
+    private PositionType position;
 }
