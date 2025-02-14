@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface UserService {
 
-    CandidateSaveDTO saveCandidate(CandidateSaveDTO candidateSaveDTO);
+    String saveCandidate(CandidateSaveDTO candidateSaveDTO, CandidatePhotoSaveDTO candidatePhotoSaveDTO);
 
     CandidateAndInterviewDTO getCandidateAndInterviewById(Long userId);
 
@@ -29,4 +29,10 @@ public interface UserService {
     PaginatedCandidateGetAllDTO getAllCandidatesPaginated(int page, int size);
 
     String getCandidatePositionById(Long userId);
+
+//    CandidatePhotoSaveDTO getCandidatePhotos(long userId);
+
+//    String saveCandidatePhotos(CandidatePhotoDTO candidatePhotoDTO);
+//
+//    CandidatePhotoDTO getCandidatePhotos(long userId);
 }

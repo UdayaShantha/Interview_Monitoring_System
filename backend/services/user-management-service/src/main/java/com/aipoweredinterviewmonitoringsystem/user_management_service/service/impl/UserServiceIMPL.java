@@ -3,19 +3,14 @@ package com.aipoweredinterviewmonitoringsystem.user_management_service.service.i
 
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.*;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCandidatesDTO;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateSaveDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateAndInterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.paginated.PaginatedCandidateGetAllDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.response.PositionResponse;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.PositionType;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.feign.InterviewFeignClient;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.CandidateRepository;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.HrTeamRepository;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.TechnicalTeamRepository;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.UserRepository;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.*;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.UserService;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.util.StandardResponse;
 import jakarta.persistence.EntityNotFoundException;
@@ -26,15 +21,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.webjars.NotFoundException;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -58,16 +52,33 @@ public class UserServiceIMPL implements UserService {
     @Autowired
     private InterviewFeignClient interviewFeignClient;
 
-
-
     @Override
     @Transactional
-    public CandidateSaveDTO saveCandidate(CandidateSaveDTO candidateSaveDTO) {
+    public String saveCandidate(CandidateSaveDTO candidateSaveDTO, CandidatePhotoSaveDTO candidatePhotoSaveDTO) {
         Candidate candidate = modelMapper.map(candidateSaveDTO, Candidate.class);
         candidate.setUserType(UserType.CANDIDATE);
         candidate.setCreatedAt(LocalDateTime.now());
+
+        if (candidatePhotoSaveDTO.getPhotos() != null && !candidatePhotoSaveDTO.getPhotos().isEmpty()) {
+            try {
+                List<byte[]> photoBytes = candidatePhotoSaveDTO.getPhotos().stream()
+                        .map(photo -> {
+                            try {
+                                return photo.getBytes();
+                            } catch (IOException e) {
+                                throw new RuntimeException("Failed to store image", e);
+                            }
+                        })
+                        .collect(Collectors.toList());
+                candidate.setPhotos(photoBytes);
+            } catch (Exception e) {
+                throw new RuntimeException("Error processing candidate photos", e);
+            }
+        }
+
         Candidate savedCandidate = candidateRepository.save(candidate);
 
+        // Save interview details via Feign Client
         InterviewSaveDTO interviewSaveDTO = new InterviewSaveDTO();
         interviewSaveDTO.setCandidateId(savedCandidate.getUserId());
         interviewSaveDTO.setScheduleDate(candidateSaveDTO.getScheduleDate());
@@ -75,17 +86,9 @@ public class UserServiceIMPL implements UserService {
 
         ResponseEntity<StandardResponse> response = interviewFeignClient.saveInterview(interviewSaveDTO);
 
-        CandidateSaveDTO savedCandidateDTO = modelMapper.map(savedCandidate, CandidateSaveDTO.class);
-        if (response.getBody() != null && response.getBody().getData() != null) {
-            Map<String, Object> data = (Map<String, Object>) response.getBody().getData();
-            if (data.containsKey("scheduleDate") && data.containsKey("startTime")) {
-                savedCandidateDTO.setScheduleDate(LocalDate.parse(data.get("scheduleDate").toString()));
-                savedCandidateDTO.setStartTime(LocalTime.parse(data.get("startTime").toString()));
-            }
-        }
-
-        return savedCandidateDTO;
+        return "Candidate saved successfully";
     }
+
 
     @Override
     public CandidateAndInterviewDTO getCandidateAndInterviewById(Long userId) {
@@ -145,6 +148,15 @@ public class UserServiceIMPL implements UserService {
 
         return candidate.getPositionType().name();
     }
+
+//    @Override
+//    public CandidatePhotoSaveDTO getCandidatePhotos(long userId) {
+//        if(candidateRepository.existsById(userId)){
+//            Candidate candidate = candidateRepository.findById(userId).get();
+//            List<byte[]> photoBytes=candidate.getPhotos();
+//        }
+//
+//    }
 
     @Override
     public String deleteCandidate(Long userId) {
@@ -244,8 +256,4 @@ public class UserServiceIMPL implements UserService {
         }
         return "Not such kind of User";
     }
-
-
-
-
 }

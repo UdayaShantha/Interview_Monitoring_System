@@ -1,46 +1,44 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.controller;
 
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCandidatesDTO;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateSaveDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateAndInterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.paginated.PaginatedCandidateGetAllDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.response.PositionResponse;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.*;
-import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.CandidateRepository;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.UserService;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.util.StandardResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
 @CrossOrigin
 @RequestMapping("api/v1/users")
 public class UserController {
+
     @Autowired
     private UserService userService;
-    @Autowired
-    private CandidateRepository candidateRepository;
 
-
-    @PostMapping("/candidate")
-    public ResponseEntity<StandardResponse> saveCandidate(@RequestBody CandidateSaveDTO candidateSaveDTO) {
+    @PostMapping(value = "/candidate/save", consumes = {"multipart/form-data"})
+    public ResponseEntity<StandardResponse> saveCandidate(
+            @RequestPart("candidate") String candidateJson,
+            @RequestPart("photos") List<MultipartFile> photos) {
         try {
-            CandidateSaveDTO savedCandidate = userService.saveCandidate(candidateSaveDTO);
-            return new ResponseEntity<StandardResponse>(
-                    new StandardResponse(201,"Success",savedCandidate),
-                    HttpStatus.CREATED
-            );
+            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.registerModule(new JavaTimeModule());
+            CandidateSaveDTO candidateSaveDTO = objectMapper.readValue(candidateJson, CandidateSaveDTO.class);
+            CandidatePhotoSaveDTO candidatePhotoSaveDTO = new CandidatePhotoSaveDTO();
+            candidatePhotoSaveDTO.setPhotos(photos);
+            String savedCandidate = userService.saveCandidate(candidateSaveDTO, candidatePhotoSaveDTO);
+            return new ResponseEntity<>(new StandardResponse(201, "Success", savedCandidate), HttpStatus.CREATED);
         } catch (Exception e) {
-            return new ResponseEntity<StandardResponse>(
-                    new StandardResponse(500,"Internal Server Error",e.getMessage()),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
+            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -98,7 +96,7 @@ public class UserController {
         );
     }
 
-    @PutMapping("candidate/{id}")
+    @PutMapping("/candidate/{id}")
     public ResponseEntity<StandardResponse> updateCandidate(@PathVariable(value = "id") Long userId, @RequestBody CandidateUpdateDTO candidateUpdateDTO) {
         CandidateUpdateDTO updatedCandidate = userService.updateCandidate(userId, candidateUpdateDTO);
         return new ResponseEntity<StandardResponse>(
@@ -184,4 +182,34 @@ public class UserController {
             );
         }
     }
+
+//    @GetMapping("/get/candidate/photos")
+//    public ResponseEntity<StandardResponse> getCandidatePhotos(@RequestParam long userId){
+//        try{
+//            CandidatePhotoDTO candidatePhotoDTO =userService.getCandidatePhotos(userId);
+//            return new ResponseEntity<StandardResponse>(
+//                    new StandardResponse(200,"Success",candidatePhotoDTO),HttpStatus.FOUND
+//            );
+//        }
+//        catch (Exception e) {
+//            return new ResponseEntity<StandardResponse>(
+//                    new StandardResponse(404,"User Not Found",e.getMessage()),HttpStatus.NOT_FOUND
+//            );
+//        }
+//    }
+
+//    @GetMapping("get/candidate/photos")
+//    public ResponseEntity<StandardResponse> getCandidatePhotos(@RequestParam long userId){
+//        try {
+//            CandidatePhotoSaveDTO candidatePhotoSaveDTO= userService.getCandidatePhotos(userId);
+//            return new ResponseEntity<StandardResponse>(
+//                    new StandardResponse(200,"Success",candidatePhotoSaveDTO),HttpStatus.OK
+//            );
+//        }
+//        catch (Exception e) {
+//            return new ResponseEntity<StandardResponse>(
+//                    new StandardResponse(404,"User Not Found",e.getMessage()),HttpStatus.NOT_FOUND
+//            );
+//        }
+//    }
 }
