@@ -17,9 +17,6 @@ import java.util.List;
 @Transactional
 public interface CandidateRepository extends JpaRepository<Candidate, Long> {
 
-    @Query("SELECT c.name FROM Candidate c WHERE c.userId = :userId")
-    String findNameByUserId(long userId);
-
     @Query("SELECT c.positionType FROM Candidate c WHERE c.userId = :userId")
     Candidate findPositionByuserId(long userId);
 
@@ -29,10 +26,6 @@ public interface CandidateRepository extends JpaRepository<Candidate, Long> {
 
     Page<Candidate> findAll(Pageable pageable);
 
-    Candidate findByNic(String nic);
+    Candidate findCandidateByUserId(long userId);
 
-    Candidate findByEmail(String email);
-
-    @Query("SELECT c.photos FROM Candidate c WHERE c.userId = :userId")
-    List<byte[]> findPhotosByCandidateId(long userId);
 }

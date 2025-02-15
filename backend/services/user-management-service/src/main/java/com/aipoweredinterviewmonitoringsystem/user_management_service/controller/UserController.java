@@ -1,9 +1,11 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.controller;
 
+import com.aipoweredinterviewmonitoringsystem.user_management_service.advisor.UserNotFoundException;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCandidatesDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateSaveDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateAndInterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.paginated.PaginatedCandidateGetAllDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.response.CandidatePhotoResponse;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.response.PositionResponse;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.*;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.UserService;
@@ -183,33 +185,24 @@ public class UserController {
         }
     }
 
-//    @GetMapping("/get/candidate/photos")
-//    public ResponseEntity<StandardResponse> getCandidatePhotos(@RequestParam long userId){
-//        try{
-//            CandidatePhotoDTO candidatePhotoDTO =userService.getCandidatePhotos(userId);
-//            return new ResponseEntity<StandardResponse>(
-//                    new StandardResponse(200,"Success",candidatePhotoDTO),HttpStatus.FOUND
-//            );
-//        }
-//        catch (Exception e) {
-//            return new ResponseEntity<StandardResponse>(
-//                    new StandardResponse(404,"User Not Found",e.getMessage()),HttpStatus.NOT_FOUND
-//            );
-//        }
-//    }
-
-//    @GetMapping("get/candidate/photos")
-//    public ResponseEntity<StandardResponse> getCandidatePhotos(@RequestParam long userId){
-//        try {
-//            CandidatePhotoSaveDTO candidatePhotoSaveDTO= userService.getCandidatePhotos(userId);
-//            return new ResponseEntity<StandardResponse>(
-//                    new StandardResponse(200,"Success",candidatePhotoSaveDTO),HttpStatus.OK
-//            );
-//        }
-//        catch (Exception e) {
-//            return new ResponseEntity<StandardResponse>(
-//                    new StandardResponse(404,"User Not Found",e.getMessage()),HttpStatus.NOT_FOUND
-//            );
-//        }
-//    }
+    @GetMapping("/get/candidate/photos")
+    public ResponseEntity<StandardResponse> getCandidatePhotosById(@RequestParam long userId) {
+        try {
+            CandidatePhotoResponse photoDTO = userService.getCandidatePhotosById(userId);
+            return new ResponseEntity<>(
+                    new StandardResponse(200, "Success", photoDTO),
+                    HttpStatus.OK
+            );
+        } catch (UserNotFoundException e) {
+            return new ResponseEntity<>(
+                    new StandardResponse(404, "User Not Found", e.getMessage()),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    new StandardResponse(500, "Internal Server Error", e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 }

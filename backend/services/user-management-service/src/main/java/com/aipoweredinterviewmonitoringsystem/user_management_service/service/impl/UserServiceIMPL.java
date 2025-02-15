@@ -1,11 +1,13 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.service.impl;
 
 
+import com.aipoweredinterviewmonitoringsystem.user_management_service.advisor.UserNotFoundException;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.*;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCandidatesDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateSaveDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.CandidateAndInterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.paginated.PaginatedCandidateGetAllDTO;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.response.CandidatePhotoResponse;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.response.PositionResponse;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
@@ -17,16 +19,20 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -145,18 +151,26 @@ public class UserServiceIMPL implements UserService {
     @Override
     public String getCandidatePositionById(Long userId) {
         Candidate candidate = candidateRepository.findById(userId).get();
-
         return candidate.getPositionType().name();
     }
 
-//    @Override
-//    public CandidatePhotoSaveDTO getCandidatePhotos(long userId) {
-//        if(candidateRepository.existsById(userId)){
-//            Candidate candidate = candidateRepository.findById(userId).get();
-//            List<byte[]> photoBytes=candidate.getPhotos();
-//        }
-//
-//    }
+    @Override
+    public CandidatePhotoResponse getCandidatePhotosById(long userId) {
+        if (!candidateRepository.existsById(userId)) {
+            throw new UserNotFoundException("No such kind of candidate found");
+        }
+        Candidate candidate = candidateRepository.findCandidateByUserId(userId);
+        CandidatePhotoResponse photoDTO = new CandidatePhotoResponse();
+        if (candidate.getPhotos() != null && !candidate.getPhotos().isEmpty()) {
+            List<byte[]> photosCopy = candidate.getPhotos().stream()
+                    .map(bytes -> bytes.clone())
+                    .collect(Collectors.toList());
+            photoDTO.setPhotos(photosCopy);
+            return photoDTO;
+        }
+        photoDTO.setPhotos(new ArrayList<>());
+        return photoDTO;
+    }
 
     @Override
     public String deleteCandidate(Long userId) {
@@ -176,18 +190,23 @@ public class UserServiceIMPL implements UserService {
     @Override
     @Transactional
     public CandidateUpdateDTO updateCandidate(Long userId, CandidateUpdateDTO candidateUpdateDTO) {
-        Candidate candidate = candidateRepository.findById(userId).get();
-        candidate.setUsername(candidateUpdateDTO.getUsername());
-        candidate.setPassword(candidateUpdateDTO.getPassword());
-        candidate.setName(candidateUpdateDTO.getName());
-        candidate.setNic(candidateUpdateDTO.getNic());
-        candidate.setEmail(candidateUpdateDTO.getEmail());
-        candidate.setAddress(candidateUpdateDTO.getAddress());
-        candidate.setPhone(candidateUpdateDTO.getPhone());
-        candidate.setBirthday(candidateUpdateDTO.getBirthday());
-        candidate.setPositionType(candidateUpdateDTO.getPositionType());
-        candidateRepository.save(candidate);
-        return modelMapper.map(candidate, CandidateUpdateDTO.class);
+        try {
+            Candidate candidate = candidateRepository.findById(userId).get();
+            candidate.setUsername(candidateUpdateDTO.getUsername());
+            candidate.setPassword(candidateUpdateDTO.getPassword());
+            candidate.setName(candidateUpdateDTO.getName());
+            candidate.setNic(candidateUpdateDTO.getNic());
+            candidate.setEmail(candidateUpdateDTO.getEmail());
+            candidate.setAddress(candidateUpdateDTO.getAddress());
+            candidate.setPhone(candidateUpdateDTO.getPhone());
+            candidate.setBirthday(candidateUpdateDTO.getBirthday());
+            candidate.setPositionType(candidateUpdateDTO.getPositionType());
+            candidateRepository.save(candidate);
+            return modelMapper.map(candidate, CandidateUpdateDTO.class);
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Error processing update", e);
+        }
     }
 
     @Override
@@ -230,17 +249,12 @@ public class UserServiceIMPL implements UserService {
 
     @Override
     public PositionResponse getCandidatePosition(long userId) {
-        try{
-            if(candidateRepository.existsById(userId)) {
-                Candidate candidate=candidateRepository.findPositionByuserId(userId);
-                PositionResponse positionResponse=modelMapper.map(candidate, PositionResponse.class);
-                return positionResponse;
-            }
+        if(candidateRepository.existsById(userId)) {
+            Candidate candidate=candidateRepository.findPositionByuserId(userId);
+            PositionResponse positionResponse=modelMapper.map(candidate, PositionResponse.class);
+            return positionResponse;
         }
-        catch (Exception e){
-            return null;
-        }
-        return null;
+        throw new UserNotFoundException("Can't find the position");
     }
 
     @Override
