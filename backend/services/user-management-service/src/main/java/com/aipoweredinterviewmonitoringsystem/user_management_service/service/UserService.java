@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface UserService {
 
-    String saveCandidate(CandidateSaveDTO candidateSaveDTO, CandidatePhotoSaveDTO candidatePhotoSaveDTO);
+    CandidateSaveDTO saveCandidate(CandidateSaveDTO candidateSaveDTO, CandidatePhotoSaveDTO candidatePhotoSaveDTO);
 
     CandidateAndInterviewDTO getCandidateAndInterviewById(Long userId);
 

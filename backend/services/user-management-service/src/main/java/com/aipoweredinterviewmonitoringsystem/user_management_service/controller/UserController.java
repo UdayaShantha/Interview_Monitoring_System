@@ -35,7 +35,7 @@ public class UserController {
             CandidateSaveDTO candidateSaveDTO = objectMapper.readValue(candidateJson, CandidateSaveDTO.class);
             CandidatePhotoSaveDTO candidatePhotoSaveDTO = new CandidatePhotoSaveDTO();
             candidatePhotoSaveDTO.setPhotos(photos);
-            String savedCandidate = userService.saveCandidate(candidateSaveDTO, candidatePhotoSaveDTO);
+            CandidateSaveDTO savedCandidate = userService.saveCandidate(candidateSaveDTO, candidatePhotoSaveDTO);
             return new ResponseEntity<>(new StandardResponse(201, "Success", savedCandidate), HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);

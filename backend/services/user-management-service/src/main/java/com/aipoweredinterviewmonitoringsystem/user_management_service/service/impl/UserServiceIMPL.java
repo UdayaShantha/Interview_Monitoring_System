@@ -54,7 +54,7 @@ public class UserServiceIMPL implements UserService {
 
     @Override
     @Transactional
-    public String saveCandidate(CandidateSaveDTO candidateSaveDTO, CandidatePhotoSaveDTO candidatePhotoSaveDTO) {
+    public CandidateSaveDTO saveCandidate(CandidateSaveDTO candidateSaveDTO, CandidatePhotoSaveDTO candidatePhotoSaveDTO) {
         Candidate candidate = modelMapper.map(candidateSaveDTO, Candidate.class);
         candidate.setUserType(UserType.CANDIDATE);
         candidate.setCreatedAt(LocalDateTime.now());
@@ -86,7 +86,7 @@ public class UserServiceIMPL implements UserService {
 
         ResponseEntity<StandardResponse> response = interviewFeignClient.saveInterview(interviewSaveDTO);
 
-        return "Candidate saved successfully";
+        return candidateSaveDTO;
     }
 
 
