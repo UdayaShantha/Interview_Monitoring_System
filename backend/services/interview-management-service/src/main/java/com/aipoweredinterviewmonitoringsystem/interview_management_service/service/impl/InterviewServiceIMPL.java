@@ -139,24 +139,20 @@ public class InterviewServiceIMPL implements InterviewService {
     @Override
     public List<QuestionResponseDTO> getInterviewQuestions(long interviewId) {
         if(interviewRepository.existsById(interviewId)){
-            List<QuestionResponseDTO> questionResponseDTOs = new ArrayList<>();
             long candidateID=interviewRepository.findById(interviewId).get().getCandidateId();
             if(userFeignClient.getCandidatePositionById(candidateID).getBody().getData().toString().equals("SOFTWARE_ENGINEER")){
-                questionResponseDTOs.add(
-                        modelMapper.map(questionFeignClient.getInterviewQuestionsShuffle("SOFTWARE_ENGINEER").getBody().getData().toString(),QuestionResponseDTO.class)
-                );
+                List<QuestionResponseDTO> questionResponseDTOS = (List<QuestionResponseDTO>) questionFeignClient.getInterviewQuestionsShuffle("SOFTWARE_ENGINEER").getBody().getData();
+                return questionResponseDTOS;
             }
             if(userFeignClient.getCandidatePositionById(candidateID).getBody().getData().toString().equals("QA")){
-                questionResponseDTOs.add(
-                        modelMapper.map(questionFeignClient.getInterviewQuestionsShuffle("QA").getBody().getData().toString(),QuestionResponseDTO.class)
-                );
+                List<QuestionResponseDTO> questionResponseDTOS = (List<QuestionResponseDTO>) questionFeignClient.getInterviewQuestionsShuffle("QA").getBody().getData();
+                return questionResponseDTOS;
             }
             if(userFeignClient.getCandidatePositionById(candidateID).getBody().getData().toString().equals("DATA_ANALYTICS")){
-                questionResponseDTOs.add(
-                        modelMapper.map(questionFeignClient.getInterviewQuestionsShuffle("DATA_ANALYTICS").getBody().getData().toString(),QuestionResponseDTO.class)
-                );
+                List<QuestionResponseDTO> questionResponseDTOS = (List<QuestionResponseDTO>) questionFeignClient.getInterviewQuestionsShuffle("DATA_ANALYTICS").getBody().getData();
+                return questionResponseDTOS;
             }
-            return questionResponseDTOs;
+            throw new EntityNotFoundException("Can't fetch interview questions");
         }
         throw new RuntimeException("No such interview");
     }
