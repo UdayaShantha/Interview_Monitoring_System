@@ -4,6 +4,7 @@ import com.aipoweredinterviewmonitoringsystem.interview_management_service.entit
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -23,6 +24,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@Builder
 public class Interview {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

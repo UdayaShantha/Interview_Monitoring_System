@@ -44,7 +44,7 @@ public class InterviewServiceIMPL implements InterviewService {
     public UserFeignClient userFeignClient;
 
     @Autowired
-    private QuestionFeignClient questionFeignClient;
+    public QuestionFeignClient questionFeignClient;
 
     public InterviewSaveDTO saveInterview(InterviewSaveDTO interviewSaveDTO) {
         Interview interview = modelMapper.map(interviewSaveDTO, Interview.class);
