@@ -43,7 +43,7 @@ jobs:
         language: 
           - 'python'        # For AI services
           - 'javascript'    # For frontend components
-          - 'java'          # Foe backend sercices
+          - 'java'          # For backend services
         
         # Include specific configurations for different scanning modes
         config:
@@ -82,10 +82,9 @@ jobs:
           if [ "${{ matrix.language }}" = "python" ]; then
             python -m pip install --upgrade pip
             pip install -r requirements.txt
-          elif [ "${{ matrix.language }}" = "javascript" ] || [ "${{ matrix.language }}" = "typescript" ]; then
+          elif [ "${{ matrix.language }}" = "javascript" ]; then
             npm install
-          fi
-
+          
       # Step 6: Build the project (if necessary)
       - name: Build Project
         if: matrix.language == 'javascript'
