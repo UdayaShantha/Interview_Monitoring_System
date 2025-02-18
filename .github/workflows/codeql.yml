@@ -41,9 +41,9 @@ jobs:
         # Define languages to analyze
         # Tailored for your AI Interview Monitoring System
         language: 
-          - 'python'        # For backend services
+          - 'python'        # For AI services
           - 'javascript'    # For frontend components
-          - 'typescript'    # For type-safe frontend code
+          - 'java'          # Foe backend sercices
         
         # Include specific configurations for different scanning modes
         config:
