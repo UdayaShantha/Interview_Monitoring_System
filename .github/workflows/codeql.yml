@@ -63,7 +63,7 @@ jobs:
 
       # Step 3: Setup Node.js for JavaScript/TypeScript analysis
       - name: Setup Node.js
-        if: matrix.language == 'javascript' || matrix.language == 'typescript'
+        if: matrix.language == 'javascript'
         uses: actions/setup-node@v3
         with:
           node-version: '18'
@@ -88,7 +88,7 @@ jobs:
 
       # Step 6: Build the project (if necessary)
       - name: Build Project
-        if: matrix.language == 'javascript' || matrix.language == 'typescript'
+        if: matrix.language == 'javascript'
         run: |
           npm run build
 
