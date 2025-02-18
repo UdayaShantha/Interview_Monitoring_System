@@ -2,9 +2,11 @@ package com.aipoweredinterviewmonitoringsystem.interview_management_service.serv
 
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.*;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.paginated.PaginatedInterviewGetAllDTO;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.response.QuestionResponseDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Result;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.feign.QuestionFeignClient;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.feign.UserFeignClient;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.repository.InterviewRepository;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.service.InterviewService;
@@ -13,9 +15,12 @@ import jakarta.persistence.EntityNotFoundException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -24,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class InterviewServiceIMPL implements InterviewService {
@@ -37,14 +43,17 @@ public class InterviewServiceIMPL implements InterviewService {
     @Autowired
     public UserFeignClient userFeignClient;
 
+    @Autowired
+    public QuestionFeignClient questionFeignClient;
+
     public InterviewSaveDTO saveInterview(InterviewSaveDTO interviewSaveDTO) {
         Interview interview = modelMapper.map(interviewSaveDTO, Interview.class);
         interview.setStatus(Status.UPCOMING);
+        interview.setResult(Result.PENDING);
         interview.setCreatedAt(LocalDateTime.now());
         Interview savedInterview = interviewRepository.save(interview);
         return modelMapper.map(savedInterview, InterviewSaveDTO.class);
     }
-
 
     @Override
     public List<GetAllInterviewsDTO> getAllInterviews() {
@@ -106,12 +115,15 @@ public class InterviewServiceIMPL implements InterviewService {
         if(interviewRepository.existsById(interviewId)){
             Interview interview = interviewRepository.findById(interviewId).get();
 
-            // Validate if the status from the DTO is in the allowed list
             List<Status> allowedStatuses = Arrays.asList(Status.UPCOMING, Status.IN_PROGRESS, Status.COMPLETED, Status.POSTPONED);
-            if (!allowedStatuses.contains(interviewStatusUpdateDTO.getStatus())) {
+
+
+            // Validate if the status from the DTO is in the allowed list
+            List<Status> allowedStatus = Arrays.asList(Status.UPCOMING, Status.COMPLETED, Status.POSTPONED);
+
+            if (!allowedStatus.contains(interviewStatusUpdateDTO.getStatus())) {
                 throw new IllegalArgumentException("Invalid status selected");
             }
-
             interview.setStatus(interviewStatusUpdateDTO.getStatus());
             Interview updatedInterview = interviewRepository.save(interview);
             interviewStatusUpdateDTO = modelMapper.map(updatedInterview, InterviewStatusUpdateDTO.class);
@@ -122,6 +134,28 @@ public class InterviewServiceIMPL implements InterviewService {
         }
     }
 
+
+
+    @Override
+    public List<QuestionResponseDTO> getInterviewQuestions(long interviewId) {
+        if(interviewRepository.existsById(interviewId)){
+            long candidateID=interviewRepository.findById(interviewId).get().getCandidateId();
+            if(userFeignClient.getCandidatePositionById(candidateID).getBody().getData().toString().equals("SOFTWARE_ENGINEER")){
+                List<QuestionResponseDTO> questionResponseDTOS = (List<QuestionResponseDTO>) questionFeignClient.getInterviewQuestionsShuffle("SOFTWARE_ENGINEER").getBody().getData();
+                return questionResponseDTOS;
+            }
+            if(userFeignClient.getCandidatePositionById(candidateID).getBody().getData().toString().equals("QA")){
+                List<QuestionResponseDTO> questionResponseDTOS = (List<QuestionResponseDTO>) questionFeignClient.getInterviewQuestionsShuffle("QA").getBody().getData();
+                return questionResponseDTOS;
+            }
+            if(userFeignClient.getCandidatePositionById(candidateID).getBody().getData().toString().equals("DATA_ANALYTICS")){
+                List<QuestionResponseDTO> questionResponseDTOS = (List<QuestionResponseDTO>) questionFeignClient.getInterviewQuestionsShuffle("DATA_ANALYTICS").getBody().getData();
+                return questionResponseDTOS;
+            }
+            throw new EntityNotFoundException("Can't fetch interview questions");
+        }
+        throw new RuntimeException("No such interview");
+    }
 
     @Override
     public GetInterviewDTO getInterviewById(Long interviewId) {
@@ -206,28 +240,19 @@ public class InterviewServiceIMPL implements InterviewService {
         return (selectedCount / (double) totalCompleted) * 100;
     }
 
-
     @Override
     public double calculateTodayProjection() {
         LocalDate today = LocalDate.now();
         LocalTime now = LocalTime.now();
-
         List<Interview> todayInterviews = interviewRepository.findAllByScheduleDateEquals(today);
-
         int totalInterviews = todayInterviews.size();
-
-
         long completedInterviews = todayInterviews.stream()
                 .filter(interview ->
                         interview.getStatus() == Status.COMPLETED ||
                                 (interview.getStartTime() != null && interview.getStartTime().isBefore(now))
                 ).count();
-
-
         return totalInterviews > 0 ? ((double) completedInterviews / totalInterviews) * 100 : 0.0;
     }
-
-
 
     @Override
     public double calculateUnfinishedInterviewsPercentage() {
@@ -237,7 +262,6 @@ public class InterviewServiceIMPL implements InterviewService {
         if (totalInterviewsToday == 0) {
             return 0.0;
         }
-
         return ((double) unfinishedInterviewsToday / totalInterviewsToday) * 100;
     }
 
@@ -250,10 +274,8 @@ public class InterviewServiceIMPL implements InterviewService {
         if (totalCount == 0) {
             return 0.0;
         }
-
         return (double) cancelledCount / totalCount * 100;
     }
-
 
     @Override
     public List<InterviewDTO> getAllInterviewsByResult(Result result) {
@@ -265,6 +287,59 @@ public class InterviewServiceIMPL implements InterviewService {
         return interviewDTOs;
     }
 
-
-
+    @Override
+    public Page<GetAllInterviewsDTO> filterInterviews(String positionType, Status status, LocalDate scheduleDate, String scheduleTimeStatus, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Interview> filteredInterviews = interviewRepository.findAll(pageable);
+        List<Interview> interviewList = filteredInterviews.getContent();
+        if (positionType != null && !positionType.isEmpty()) {
+            interviewList = interviewList.stream()
+                    .filter(interview -> {
+                        ResponseEntity<StandardResponse> response = userFeignClient.getCandidatePositionById(interview.getCandidateId());
+                        return response.getBody() != null && response.getBody().getData() != null &&
+                                response.getBody().getData().toString().equalsIgnoreCase(positionType);
+                    })
+                    .collect(Collectors.toList());
+        }
+        if (status != null) {
+            interviewList = interviewList.stream()
+                    .filter(interview -> interview.getStatus() == status)
+                    .collect(Collectors.toList());
+        }
+        if (scheduleDate != null) {
+            interviewList = interviewList.stream()
+                    .filter(interview -> interview.getScheduleDate().equals(scheduleDate))
+                    .collect(Collectors.toList());
+        }
+        if (scheduleTimeStatus != null && !scheduleTimeStatus.isEmpty()) {
+            LocalDate today = LocalDate.now();
+            interviewList = interviewList.stream()
+                    .filter(interview -> {
+                        LocalDate interviewDate = interview.getScheduleDate();
+                        switch (scheduleTimeStatus.toLowerCase()) {
+                            case "today":
+                                return interviewDate.isEqual(today);
+                            case "tomorrow":
+                                return interviewDate.isEqual(today.plusDays(1));
+                            case "thisweek":
+                                return interviewDate.isAfter(today.minusDays(1)) &&
+                                        interviewDate.isBefore(today.plusDays(7));
+                            case "thismonth":
+                                return interviewDate.getMonth() == today.getMonth() &&
+                                        interviewDate.getYear() == today.getYear();
+                            default:
+                                return false;
+                        }
+                    })
+                    .collect(Collectors.toList());
+        }
+        List<GetAllInterviewsDTO> interviewDTOs = interviewList.stream()
+                .map(interview -> {
+                    GetAllInterviewsDTO dto = modelMapper.map(interview, GetAllInterviewsDTO.class);
+                    dto.setPositionType(userFeignClient.getCandidatePositionById(interview.getCandidateId()).getBody().getData().toString());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+        return new PageImpl<>(interviewDTOs, pageable, filteredInterviews.getTotalElements());
+    }
 }

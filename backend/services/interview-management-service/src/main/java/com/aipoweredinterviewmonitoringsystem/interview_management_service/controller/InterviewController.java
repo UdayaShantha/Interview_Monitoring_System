@@ -1,23 +1,35 @@
 package com.aipoweredinterviewmonitoringsystem.interview_management_service.controller;
 
 
+
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.advisor.QuestionNotFoundException;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.GetInterviewDTO;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewDTO;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewSaveDTO;
+
+
+
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.*;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.paginated.PaginatedInterviewGetAllDTO;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.response.QuestionResponseDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Result;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.service.InterviewService;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.util.StandardResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
 @CrossOrigin
-@RequestMapping("api/v1/interviews")
+@RequestMapping("/api/v1/interviews")
 public class InterviewController {
 
     @Autowired
@@ -82,7 +94,6 @@ public class InterviewController {
 
     }
 
-
     @GetMapping("by-status/{status}")
     public ResponseEntity<StandardResponse> getInterviewByStatus(@PathVariable(value = "status") Status status) {
         List<InterviewDTO> allInterviewsByStatus = interviewService.getAllInterviewsByStatus(status);
@@ -98,13 +109,27 @@ public class InterviewController {
     }
 
     @PutMapping("/status/{interviewId}")
-    public ResponseEntity<StandardResponse> updateInterviewStatus(@PathVariable(value = "interviewId") Long interviewId, @RequestBody InterviewStatusUpdateDTO interviewStatusUpdateDTO) {
+    public ResponseEntity<StandardResponse> updateInterviewStatus(@PathVariable(value = "interviewId") long interviewId, @RequestBody InterviewStatusUpdateDTO interviewStatusUpdateDTO) {
         InterviewStatusUpdateDTO updatedInterview = interviewService.updateInterviewStatus(interviewId,interviewStatusUpdateDTO);
         return new ResponseEntity<StandardResponse>(
                 new StandardResponse(200,"Success",updatedInterview),
                 HttpStatus.OK
         );
 
+    }
+
+
+    @GetMapping(value={"/get/interview/questions"},params = {"interviewId"})
+    public ResponseEntity<StandardResponse> getInterviewQuestions(@RequestParam(value = "interviewId") long interviewId) {
+        try {
+            List<QuestionResponseDTO> questionResponseDTOS = interviewService.getInterviewQuestions(interviewId);
+            if (questionResponseDTOS.isEmpty()) {
+                throw new QuestionNotFoundException("Question Not Found");
+            }
+            return new ResponseEntity<>(new StandardResponse(200, "Success", questionResponseDTOS), HttpStatus.OK);
+        }catch (Exception e) {
+            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @GetMapping("/completed-percentage")
@@ -165,5 +190,19 @@ public class InterviewController {
     }
 
 
+    @GetMapping("/filter")
+    public ResponseEntity<StandardResponse> filterInterviews(
+            @RequestParam(required = false) String positionType,
+            @RequestParam(required = false) Status status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate scheduleDate,
+            @RequestParam(required = false) String scheduleTimeStatus,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
+        Page<GetAllInterviewsDTO> filteredInterviews = interviewService.filterInterviews(positionType, status, scheduleDate, scheduleTimeStatus, page, size);
+        return new ResponseEntity<>(
+                new StandardResponse(200, "Success", filteredInterviews),
+                HttpStatus.OK
+        );
+    }
 }

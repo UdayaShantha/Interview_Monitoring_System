@@ -13,42 +13,52 @@ import java.util.List;
 
 @Repository
 @EnableJpaRepositories
+@Transactional
 public interface QuestionDARepository extends JpaRepository<QuestionDA, Long> {
     @Modifying
-    @Transactional
     @Query("DELETE FROM QuestionDA qd WHERE qd.questionId = :questionId")
     void deleteAllByQuestionId(long questionId);
 
-    @Transactional
     @Query("SELECT da.content,da.category,da.duration,da.keywords FROM QuestionDA da WHERE da.questionId = :questionId")
     Object getQuestionDAByQuestionId(long questionId);
 
     @Modifying
-    @Transactional
     @Query("UPDATE QuestionDA q SET q.content= :content, q.category= :category, q.duration= :duration, q.keywords= :keywords WHERE q.questionId= :questionId")
     int updateQuestionDA(String content, QuestionType category, long duration, String keywords, long questionId);
 
-    @Transactional
     @Query("SELECT da.content,da.category,da.duration FROM QuestionDA da WHERE da.questionId = :questionId")
     Object getQuestionDASPaiginated(long questionId);
 
     boolean existsByCategory(QuestionType category);
 
-    @Transactional
     @Query("SELECT da.content,da.category,da.duration FROM QuestionDA da WHERE da.questionId = :questionId AND da.category= :category")
     Object getCommonQuestionsPaiginatedByCategory(long questionId, QuestionType category);
 
     boolean existsByDuration(long duration);
 
-    @Transactional
     @Query("SELECT da.content,da.category,da.duration FROM QuestionDA da WHERE da.questionId = :questionId AND da.duration= :duration")
     Object getCommonQuestionsPaiginatedByDuration(long questionId, long duration);
 
-    @Transactional
     @Query("SELECT da.content,da.category,da.duration FROM QuestionDA da WHERE da.questionId = :questionId AND da.duration= :duration AND da.category= :category")
     Object getCommonQuestionsPaiginatedByDurationAndCategory(long questionId, long duration, QuestionType category);
+
+    @Query("SELECT da FROM QuestionDA da ORDER BY RANDOM() LIMIT :count_da")
+    List<QuestionDA> getQuestionsDAByPositionAndCount(int count_da);
+
+    boolean getQuestionDAByContentEquals(String content);
+
+    @Query("SELECT da.duration FROM QuestionDA da WHERE da.content= :content")
+    int getQuestionDADurationByContentEquals(String content);
 
     boolean existsByQuestionIdAndDuration(long questionId, long duration);
 
     boolean existsByQuestionIdAndCategory(long questionId, QuestionType category);
+
+    boolean existsByContent(String content);
+
+    @Query(value = "SELECT da.duration FROM QuestionDA da WHERE da.content= :content")
+    int getQuestionDADurationByContent(String content);
+
+//    @Query("SELECT da FROM QuestionDA da WHERE SUM(da.duration)= :durationDa ORDER BY RANDOM() LIMIT :count_da")
+//    List<QuestionDA> getQuestionsDAByPositionAndCountANDDuration(int countDa, int durationDa);
 }

@@ -1,8 +1,7 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.feign;
 
-import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewSaveDTO;
-import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
-import com.aipoweredinterviewmonitoringsystem.interview_management_service.repository.InterviewRepository;
+
+import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.InterviewSaveDTO;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.util.StandardResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -19,9 +18,6 @@ public interface InterviewFeignClient {
 
     @DeleteMapping("api/v1/interviews/{id}")
     ResponseEntity<StandardResponse> deleteInterview(@PathVariable(value = "id") Long InterviewId);
-
-    @GetMapping("api/v1/interviews/candidate/{candidateId}")
-    Interview getInterviewByCandidateId(@PathVariable(value = "candidateId") Long candidateId);
 
 
 }

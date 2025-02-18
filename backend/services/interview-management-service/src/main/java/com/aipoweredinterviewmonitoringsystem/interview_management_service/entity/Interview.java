@@ -4,8 +4,13 @@ import com.aipoweredinterviewmonitoringsystem.interview_management_service.entit
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import org.aspectj.weaver.patterns.TypePatternQuestions;
+import org.springframework.context.annotation.Profile;
+
 
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -19,11 +24,16 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@Builder
 public class Interview {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "interview_id")
     private long interviewId;
+
+//    @OneToOne(cascade = CascadeType.ALL)
+//    @JoinColumn(name = "candidate", referencedColumnName = "user_id",nullable = false,unique = true)
+//    private Candidate candidate;
 
     @Column(name = "candidate_id", nullable = false, unique = true)
     private long candidateId;

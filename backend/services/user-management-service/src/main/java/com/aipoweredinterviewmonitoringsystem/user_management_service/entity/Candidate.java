@@ -1,8 +1,10 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.entity;
 
 
+
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.PositionType;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -13,6 +15,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -29,7 +32,7 @@ public class Candidate extends User{
     @Column(name = "candidate_nic",nullable = false, unique = true)
     private String nic;
 
-    @Column(name = "email",nullable = false,unique = true)
+    @Column(name = "candidate_email",nullable = false,unique = true)
     private String email;
 
     @Column(name = "candidate_address",nullable = false)
@@ -56,4 +59,12 @@ public class Candidate extends User{
 
     @Column(name = "candidate_comment")
     private String comment;
+
+//    @OneToOne(mappedBy = "candidate")
+//    private Interview interview;
+
+//    @OneToOne(mappedBy = "candidate")
+//    @JsonIgnore
+//    private Interview interview;
 }
+
