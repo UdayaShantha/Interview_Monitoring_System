@@ -4,7 +4,6 @@ from database import Base
 
 class Transcription(Base):
     __tablename__ = "transcriptions"
-
     interview_id = Column(Integer, primary_key=True)
     question_id = Column(Integer, primary_key=True)
     filename = Column(String(255), nullable=False)

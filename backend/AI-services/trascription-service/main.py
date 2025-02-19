@@ -6,7 +6,7 @@ import aiofiles
 import os
 import logging
 from database import get_db, create_tables, engine
-from models import Transcription  # Critical for table creation
+from models import Transcription
 
 # Initialize FastAPI
 app = FastAPI(title="Audio Transcription Service")
@@ -17,7 +17,6 @@ logger = logging.getLogger(__name__)
 
 # Load Whisper model
 model = whisper.load_model("small")
-
 
 @app.on_event("startup")
 async def startup_event():
@@ -30,7 +29,6 @@ async def startup_event():
     except Exception as e:
         logger.error(f"Database initialization failed: {e}")
         raise
-
 
 @app.post("/transcribe")
 async def transcribe_audio(
@@ -91,6 +89,5 @@ async def transcribe_audio(
         await db.rollback()
         raise HTTPException(500, "Transcription processing failed")
     finally:
-        # Cleanup temporary file
         if os.path.exists(temp_file):
             os.remove(temp_file)
