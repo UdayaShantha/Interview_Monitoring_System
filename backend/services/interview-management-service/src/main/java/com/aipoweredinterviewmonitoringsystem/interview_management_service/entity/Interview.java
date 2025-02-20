@@ -46,7 +46,7 @@ public class Interview {
     @Column(name = "status",nullable = false)
     private Status status;
 
-    @Column(name = "start_time",nullable = false,unique = true)
+    @Column(name = "start_time",nullable = false)
     private LocalTime startTime;
 
     @Column(name = "end_time")

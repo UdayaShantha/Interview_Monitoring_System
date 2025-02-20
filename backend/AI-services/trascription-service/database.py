@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine, AsyncSessio
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 
-DATABASE_URL = f"postgresql+asyncpg://{os.environ['YOUR_USERNAME']}:{os.environ['YOUR_PASSWORD']}@localhost/ai_services_db1"
+DATABASE_URL = f"postgresql+asyncpg://postgres:21320@localhost/ai_services_db1"
 
 Base = declarative_base()
 
