@@ -42,7 +42,7 @@ async def transcribe_audio(
 
     try:
         # Validate file type
-        if not audio_file.filename.lower().endswith(('.wav', '.mp3', '.ogg')):
+        if not audio_file.filename.lower().endswith(('.wav', '.mp3', '.ogg', '.m4a')):
             raise HTTPException(400, "Invalid file format")
 
         # Save uploaded file temporarily
