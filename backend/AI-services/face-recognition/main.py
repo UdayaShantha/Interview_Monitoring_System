@@ -142,7 +142,6 @@ async def stop_stream_report(interviewId: int, candidateId: int, db: AsyncSessio
     # Return the CSV file as a response
     return {
         "message": "Report generation stopped and saved successfully",
-        "report_id": interview_report.interview_id,  # Use appropriate ID
         "csv_content": csv_content
     }
 
