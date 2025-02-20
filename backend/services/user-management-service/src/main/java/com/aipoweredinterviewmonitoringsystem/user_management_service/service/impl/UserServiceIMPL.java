@@ -1,6 +1,7 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.service.impl;
 
 
+import com.aipoweredinterviewmonitoringsystem.user_management_service.advisor.CandidateNotFoundException;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.advisor.UserNotFoundException;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.*;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.AllCandidatesDTO;
@@ -113,7 +114,7 @@ public class UserServiceIMPL implements UserService {
             }
             return candidateAndInterviewDTO;
         } else {
-            throw new RuntimeException("No candidate found with id " + userId);
+            throw new CandidateNotFoundException("No candidate found with id " + userId);
         }
 
     }
@@ -174,6 +175,9 @@ public class UserServiceIMPL implements UserService {
 
     @Override
     public String deleteCandidate(Long userId) {
+        if(!candidateRepository.existsById(userId)){
+            throw new CandidateNotFoundException("No such kind of candidate found");
+        }
         candidateRepository.deleteById(userId);
 
         ResponseEntity<StandardResponse> response = interviewFeignClient.getInterviewById(userId);
@@ -221,12 +225,11 @@ public class UserServiceIMPL implements UserService {
                     technicalTeamRepository.saveComment(userId,comment);
                     return "Comment saved";
                 }
-            }
-            catch (RuntimeException e){
-                return "Comment not saved";
+            } catch (RuntimeException e) {
+                throw new RuntimeException("Comment not saved", e);
             }
         }
-        return "Not such kind of User";
+        throw new UserNotFoundException("No such kind of User");
     }
 
     @Override
@@ -239,12 +242,11 @@ public class UserServiceIMPL implements UserService {
                 if (technicalTeamRepository.existsById(userId)) {
                     return technicalTeamRepository.findNameByUserId(userId);
                 }
-            }
-            catch (RuntimeException e){
-                return "Can't get the logged user's name";
+            } catch (RuntimeException e) {
+                throw new RuntimeException("Can't get the logged user's name", e);
             }
         }
-        return "Not such kind of User";
+        throw new UserNotFoundException("No such kind of User");
     }
 
     @Override
@@ -263,11 +265,10 @@ public class UserServiceIMPL implements UserService {
             try {
                 candidateRepository.saveRateAndComment(rate,comment);
                 return "Comment saved";
-            }
-            catch (RuntimeException e){
-                return "Feddback not saved";
+            } catch (RuntimeException e) {
+                throw new RuntimeException("Feedback not saved", e);
             }
         }
-        return "Not such kind of User";
+        throw new UserNotFoundException("No such kind of User");
     }
 }

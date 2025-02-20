@@ -1,14 +1,15 @@
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import sessionmaker
+from Base import Base  # Import Base from the separate module
+import asyncio
 
-DATABASE_URL = "postgresql+asyncpg://{YOUR_USERNAME}:{YOUR_PASSWORD}@localhost:5432/interview_ans_db"
+DATABASE_URL = "postgresql+asyncpg://postgres:21320@localhost/ai_db1"
 
-Base = declarative_base()
-
+# Database setup
 engine: AsyncEngine = create_async_engine(
     DATABASE_URL,
     pool_pre_ping=True,
-    echo=True  # Enable for debugging SQL queries
+    echo=True
 )
 
 SessionLocal = sessionmaker(
@@ -25,3 +26,6 @@ async def get_db():
 async def create_tables():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+if __name__ == "__main__":
+    asyncio.run(create_tables())
