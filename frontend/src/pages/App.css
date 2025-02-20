@@ -1,42 +1,624 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+/* styles for login page*/
+
+bbody, html {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  height: 100%;
+  color: #333;
+  background: linear-gradient(to bottom, #A5D6A7, #4CAF50);
+}
+
+/* Login Container */
+.login-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  position: relative;
+}
+
+/* Login Form */
+.login-form {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 40px 60px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
   text-align: center;
+  max-width: 450px;
+  width: 100%;
+  transition: transform 0.3s ease;
+}
+
+.login-form:hover {
+  transform: translateY(-5px);
+}
+
+/* Heading */
+.welcome-text {
+  margin-bottom: 10px;
+  color: #1B5E20;
+  font-weight: bold;
+  font-size: 28px;
+}
+
+.subtitle {
+  color: #4CAF50;
+  font-size: 16px;
+  margin-bottom: 30px;
+}
+
+/* Input Group */
+.input-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.input-group label {
+  font-weight: bold;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.input-with-icon {
+  display: flex;
+  align-items: center;
+  background: #F1F8E9;
+  border: 1px solid #66BB6A;
+  border-radius: 8px;
+  padding: 10px;
+  transition: border 0.3s ease;
+}
+
+.input-with-icon input {
+  border: none;
+  outline: none;
+  background: transparent;
+  flex: 1;
+  padding-left: 10px;
+  font-size: 14px;
+}
+
+.input-with-icon .icon {
+  color: #2E7D32;
+}
+
+.input-with-icon:focus-within {
+  border-color: #1B5E20;
+}
+
+.input-group select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #66BB6A;
+  border-radius: 8px;
+  outline: none;
+  background: #F1F8E9;
+  font-size: 14px;
+}
+
+.input-group select:focus {
+  border-color: #1B5E20;
+}
+
+/* Button Group */
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.clear-btn,
+.login-btn {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  width: 48%;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.clear-btn {
+  background-color: #E57373;
+  color: white;
+}
+
+.clear-btn:hover {
+  background-color: #D32F2F;
+  transform: translateY(-2px);
+}
+
+.login-btn {
+  background-color: #2E7D32;
+  color: white;
+}
+
+.login-btn:hover {
+  background-color: #1B5E20;
+  transform: translateY(-2px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .login-form {
+    padding: 20px;
+    max-width: 90%;
+  }
+
+  .button-group {
+    flex-direction: column;
+  }
+}
+
+
+
+
+
+/*css for instruction page*/
+
+
+.instruction-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start; /* Adjusted to start from the top */
+  background: linear-gradient(135deg, #66bb6a, #388e3c);
+  animation: fadeIn 1s ease-in-out;
+  font-family: 'Poppins', sans-serif;
+  padding: 20px;
+}
+
+.instruction-hero {
+  text-align: center;
+  padding: 25px;
+  max-width: 600px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  margin-bottom: 20px;
+}
+
+.instruction-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #1b5e20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.instruction-icon {
+  margin-right: 10px;
+  color: #2e7d32;
+}
+
+.instruction-subtitle {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  opacity: 0.9;
+}
+
+/* Instruction Box */
+.instruction-box {
+  background: rgba(255, 255, 255, 0.97);
+  padding: 25px;
+  width: 100%;
+  max-width: 500px; /* Reduced size */
+  border-radius: 15px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  text-align: center;
+  animation: popUp 0.8s ease-in-out forwards;
+  margin-top: 20px; /* Ensures box is below the hero section */
+}
+
+.instruction-list {
+  text-align: left;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.8;
+  margin-bottom: 20px;
+  padding-left: 20px;
+  list-style: none;
+}
+
+.instruction-list li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  background: rgba(76, 175, 80, 0.2);
+  padding: 12px;
+  border-radius: 10px;
+  transition: transform 0.3s ease-in-out;
+}
+
+.instruction-list li:hover {
+  transform: translateX(8px);
+  background: rgba(76, 175, 80, 0.3);
+}
+
+.bullet-icon {
+  color: #2e7d32;
+  margin-right: 12px;
+  font-size: 18px;
+}
+
+/* Back Button */
+.back-button {
+  background: linear-gradient(135deg, #388e3c, #1b5e20);
+  color: white;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease-in-out, transform 0.2s ease-in-out;
+  width: 160px;
+  margin: 0 auto;
+  font-weight: 600;
+}
+
+.back-button .icon {
+  margin-right: 8px;
+}
+
+.back-button:hover {
+  background: linear-gradient(135deg, #2e7d32, #1b5e20);
+  transform: scale(1.05);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes popUp {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* 🌿 Responsive Design */
+@media (max-width: 768px) {
+  .instruction-hero {
+    max-width: 95%;
+    padding: 20px;
+  }
+
+  .instruction-title {
+    font-size: 24px;
+  }
+
+  .instruction-subtitle {
+    font-size: 14px;
+  }
+
+  .instruction-box {
+    width: 95%;
+    padding: 20px;
+  }
+
+  .instruction-list {
+    font-size: 14px;
+  }
+
+  .back-button {
+    width: 140px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .instruction-box {
+    width: 98%;
+    padding: 15px;
+  }
+
+  .instruction-title {
+    font-size: 22px;
+  }
+
+  .instruction-subtitle {
+    font-size: 13px;
+  }
+
+  .instruction-list {
+    font-size: 13px;
+  }
+
+  .back-button {
+    width: 120px;
+    font-size: 14px;
+  }
+}
+
+
+
+
+/*css for about us page*/
+
+
+.about-container {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(to bottom, #1b5e20, #2e7d32);
+  color: white;
+  text-align: center;
+  scroll-behavior: smooth;
+  padding-top: 5em;
+  animation: fadeIn 1.5s ease-in-out;
+}
+
+
+.navbar-container {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background: #1bd6a8;
+  padding: 1em;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  animation: slideDown 1.2s ease-in-out;
 }
 
 .logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+  font-size: 1.8em;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #c8e6c9;
+  transition: transform 0.3s ease-in-out, color 0.3s ease-in-out;
 }
+
 .logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+  transform: scale(1.1);
+  color: #a5d6a7;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+
+.hero-section {
+  margin-top: 6em;
+  padding: 3em 1em;
+  max-width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+  animation: slideUp 1.5s ease-in-out;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.hero-title {
+  font-size: 2em;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  color: #c8e6c9;
+  flex-wrap: wrap;
+  animation: popIn 1.3s ease-in-out;
 }
 
-.card {
+.hero-title:hover {
+  text-shadow: 0 0 10px #a5d6a7;
+}
+
+.hero-icon {
+  color: #c8e6c9;
+}
+
+.hero-subtitle {
+  font-size: 1.2em;
+  opacity: 0.9;
+  animation: fadeIn 2s ease-in-out;
+}
+
+
+.values-section {
+  padding: 2em;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  margin: 3em auto;
+  max-width: 900px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  animation: slideUp 1s ease-in-out;
+}
+
+.values-title {
+  font-size: 1.8em;
+  color: #c8e6c9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+}
+
+.values-grid {
+  display: flex;
+  justify-content: center;
+  gap: 2em;
+  margin-top: 2em;
+  flex-wrap: wrap;
+}
+
+.value-card {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 1.5em;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: transform 0.4s ease-in-out, box-shadow 0.4s ease-in-out;
+  width: 280px;
+}
+
+.value-card:hover {
+  transform: scale(1.08);
+  box-shadow: 0 10px 20px rgba(165, 214, 167, 0.3);
+}
+
+.value-icon {
+  font-size: 2em;
+  color: #c8e6c9;
+  margin-bottom: 0.5em;
+}
+
+
+.team-section {
   padding: 2em;
 }
 
-.read-the-docs {
-  color: #888;
+.team-title {
+  font-size: 1.8em;
+  color: #c8e6c9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+}
+
+.team-grid {
+  display: flex;
+  justify-content: center;
+  gap: 2em;
+  margin-top: 2em;
+  flex-wrap: wrap;
+}
+
+.team-card {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 1.5em;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease-in-out, box-shadow 0.4s ease-in-out;
+  width: 250px;
+  text-align: center;
+}
+
+.team-card:hover {
+  transform: scale(1.1);
+  box-shadow: 0 10px 20px rgba(165, 214, 167, 0.3);
+}
+
+.team-img {
+  width: 5em;
+  height: 5em;
+  border-radius: 50%;
+  border: 3px solid #c8e6c9;
+  transition: transform 0.3s ease-in-out, border-color 0.3s ease-in-out;
+}
+
+.team-img:hover {
+  transform: scale(1.15);
+  border-color: #a5d6a7;
+}
+
+
+.footer {
+  background: #1bd6a8;
+  padding: 1.5em;
+  font-size: 1em;
+  animation: slideUp 1.5s ease-in-out;
+}
+
+
+.button {
+  background-color: #c8e6c9;
+  color: #1b5e20;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: background-color 0.4s ease-in-out, transform 0.4s ease-in-out;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.button:hover {
+  background-color: #a5d6a7;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(165, 214, 167, 0.3);
+}
+
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes popIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* 🌟 Responsive Design */
+@media (max-width: 768px) {
+  .hero-section {
+    margin-top: 6em;
+    padding: 2em;
+  }
+
+  .hero-title {
+    font-size: 1.5em;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .values-section {
+    width: 90%;
+  }
+
+  .values-grid {
+    flex-direction: column;
+    gap: 1em;
+  }
+
+  .team-grid {
+    flex-direction: column;
+    align-items: center;
+    gap: 1em;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: 1.2em;
+    text-align: center;
+  }
+
+  .hero-subtitle {
+    font-size: 1em;
+  }
+
+  .values-title {
+    font-size: 1.5em;
+  }
+
+  .value-card {
+    width: 100%;
+  }
+
+  .team-card {
+    width: 90%;
+  }
+
+  .footer {
+    font-size: 0.9em;
+  }
 }
