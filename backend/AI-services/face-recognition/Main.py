@@ -12,7 +12,7 @@ from basicDetect import run as basic_detect
 from faceVerify import run as face_verify
 import threading
 from database import get_db,create_tables
-from models import Transcription,InterviewReport
+from models import InterviewReport
 
 app = FastAPI(title="Face-Recognition")
 
