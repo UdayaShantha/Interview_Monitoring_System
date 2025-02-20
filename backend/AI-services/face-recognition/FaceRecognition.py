@@ -157,12 +157,6 @@ class InterviewMonitoringSystem:
         if detection_result and detection_result.face_blendshapes:
             self.update_emotion_scores(detection_result.face_blendshapes)
 
-    # Rest of the existing methods remain unchanged
-    # (calculate_head_rotation, update_emotion_scores,
-    # get_final_percentages, generate_interview_report,
-    # save_report_to_csv)
-
-
 def run(model: str, num_faces: int, min_face_detection_confidence: float,
         min_face_presence_confidence: float, min_tracking_confidence: float,
         camera_id: int, width: int, height: int) -> None:
@@ -241,10 +235,6 @@ def run(model: str, num_faces: int, min_face_detection_confidence: float,
     detector.close()
     cap.release()
     cv2.destroyAllWindows()
-
-
-# Rest of the code (main function and arg parsing) remains unchanged
-
 
 def main():
     parser = argparse.ArgumentParser(

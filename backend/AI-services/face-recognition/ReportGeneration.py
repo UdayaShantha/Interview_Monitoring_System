@@ -112,8 +112,6 @@ class InterviewMonitoringSystem:
         Returns:
             Approximate head rotation angle
         """
-        # Use nose tip and chin as reference points
-        # This is a simplified rotation calculation
         nose_tip = face_landmarks[4]  # Approximate nose tip landmark
         chin = face_landmarks[152]  # Approximate chin landmark
 
