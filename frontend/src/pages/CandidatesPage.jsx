@@ -1,103 +1,115 @@
-import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import Footer from "../components/Footer";
-import { FaTrash, FaPlus, FaEye } from "react-icons/fa";
-import { motion } from "framer-motion";
-import CandidateForm from "./CandidateForm";
+import { useState, useEffect } from "react";
+import { getCandidates } from "../api/axios"; // Importing API function
+import CandidateTable from "../components/CandidateTable"; // Candidate table component
 import "./App.css";
 
-const CandidatesPage = () => {
+function App() {
   const [candidates, setCandidates] = useState([]);
-  const [showForm, setShowForm] = useState(false);
-
+  const [totalCandidates, setTotalCandidates] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const pageSize = 10;
 
   useEffect(() => {
-    fetch("https://your-api-endpoint/candidates")
-      .then((response) => response.json())
-      .then((data) => setCandidates(data))
-      .catch((error) => console.error("Error fetching candidates:", error));
-  }, []);
+    fetchCandidates();
+  }, [currentPage]);
 
+  const fetchCandidates = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
+      const response = await getCandidates(currentPage, pageSize);
+
+      if (response.code === 200 && response.data) { 
+        setCandidates(response.data.list || []);
+        setTotalCandidates(response.data.totalCandidates || 0);
+      } else {
+        setError(response.message || "Unexpected server response");
+      }
+    } catch (error) {
+      setError(error.response?.data?.message || error.message || "Failed to fetch candidates");
+      setCandidates([]);
+      setTotalCandidates(0);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="candidates-page">
-      <nav className="navbar">
-        <ul>
-          <li>
-            <Link to="/hr-dashboard">🏠 Home</Link>
-          </li>
-          <li className="active">
-            <Link to="/candidates">📅 Upcoming Today</Link>
-          </li>
-        </ul>
+    <div className="min-h-screen bg-gray-50">
+      {/* Navbar */}
+      <nav className="bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex">
+              <div className="flex-shrink-0 flex items-center">
+                <span className="text-2xl font-bold">LOGO</span>
+              </div>
+              <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+                <a href="#" className="border-b-2 border-transparent hover:border-gray-300 text-gray-900 inline-flex items-center px-1 pt-1 text-sm font-medium">
+                  Home
+                </a>
+              </div>
+            </div>
+            <div className="flex items-center">
+              <button className="bg-white border border-gray-300 rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                Upcoming Today
+              </button>
+            </div>
+          </div>
+        </div>
       </nav>
 
-      <motion.div
-        className="header-section"
-        initial={{ opacity: 0, x: -30 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <h2 className="page-title">Candidate Management</h2>
-      </motion.div>
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-0">
+          <div className="flex justify-between items-center mb-6">
+            <button className="bg-green-100 text-green-800 px-4 py-2 rounded-md flex items-center space-x-2">
+              <span>+</span>
+              <span>Add New Candidate</span>
+            </button>
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
+              <span>Hi! Bob</span>
+            </div>
+          </div>
 
-      <motion.div
-        className="button-container"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <button className="add-button" onClick={() => setShowForm(true)}>
-          <FaPlus /> Add New Candidate
-        </button>
-      </motion.div>
+          {/* Loading & Error Handling */}
+          {loading ? (
+            <div className="text-center py-4">Loading...</div>
+          ) : error ? (
+            <div className="text-center py-4 text-red-600">{error}</div>
+          ) : (
+            <CandidateTable candidates={candidates} />
+          )}
 
-      {showForm && <CandidateForm onClose={() => setShowForm(false)} />}
-
-      <motion.div
-        className="table-wrapper"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1 }}
-      >
-        <table className="candidates-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Position</th>
-              <th>Date</th>
-              <th>Start Time</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {candidates.length === 0 ? (
-              <tr>
-                <td colSpan="6" className="no-data"> </td>
-              </tr>
-            ) : (
-              candidates.map((candidate) => (
-                <tr key={candidate.id}>
-                  <td>{candidate.name}</td>
-                  <td>{candidate.position}</td>
-                  <td>{candidate.date}</td>
-                  <td>{candidate.startTime}</td>
-                  <td>{candidate.status}</td>
-                  <td className="action-icons">
-                    <FaEye className="view-icon" title="View Candidate" />
-                    <FaTrash className="delete-icon" title="Delete Candidate" />
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </motion.div><br></br><br></br>
-
-      <Footer />
+          {/* Pagination */}
+          {!loading && !error && candidates.length > 0 && (
+            <div className="mt-4 flex justify-center">
+              <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                  disabled={currentPage === 0}
+                  className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => setCurrentPage(prev => prev + 1)}
+                  disabled={candidates.length < pageSize}
+                  className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </nav>
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   );
-};
+}
 
-export default CandidatesPage;
+export default App;
