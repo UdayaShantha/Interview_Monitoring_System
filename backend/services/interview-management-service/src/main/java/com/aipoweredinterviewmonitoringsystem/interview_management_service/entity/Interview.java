@@ -26,6 +26,7 @@ import java.util.List;
 @Data
 @Builder
 public class Interview {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "interview_id")

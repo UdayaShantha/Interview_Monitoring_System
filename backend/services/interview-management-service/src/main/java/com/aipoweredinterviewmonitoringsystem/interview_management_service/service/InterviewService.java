@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 
 import java.time.LocalDate;
 
+import java.time.LocalTime;
 import java.util.List;
 
 public interface InterviewService {
@@ -47,5 +48,9 @@ public interface InterviewService {
     List<InterviewDTO> getAllInterviewsByResult(Result result);
 
     Page<GetAllInterviewsDTO> filterInterviews(String positionType, Status status, LocalDate scheduleDate, String scheduleTimeStatus, int page, int size);
+
+    boolean checkInterview(long interviewId);
+
+    LocalTime getInterviewStartTime(long interviewId);
 }
 
