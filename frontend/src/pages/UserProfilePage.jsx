@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Facebook, Twitter, Linkedin, Youtube } from 'lucide-react';
 import './App.css';
 
 function UserProfilePage() {
   const navigate = useNavigate();
-  const [timeLeft, setTimeLeft] = useState("00D 00H 00M 00S");
+  const location = useLocation();
+  const [timeLeft, setTimeLeft] = useState('00D 00H 00M 00S');
 
   useEffect(() => {
-    const interviewStartTime = new Date("2025-02-10T10:00:00").getTime();
+    const interviewStartTime = new Date('2025-02-10T10:00:00').getTime();
     
     function updateTimer() {
       const now = new Date().getTime();
       const difference = interviewStartTime - now;
 
       if (difference <= 0) {
-        setTimeLeft("00D 00H 00M 00S");
+        setTimeLeft('00D 00H 00M 00S');
         return;
       }
 
@@ -40,7 +41,12 @@ function UserProfilePage() {
       <header className="user-header">
         <h1 className="company-name">LOGO</h1>
         <nav className="header-buttons">
-          <button className="home-btn">Home</button>
+          <button 
+            className={`nav-btn ${location.pathname === '/user-profile' ? 'active' : ''}`}
+            onClick={() => navigate('/user-profile')}
+          >
+            Home
+          </button>
           <button className="logout-btn" onClick={handleLogout}>Log Out</button>
         </nav>
       </header>
@@ -59,7 +65,7 @@ function UserProfilePage() {
           <p className="time-left">Time Left: {timeLeft}</p>
         </div>
         <div className="profile-picture">
-          <img src="Bob.jpg" alt="User Profile" className="profile-img" />
+          <img src="user.png" alt="User Profile" className="profile-img" />
         </div>
       </main>
       
