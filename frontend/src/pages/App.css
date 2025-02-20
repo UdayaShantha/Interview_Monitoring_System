@@ -831,7 +831,7 @@ bbody, html {
   justify-content: space-between;
   align-items: center;
   padding: 1em;
-  background:  #21b417;
+  background:  #a1c59e;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   animation: slideDown 1.2s ease-out;
 }
@@ -888,11 +888,11 @@ bbody, html {
 }
 
 .profile-title{
-  color: yellowgreen;
+  color: rgb(24, 25, 21);
 }
 
 .profile-card {
-  background: rgba(39, 174, 96, 0.9);
+  background: rgba(113, 188, 139, 0.9);
   padding: 2em;
   border-radius: 12px;
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
@@ -1035,6 +1035,45 @@ bbody, html {
     gap: 5px;
   }
 }
+
+/* ✨ Nav Button Styling */
+.nav-btn {
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  color: white;
+  padding: 0.8em 1.5em;
+  border-radius: 8px;
+  font-weight: bold;
+  transition: transform 0.3s ease-in-out, background 0.3s ease-in-out;
+  cursor: pointer;
+  border: none;
+  margin-left: 10px;
+}
+
+.nav-btn:hover {
+  background: linear-gradient(135deg, #27ae60, #1e8449);
+  transform: scale(1.1);
+  animation: pulseGlow 1.2s infinite alternate;
+}
+
+/* ✨ Active (Highlighted & Popped) Button */
+.nav-btn.active {
+  background: #c0ff3b;
+  color: #1e8449;
+  transform: scale(1.2);
+  border: 2px solid #fff;
+  box-shadow: 0 4px 15px rgba(192, 255, 59, 0.6);
+  /*animation: popUp 0.5s ease-in-out infinite alternate;*/
+}
+
+/* ✨ Pop Up Animation 
+@keyframes popUp {
+  0% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1.2);
+  }
+}*/
 
 
 
