@@ -1,4 +1,4 @@
-/* Navbar Styling - Minimalistic, No Container Box */
+/* Navbar Styling */
 .navbar {
     position: fixed;
     top: 20px;
@@ -31,7 +31,9 @@
     font-weight: bold;
     font-size: 18px;
     position: relative;
-    transition: color 0.3s ease-in-out;
+    transition: color 0.3s, transform 0.3s, background-color 0.3s;
+    padding: 5px 10px;
+    border-radius: 5px;
   }
   
   /* Hover Effect - Underline Animation */
@@ -43,7 +45,7 @@
     width: 0;
     height: 2px;
     background-color: #00796b;
-    transition: width 0.3s ease-in-out;
+    transition: width 0.3s;
   }
   
   .navbar .nav-link:hover::after {
@@ -56,9 +58,20 @@
   
   /* Active Link Styling */
   .navbar .active {
-    color: #00796b;
+    color: #ffffff;
+    background-color: #00796b;
     font-weight: bold;
     border-bottom: 2px solid #00796b;
+    border-radius: 5px;
+  }
+  
+  /* Highlight and Pop-Up Animation */
+  .highlight-pop {
+    transform: scale(1.1);
+    color: #ffffff;
+    background-color: #00796b;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease-in-out, background-color 0.2s, box-shadow 0.2s;
   }
   
   /* Responsive Design */
