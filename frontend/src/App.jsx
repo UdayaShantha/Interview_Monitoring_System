@@ -1,13 +1,16 @@
-import './App.css'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import LoginPage from './pages/LoginPage';
+import './pages/App.css';
 
 function App() {
-
   return (
-    <>
-      <h1 className='text-xl font-bold text-red-500'>React project with TailwindCSS</h1>
-        
-    </>
-  )
+    <Router>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;

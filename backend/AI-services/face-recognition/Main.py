@@ -23,6 +23,10 @@ def run_basic_detect(interviewId: int):
     Helper function to run the BasicDetect.py script as a subprocess.
     """
     try:
+        # Validate the interviewId
+        if not isinstance(interviewId, int) or interviewId < 0:
+            raise ValueError("Invalid interviewId. It must be a non-negative integer.")
+
         # Construct the command to run BasicDetect.py with the interviewId
         command = [
             sys.executable,  # Use the same Python interpreter running FastAPI
