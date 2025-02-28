@@ -1,7 +1,7 @@
 import React from 'react';
 import './App.css';
 import Navbar from '../components/Navbar';
-import { FaArrowLeft, FaLightbulb, FaUserCheck, FaLaptop, FaEye, FaMicrophone, FaTasks } from 'react-icons/fa';
+import { FaArrowLeft, FaUserCheck, FaLaptop, FaEye, FaMicrophone, FaTasks } from 'react-icons/fa';
 import loginBackground from '../assets/login.png';
 
 function InstructionPage() {
@@ -12,13 +12,7 @@ function InstructionPage() {
     >
       <Navbar />
       <br></br>
-      {/* Hero Section */}
-      <div className="instruction-hero">
-        <h1 className="instruction-title">
-          <FaLightbulb className="instruction-icon" /> Get Ready for Your Interview!
-        </h1>
-        <p className="instruction-subtitle">Follow these steps for a successful interview experience.</p>
-      </div>
+      
 
       {/* Instruction Box */}
       <div className="instruction-box colorful-box expanded-width">
@@ -29,6 +23,8 @@ function InstructionPage() {
           <li className="colorful-item"><FaLaptop className="bullet-icon" /> Find a quiet environment with good lighting.</li>
           <li className="colorful-item"><FaUserCheck className="bullet-icon" /> Dress professionally to create a good impression.</li>
           <li className="colorful-item"><FaMicrophone className="bullet-icon" /> Ensure your camera and microphone are working.</li>
+          <li className="colorful-item"><FaEye className="bullet-icon" /> Maintain eye contact and sit upright.</li>
+          <li className="colorful-item"><FaUserCheck className="bullet-icon" /> Log in using your provided credentials.</li>
           <li className="colorful-item"><FaEye className="bullet-icon" /> Maintain eye contact and sit upright.</li>
           <li className="colorful-item"><FaUserCheck className="bullet-icon" /> Log in using your provided credentials.</li>
           
