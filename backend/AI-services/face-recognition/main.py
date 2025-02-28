@@ -32,12 +32,12 @@ async def load_basic_model():
     def start_detection():
         basic_detect(
             model='face_landmarker.task',
-            num_faces=5,
-            min_face_detection_confidence=0.5,
-            min_face_presence_confidence=0.5,
-            min_tracking_confidence=0.5,
+            num_faces=3,
+            min_face_detection_confidence=0.6,
+            min_face_presence_confidence=0.6,
+            min_tracking_confidence=0.6,
             camera_id=0,
-            width=640,
+            width=720,
             height=480
         )
 
@@ -57,12 +57,12 @@ async def load_stream_mesh():
     def start_detection():
         face_verify(
             model='face_landmarker.task',
-            num_faces=5,
-            min_face_detection_confidence=0.5,
-            min_face_presence_confidence=0.5,
-            min_tracking_confidence=0.5,
+            num_faces=3,
+            min_face_detection_confidence=0.6,
+            min_face_presence_confidence=0.6,
+            min_tracking_confidence=0.6,
             camera_id=0,
-            width=640,
+            width=720,
             height=480
         )
 
@@ -93,11 +93,7 @@ def find_latest_report():
 
 
 @app.get("/load/model/report")
-async def load_stream_report(
-    interviewId: int,
-    candidateId: int,
-    db: AsyncSession = Depends(get_db)
-):
+async def load_stream_report(interviewId: int, candidateId: int, db: AsyncSession = Depends(get_db)):
     """Start and manage the entire report generation lifecycle"""
     global report_process, stop_event
 
@@ -117,13 +113,13 @@ async def load_stream_report(
         try:
             report_generation(
                 model='face_landmarker.task',
-                num_faces=5,
-                min_face_detection_confidence=0.5,
-                min_face_presence_confidence=0.5,
-                min_tracking_confidence=0.5,
+                num_faces=3,
+                min_face_detection_confidence=0.6,
+                min_face_presence_confidence=0.6,
+                min_tracking_confidence=0.6,
                 camera_id=0,
-                width=1920,
-                height=1080
+                width=720,
+                height=480
             )
         except Exception as e:
             print(f"Report generation error: {str(e)}")
