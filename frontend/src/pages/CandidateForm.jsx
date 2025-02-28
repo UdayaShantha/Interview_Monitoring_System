@@ -197,6 +197,7 @@ const CandidateForm = ({ onClose }) => {
                     </motion.button>
                   </div>
                 </form>
+                
               </>
             )}
           </>
