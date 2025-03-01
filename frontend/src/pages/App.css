@@ -156,8 +156,6 @@ body, html {
 
 
 
-
-
 /*css for instruction page*/
 
 
@@ -345,15 +343,11 @@ body, html {
 
 
 
-
-
-/*css for About Us page*/
+/*css for about us page*/
 
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Lobster&display=swap');
 
-
 /* 🌐 General Styles */
-
 .about-container {
   font-family: 'Montserrat', sans-serif;
   background: linear-gradient(to bottom, rgba(107, 153, 142, 0.8), rgba(46, 125, 50, 0.8)),
@@ -585,6 +579,72 @@ body, html {
     width: 100%;
   }
 }
+
+
+
+
+
+
+
+/*css styles for candidate page*/
+
+/* Navbar */
+.navbar {
+  position: relative;
+  background-color: #fff;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar-links {
+  list-style-type: none;
+  display: flex;
+  gap: 20px;
+}
+
+.navbar-links li {
+  padding: 10px;
+}
+
+.navbar-links.open {
+  display: block;
+}
+
+.navbar-links li a {
+  text-decoration: none;
+  color: #333;
+}
+
+.navbar-toggle {
+  display: none;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .navbar-links {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: 60px;
+    left: 0;
+    width: 100%;
+    background-color: #fff;
+    padding: 20px;
+  }
+
+  .navbar-toggle {
+    display: block;
+  }
+
+  .navbar-links.open {
+    display: block;
+  }
+}
+
+
+
 
 
 
