@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Footer from "../components/Footer";
-import { FaTrash, FaPlus, FaEye } from "react-icons/fa";
+import { FaTrash, FaPlus, FaEye, FaBars } from "react-icons/fa";
 import { motion } from "framer-motion";
 import CandidateForm from "./CandidateForm";
 import "./App.css";
@@ -9,7 +9,7 @@ import "./App.css";
 const CandidatesPage = () => {
   const [candidates, setCandidates] = useState([]);
   const [showForm, setShowForm] = useState(false);
-
+  const [isNavbarOpen, setIsNavbarOpen] = useState(false); 
 
   useEffect(() => {
     fetch("https://your-api-endpoint/candidates")
@@ -18,17 +18,20 @@ const CandidatesPage = () => {
       .catch((error) => console.error("Error fetching candidates:", error));
   }, []);
 
-
+  const toggleNavbar = () => setIsNavbarOpen(!isNavbarOpen); 
 
   return (
     <div className="candidates-page">
       <nav className="navbar">
-        <ul>
+        <div className="navbar-toggle" onClick={toggleNavbar}>
+          <FaBars />
+        </div>
+        <ul className={isNavbarOpen ? "navbar-links open" : "navbar-links"}>
           <li>
-            <Link to="/hr-dashboard">🏠 Home</Link>
+            <Link to="/hr-dashboard">Home</Link>
           </li>
           <li className="active">
-            <Link to="/candidates">📅 Upcoming Today</Link>
+            <Link to="/candidates">Candidates</Link>
           </li>
         </ul>
       </nav>
@@ -38,6 +41,7 @@ const CandidatesPage = () => {
         initial={{ opacity: 0, x: -30 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
+        style={{ marginTop: "60px" }}
       >
         <h2 className="page-title">Candidate Management</h2>
       </motion.div>
@@ -65,25 +69,19 @@ const CandidatesPage = () => {
             <tr>
               <th>Name</th>
               <th>Position</th>
-              <th>Date</th>
-              <th>Start Time</th>
-              <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {candidates.length === 0 ? (
               <tr>
-                <td colSpan="6" className="no-data"> </td>
+                <td colSpan="3" className="no-data"></td>
               </tr>
             ) : (
               candidates.map((candidate) => (
                 <tr key={candidate.id}>
                   <td>{candidate.name}</td>
                   <td>{candidate.position}</td>
-                  <td>{candidate.date}</td>
-                  <td>{candidate.startTime}</td>
-                  <td>{candidate.status}</td>
                   <td className="action-icons">
                     <FaEye className="view-icon" title="View Candidate" />
                     <FaTrash className="delete-icon" title="Delete Candidate" />
@@ -93,7 +91,8 @@ const CandidatesPage = () => {
             )}
           </tbody>
         </table>
-      </motion.div><br></br><br></br>
+      </motion.div>
+      <br /><br />
 
       <Footer />
     </div>
