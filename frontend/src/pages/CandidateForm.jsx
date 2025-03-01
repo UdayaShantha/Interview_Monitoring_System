@@ -26,7 +26,6 @@ const CandidateForm = ({ onClose }) => {
     
     if (validFiles.length <= 5) {
       setFormData({ ...formData, images: validFiles });
-    }
   };
 
   const isFormValid = () => {
