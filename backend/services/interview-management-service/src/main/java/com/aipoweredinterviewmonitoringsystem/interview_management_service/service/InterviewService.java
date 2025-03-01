@@ -52,5 +52,7 @@ public interface InterviewService {
     boolean checkInterview(long interviewId);
 
     LocalTime getInterviewStartTime(long interviewId);
+
+    long getCandidateIdByInterviewId(long interviewId);
 }
 

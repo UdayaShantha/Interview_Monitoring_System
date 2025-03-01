@@ -7,6 +7,7 @@ import HRDashboard from './pages/HRDashboard';
 import CandidatesPage from './pages/CandidatesPage';
 import TechnicalDashboard from './pages/TechnicalDashboard'; 
 import UserProfilePage from './pages/UserProfilePage';
+import InterviewPage from './pages/InterviewPage'; 
 import './pages/App.css';
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
         <Route path="/candidates" element={<CandidatesPage />} /> 
         <Route path="/technical-dashboard" element={<TechnicalDashboard />} />
         <Route path="/user-profile" element={<UserProfilePage />} />
+        <Route path="/interviews" element={<InterviewPage />} />
 
 
 

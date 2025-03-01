@@ -1,48 +1,55 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import Footer from "../components/Footer";
-import { FaBars, FaTimes, FaUsers, FaCalendarCheck, FaChartBar, FaReact, FaAngular, FaNodeJs, FaCode, FaTools, FaCogs, FaDatabase } from "react-icons/fa";
+import { FaBars, FaTimes, FaReact, FaAngular, FaNodeJs, FaCode, FaTools, FaCogs, FaDatabase } from "react-icons/fa";
 import { SiNextdotjs, SiDocker } from "react-icons/si";
 import { motion } from "framer-motion";
-import backgroundImage from "../assets/HRbg.jpg";
+import employeeImage from "../assets/employee.jpg";
+import interviewImage from "../assets/interview.jpg";
+import reportImage from "../assets/report.jpg";
 
 function HRDashboard() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <div 
-      className="min-h-screen flex flex-col font-['Poppins']" 
-      style={{ backgroundImage: `url(${backgroundImage})`, backgroundSize: "cover", backgroundPosition: "center" }}
-    >
-      
-      <nav className="bg-gradient-to-r from-green-900 to-green-700 text-white p-5 flex justify-between items-center shadow-lg">
-        <h1 className="text-3xl font-bold tracking-wide">HR Dashboard</h1>
+    <div className="min-h-screen flex flex-col font-['Poppins'] bg-gradient-to-b from-green-50 to-green-100">
+      <nav className="bg-gradient-to-r from-green-500 to-green-300 text-white p-5 flex justify-between items-center shadow-xl">
+        <h1 className="text-4xl font-extrabold text-white tracking-wider hover:text-yellow-300 transition duration-300">HR Dashboard</h1>
 
         {/* Desktop Menu */}
-        <ul className="hidden md:flex space-x-6">
-
-        <li>
-            <Link to="/hr-dashboard" className="hover:text-red-400 transition duration-300 text-lg font-medium">
+        <ul className="hidden md:flex space-x-8 text-lg font-semibold">
+          <li>
+            <NavLink 
+              to="/hr-dashboard" 
+              className={({ isActive }) => 
+                `hover:text-red-400 transition duration-300 ${isActive ? 'text-red-400 font-bold underline' : ''}`
+              }
+            >
               Home
-            </Link>
+            </NavLink>
           </li>
-          
-
           <li>
-            <Link to="/interviews" className="hover:text-red-400 transition duration-300 text-lg font-medium">
+            <NavLink 
+              to="/interviews" 
+              className={({ isActive }) => 
+                `hover:text-red-400 transition duration-300 ${isActive ? 'text-red-400 font-bold underline' : ''}`
+              }
+            >
               Interviews
-            </Link>
+            </NavLink>
           </li>
-
           <li>
-            <Link to="/candidates" className="hover:text-red-400 transition duration-300 text-lg font-medium">
+            <NavLink 
+              to="/candidates" 
+              className={({ isActive }) => 
+                `hover:text-red-400 transition duration-300 ${isActive ? 'text-red-400 font-bold underline' : ''}`
+              }
+            >
               Candidates
-            </Link>
+            </NavLink>
           </li>
-
-          
           <li>
-            <Link to="/login" className="hover:text-red-400 transition duration-300 text-lg font-medium">
+            <Link to="/login" className="hover:text-red-400 transition duration-300">
               Logout
             </Link>
           </li>
@@ -56,16 +63,18 @@ function HRDashboard() {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <ul className="md:hidden bg-green-800 text-white space-y-6 text-center py-5 absolute top-16 left-0 w-full shadow-md z-10">
+        <ul className="md:hidden bg-green-400 text-white space-y-6 text-center py-5 absolute top-16 left-0 w-full shadow-md z-10">
           {["Home", "Candidates", "Interviews"].map((text, index) => (
             <li key={index}>
-              <Link 
+              <NavLink 
                 to={`/${text.toLowerCase()}`} 
-                className="block py-2 text-lg font-medium hover:text-green-300 transition duration-300"
+                className={({ isActive }) => 
+                  `block py-2 text-lg font-medium hover:text-green-800 transition duration-300 ${isActive ? 'text-red-400 font-bold' : ''}`
+                }
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 {text}
-              </Link>
+              </NavLink>
             </li>
           ))}
           <li>
@@ -81,53 +90,51 @@ function HRDashboard() {
       )}
 
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-b from-green-300 to-green-500 p-12 text-center">
+      <div className="relative bg-gradient-to-b from-green-300 to-green-400 p-12 text-center animate-fadeIn">
         <motion.h2 
-          className="text-5xl font-extrabold text-green-900"
-          initial={{ opacity: 0, y: -20 }}
+          className="text-4xl md:text-6xl font-extrabold text-green-900"
+          initial={{ opacity: 0, y: -40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
           Building Teams Quickly and Affordably
         </motion.h2>
-        <p className="mt-4 text-xl text-green-900 max-w-3xl mx-auto">
+        <p className="mt-6 text-lg md:text-xl text-green-900 max-w-3xl mx-auto tracking-wide leading-relaxed">
           Our AI-powered system streamlines interview management, ensuring efficiency and accuracy.
         </p>
       </div>
 
       {/* Dashboard Sections */}
-      <div className="grid md:grid-cols-3 gap-10 px-8 py-16">
-        {[
-          {
-            icon: <FaUsers className="text-green-700 text-6xl mx-auto" />, 
-            title: "Employee Database", 
-            desc: "Manage employee profiles, details, and job positions.", 
-            link: "#"
-          },
-          {
-            icon: <FaCalendarCheck className="text-green-700 text-6xl mx-auto" />, 
-            title: "Interview Schedules", 
-            desc: "Check and manage upcoming interview schedules.", 
-            link: "#"
-          },
-          {
-            icon: <FaChartBar className="text-green-700 text-6xl mx-auto" />, 
-            title: "Reports & Analytics", 
-            desc: "View HR analytics and interview performance reports.", 
-            link: "#"
-          }
-        ].map((item, index) => (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-10 px-8 py-16">
+        {[{
+          image: employeeImage, 
+          title: "Employee Database", 
+          desc: "Manage employee profiles, details, and job positions.", 
+          link: "#"
+        },
+        {
+          image: interviewImage, 
+          title: "Interview Schedules", 
+          desc: "Check and manage upcoming interview schedules.", 
+          link: "#"
+        },
+        {
+          image: reportImage, 
+          title: "Reports & Analytics", 
+          desc: "View HR analytics and interview performance reports.", 
+          link: "#"
+        }].map((item, index) => (
           <motion.div 
             key={index} 
-            className="bg-white shadow-lg rounded-xl p-8 text-center hover:shadow-2xl hover:scale-105 transition-all duration-500"
+            className="bg-white shadow-xl rounded-xl p-8 text-center transform transition-transform duration-500 hover:scale-105 hover:shadow-2xl"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.2, duration: 0.8 }}
           >
-            {item.icon}
-            <h3 className="text-2xl font-semibold mt-4 text-green-900">{item.title}</h3>
+            <img src={item.image} alt={item.title} className="w-full h-40 object-cover rounded-md mb-4 transition-transform duration-300 hover:scale-105" />
+            <h3 className="text-2xl font-semibold text-green-800 hover:text-green-600 transition duration-300">{item.title}</h3>
             <p className="text-gray-700 mt-2">{item.desc}</p>
-            <Link to={item.link} className="block mt-4 bg-green-600 text-white py-3 rounded-lg hover:bg-green-500 transition duration-300">
+            <Link to={item.link} className="block mt-4 bg-green-600 text-white py-2 rounded-lg hover:bg-green-500 transition duration-300">
               View More
             </Link>
           </motion.div>
@@ -136,11 +143,11 @@ function HRDashboard() {
 
       {/* Staff We Provide Section */}
       <div className="bg-green-100 py-12 text-center">
-        <h2 className="text-3xl font-bold text-green-900">Staff We Provide</h2>
+        <h2 className="text-4xl font-extrabold text-green-900 tracking-wide">Staff We Provide</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 px-10 mt-6">
           {["Fullstack Engineers", "Quality Assurance", "Data Engineers", "Business Analysts", "DevOps Engineers", "Frontend Engineers"].map((role, index) => (
             <motion.div key={index} 
-              className="bg-white shadow-md rounded-xl p-4 text-center hover:bg-green-300 transition-all duration-300"
+              className="bg-white shadow-md rounded-xl p-4 text-center hover:bg-green-300 transform transition duration-300 hover:scale-105"
               whileHover={{ scale: 1.1 }}
             >
               <p className="text-lg font-semibold text-green-900">{role}</p>
@@ -150,11 +157,10 @@ function HRDashboard() {
       </div>
 
       {/* Specialized Technologies Section */}
-      <div className="bg-green-800 text-white py-12 text-center">
-        <h2 className="text-3xl font-bold">Specialized Technologies</h2>
+      <div className="bg-emerald-700 text-white py-12 text-center">
+        <h2 className="text-4xl font-extrabold text-green-400">Specialized Technologies</h2>
         <div className="flex flex-wrap justify-center gap-10 mt-6">
-          {[
-            { icon: <FaReact />, name: "React" },
+          {[{ icon: <FaReact />, name: "React" },
             { icon: <FaAngular />, name: "Angular" },
             { icon: <SiNextdotjs />, name: "Next.js" },
             { icon: <FaNodeJs />, name: "Node.js" },
@@ -165,7 +171,7 @@ function HRDashboard() {
             { icon: <FaDatabase />, name: "PostgreSQL" }
           ].map((tech, index) => (
             <motion.div key={index} 
-              className="bg-white text-green-900 shadow-md rounded-xl p-6 flex flex-col items-center hover:bg-green-400 transition duration-300"
+              className="bg-white text-green-900 shadow-md rounded-xl p-6 flex flex-col items-center hover:bg-green-400 transition duration-300 transform hover:scale-105"
               whileHover={{ scale: 1.1 }}
             >
               <div className="text-6xl">{tech.icon}</div>
