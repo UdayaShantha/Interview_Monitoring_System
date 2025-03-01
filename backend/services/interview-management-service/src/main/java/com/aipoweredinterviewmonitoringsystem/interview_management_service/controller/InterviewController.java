@@ -25,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 @RestController
@@ -66,8 +67,8 @@ public class InterviewController {
         );
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<StandardResponse> getInterviewById(@PathVariable(value = "id") Long interviewId) {
+    @GetMapping("/get/interview")
+    public ResponseEntity<StandardResponse> getInterviewById(@RequestParam long interviewId) {
         GetInterviewDTO getInterviewDTO = interviewService.getInterviewById(interviewId);
         return new ResponseEntity<StandardResponse>(
                 new StandardResponse(200,"Success",getInterviewDTO),
@@ -103,8 +104,8 @@ public class InterviewController {
         );
     }
 
-    @GetMapping("/candidate/{candidateId}")
-    Interview getInterviewByCandidateId(@PathVariable(value = "candidateId") Long candidateId){
+    @GetMapping("/get/interview/candidateId")
+    Interview getInterviewByCandidateId(@RequestParam long candidateId){
         return interviewService.getInterviewByCandidateId(candidateId);
     }
 
@@ -204,5 +205,35 @@ public class InterviewController {
                 new StandardResponse(200, "Success", filteredInterviews),
                 HttpStatus.OK
         );
+    }
+
+    @GetMapping("/check/interview")
+    public ResponseEntity<StandardResponse> checkInterview(@RequestParam long interviewId) {
+        try {
+            boolean value = interviewService.checkInterview(interviewId);
+            return new ResponseEntity<>(new StandardResponse(200, "Success", value), HttpStatus.OK);
+        }catch (Exception e) {
+            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/get/interview/start-time")
+    public ResponseEntity<StandardResponse> getInterviewStartTime(@RequestParam long interviewId) {
+        try {
+            LocalTime startTime = interviewService.getInterviewStartTime(interviewId);
+            return new ResponseEntity<>(new StandardResponse(200, "Success", startTime), HttpStatus.OK);
+        }catch (Exception e) {
+            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/get/candidateId/by/interviewId")
+    public ResponseEntity<StandardResponse> getCandidateIdByInterviewId(@RequestParam long interviewId) {
+        try {
+            long candidateId = interviewService.getCandidateIdByInterviewId(interviewId);
+            return new ResponseEntity<>(new StandardResponse(200, "Success", candidateId), HttpStatus.OK);
+        }catch (Exception e) {
+            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }

@@ -26,6 +26,7 @@ import java.util.List;
 @Data
 @Builder
 public class Interview {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "interview_id")
@@ -45,7 +46,7 @@ public class Interview {
     @Column(name = "status",nullable = false)
     private Status status;
 
-    @Column(name = "start_time",nullable = false,unique = true)
+    @Column(name = "start_time",nullable = false)
     private LocalTime startTime;
 
     @Column(name = "end_time")

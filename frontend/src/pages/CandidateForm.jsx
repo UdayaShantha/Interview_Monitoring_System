@@ -26,6 +26,25 @@ const CandidateForm = ({ onClose }) => {
     
     if (validFiles.length <= 5) {
       setFormData({ ...formData, images: validFiles });
+
+  const isValidURL = (url) => {
+    try {
+      new URL(url);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  };
+
+  const handleImageUpload = (index, event) => {
+    const newImages = [...formData.images];
+    const imageUrl = URL.createObjectURL(event.target.files[0]);
+    if (isValidURL(imageUrl)) {
+      newImages[index] = imageUrl;
+      setFormData({ ...formData, images: newImages });
+    } else {
+      console.error("Invalid image URL");
+    }
   };
 
   const isFormValid = () => {
