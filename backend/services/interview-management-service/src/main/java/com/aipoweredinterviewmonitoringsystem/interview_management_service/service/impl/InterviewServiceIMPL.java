@@ -135,8 +135,6 @@ public class InterviewServiceIMPL implements InterviewService {
         }
     }
 
-
-
     @Override
     public List<QuestionResponseDTO> getInterviewQuestions(long interviewId) {
         if(interviewRepository.existsById(interviewId)){
@@ -356,6 +354,14 @@ public class InterviewServiceIMPL implements InterviewService {
     public LocalTime getInterviewStartTime(long interviewId) {
         if(interviewRepository.existsById(interviewId)){
             return interviewRepository.findById(interviewId).get().getStartTime();
+        }
+        throw new InterviewNotFountException("Not found this interview");
+    }
+
+    @Override
+    public long getCandidateIdByInterviewId(long interviewId) {
+        if(interviewRepository.existsById(interviewId)){
+            return interviewRepository.findById(interviewId).get().getCandidateId();
         }
         throw new InterviewNotFountException("Not found this interview");
     }
