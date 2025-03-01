@@ -18,7 +18,7 @@ const CandidateForm = ({ onClose }) => {
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
-    const validFiles = files.filter(file => {
+        const validFiles = files.filter(file => {
       const validTypes = ["image/jpeg", "image/png", "image/gif"];
       const maxSize = 5 * 1024 * 1024; // 5MB
       return validTypes.includes(file.type) && file.size <= maxSize;
