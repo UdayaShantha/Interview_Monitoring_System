@@ -174,4 +174,10 @@ const CandidateForm = ({ onClose }) => {
   );
 };
 
+  }
+}
+
+  
+
 export default CandidateForm;
+  
