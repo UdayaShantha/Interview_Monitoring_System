@@ -62,6 +62,7 @@ body, html {
   display: block;
 }
 
+
 .input-with-icon {
   display: flex;
   align-items: center;
@@ -123,7 +124,7 @@ body, html {
 }
 
 .clear-btn {
-  background-color: #a9dcab;
+  background-color: #e19b8b;
   color: white;
 }
 
@@ -751,7 +752,7 @@ body, html {
   cursor: pointer;
   border: none;
   transition: transform 0.3s ease-in-out, background 0.3s ease-in-out;
-  animation: bounce 1s infinite alternate;
+ 
 }
 
 .start-btn:hover {
