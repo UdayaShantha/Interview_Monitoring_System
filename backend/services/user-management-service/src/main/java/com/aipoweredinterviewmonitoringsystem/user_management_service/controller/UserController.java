@@ -157,8 +157,8 @@ public class UserController {
     public ResponseEntity<StandardResponse> saveCandidateFeedback(@RequestParam(value = "user_id") long user_id,
                                                                   @RequestParam(value = "rate") int rate,
                                                                   @RequestParam(value="comment") String comment){
-        String msg=userService.saveCandidateFeedback(user_id,rate,comment);
         try {
+            String msg=userService.saveCandidateFeedback(user_id,rate,comment);
             return new ResponseEntity<StandardResponse>(
                     new StandardResponse(200,"Success",msg),HttpStatus.CREATED
             );
@@ -205,4 +205,5 @@ public class UserController {
             );
         }
     }
+
 }

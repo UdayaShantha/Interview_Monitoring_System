@@ -111,7 +111,6 @@ def run(model: str,
     font_thickness = 1
     fps_avg_frame_count = 10
 
-    # Label box parameters
     label_background_color = (255, 255, 255)  # White
     label_padding_width = 1500  # pixels
 
@@ -257,7 +256,6 @@ def main():
         default=1080,
         type=int)
 
-    # Parse arguments with explicit type conversion
     args = parser.parse_args()
 
     # Run the detection

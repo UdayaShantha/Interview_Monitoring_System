@@ -1,20 +1,3 @@
-# Copyright 2023 The MediaPipe Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-"""Main scripts to run face landmarker."""
-
-
-#Impport the relevant libraries
 
 import argparse
 import sys
@@ -31,12 +14,11 @@ mp_face_mesh = mp.solutions.face_mesh
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 
-# Global variables to calculate FPS
 COUNTER, FPS = 0, 0
 START_TIME = time.time()
 DETECTION_RESULT = None
 
-#Initially setup parameters into null/none
+
 def run(model: str,
         num_faces: int,
         min_face_detection_confidence: float,
@@ -257,10 +239,6 @@ def main():
              'considered successful.',
         required=False,
         default=0.5)
-    # Finding the camera ID can be very reliant on platform-dependent methods.
-    # One common approach is to use the fact that camera IDs are usually indexed sequentially by the OS, starting from 0.
-    # Here, we use OpenCV and create a VideoCapture object for each potential ID with 'cap = cv2.VideoCapture(i)'.
-    # If 'cap' is None or not 'cap.isOpened()', it indicates the camera ID is not available.
     parser.add_argument(
         '--cameraId', help='Id of camera.', required=False, default=0)
     parser.add_argument(

@@ -1,5 +1,6 @@
 package com.aipoweredinterviewmonitoringsystem.interview_management_service.service.impl;
 
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.advisor.InterviewNotFountException;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.*;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.paginated.PaginatedInterviewGetAllDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.response.QuestionResponseDTO;
@@ -133,8 +134,6 @@ public class InterviewServiceIMPL implements InterviewService {
             throw new RuntimeException("No such interview");
         }
     }
-
-
 
     @Override
     public List<QuestionResponseDTO> getInterviewQuestions(long interviewId) {
@@ -341,5 +340,29 @@ public class InterviewServiceIMPL implements InterviewService {
                 })
                 .collect(Collectors.toList());
         return new PageImpl<>(interviewDTOs, pageable, filteredInterviews.getTotalElements());
+    }
+
+    @Override
+    public boolean checkInterview(long interviewId) {
+        if(interviewRepository.countByStatusAndDate(Status.CANCELLED, LocalDate.now()) > 0 && interviewRepository.existsById(interviewId)){
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public LocalTime getInterviewStartTime(long interviewId) {
+        if(interviewRepository.existsById(interviewId)){
+            return interviewRepository.findById(interviewId).get().getStartTime();
+        }
+        throw new InterviewNotFountException("Not found this interview");
+    }
+
+    @Override
+    public long getCandidateIdByInterviewId(long interviewId) {
+        if(interviewRepository.existsById(interviewId)){
+            return interviewRepository.findById(interviewId).get().getCandidateId();
+        }
+        throw new InterviewNotFountException("Not found this interview");
     }
 }
