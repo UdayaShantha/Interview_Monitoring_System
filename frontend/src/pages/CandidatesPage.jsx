@@ -8,17 +8,42 @@ import "./App.css";
 
 const CandidatesPage = () => {
   const [candidates, setCandidates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [isNavbarOpen, setIsNavbarOpen] = useState(false); // To handle navbar toggle
+  const [isNavbarOpen, setIsNavbarOpen] = useState(false);
 
   useEffect(() => {
-    fetch("https://your-api-endpoint/candidates")
+
+    /*fetch("https://your-api-endpoint/candidates")
       .then((response) => response.json())
       .then((data) => setCandidates(data))
       .catch((error) => console.error("Error fetching candidates:", error));
-  }, []);
+  }, []);*/
 
-  const toggleNavbar = () => setIsNavbarOpen(!isNavbarOpen); // Toggle navbar visibility
+   
+
+
+    //fetch all canidates paginated
+  const fetchCandidates = async (page = 0, size = 10) => {
+    try {
+      const response = await axios.get(`("http://localhost:9191/api/v1/users/candidate/all//paginated?page=${page}&size=${size}")`);
+      if (response.status === 200) {
+        setCandidates(response.data.data.candidates); // Update state with paginated data
+      }
+    } catch (error) {
+      setError("Failed to load candidates");
+      console.error("Error fetching candidates:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+
+  fetchCandidates();
+}, []);
+
+  const toggleNavbar = () => setIsNavbarOpen(!isNavbarOpen); 
 
   return (
     <div className="candidates-page">
