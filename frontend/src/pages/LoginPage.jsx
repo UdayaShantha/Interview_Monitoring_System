@@ -79,10 +79,10 @@ function LoginPage() {
               onChange={(e) => setPosition(e.target.value)}
               required
             >
-              <option value="" disabled hidden>Select your position</option>
-              <option value="Candidate">Candidate</option>
-              <option value="HR">HR</option>
-              <option value="Technical">Technical</option>
+              <option value="" disabled hidden style={{ color: 'black' }}>Select your position</option>
+              <option value="Candidate" style={{ color: '#2E7D32', fontWeight: 'bold' }}>Candidate</option>
+              <option value="HR" style={{ color: '#2E7D32', fontWeight: 'bold' }}>HR</option>
+              <option value="Technical" style={{ color: '#2E7D32', fontWeight: 'bold' }}>Technical</option>
             </select>
           </div>
 

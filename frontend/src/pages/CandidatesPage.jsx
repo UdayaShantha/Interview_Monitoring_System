@@ -9,7 +9,7 @@ import "./App.css";
 const CandidatesPage = () => {
   const [candidates, setCandidates] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [isNavbarOpen, setIsNavbarOpen] = useState(false); 
+  const [isNavbarOpen, setIsNavbarOpen] = useState(false); // To handle navbar toggle
 
   useEffect(() => {
     fetch("https://your-api-endpoint/candidates")
@@ -18,7 +18,7 @@ const CandidatesPage = () => {
       .catch((error) => console.error("Error fetching candidates:", error));
   }, []);
 
-  const toggleNavbar = () => setIsNavbarOpen(!isNavbarOpen); 
+  const toggleNavbar = () => setIsNavbarOpen(!isNavbarOpen); // Toggle navbar visibility
 
   return (
     <div className="candidates-page">

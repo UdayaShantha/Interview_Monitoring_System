@@ -18,32 +18,9 @@ const CandidateForm = ({ onClose }) => {
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
-        const validFiles = files.filter(file => {
-      const validTypes = ["image/jpeg", "image/png", "image/gif"];
-      const maxSize = 5 * 1024 * 1024; // 5MB
-      return validTypes.includes(file.type) && file.size <= maxSize;
-    });
     
-    if (validFiles.length <= 5) {
-      setFormData({ ...formData, images: validFiles });
-
-  const isValidURL = (url) => {
-    try {
-      new URL(url);
-      return true;
-    } catch (_) {
-      return false;
-    }
-  };
-
-  const handleImageUpload = (index, event) => {
-    const newImages = [...formData.images];
-    const imageUrl = URL.createObjectURL(event.target.files[0]);
-    if (isValidURL(imageUrl)) {
-      newImages[index] = imageUrl;
-      setFormData({ ...formData, images: newImages });
-    } else {
-      console.error("Invalid image URL");
+    if (files.length <= 5) {
+      setFormData({ ...formData, images: files });
     }
   };
 
