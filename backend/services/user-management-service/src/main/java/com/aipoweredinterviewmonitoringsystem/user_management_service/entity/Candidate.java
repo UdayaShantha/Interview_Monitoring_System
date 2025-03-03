@@ -1,12 +1,21 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.entity;
 
 
+
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.PositionType;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -15,33 +24,47 @@ import java.util.List;
 @Data
 @Entity
 @Table(name = "candidates")
-public class Candidate {
-    @Id
-    private Long userId;
+public class Candidate extends User{
 
-    @OneToOne
-    @JoinColumn(name = "user_id")
-    @MapsId
-    private User user;
-
+    @Column(name = "candidate_name",nullable = false)
     private String name;
-    private String phone;
-    private String nic;
-    private String address;
-    private String email;
-    private LocalDate birthday;
-    private String position;
 
-    @Column(name = "created_by")
-    private Long createdBy;
+    @Column(name = "candidate_nic",nullable = false, unique = true)
+    private String nic;
+
+    @Column(name = "candidate_email",nullable = false,unique = true)
+    private String email;
+
+    @Column(name = "candidate_address",nullable = false)
+    private String address;
+
+    @Column(name = "candidate_phone_number",nullable = false,unique = true)
+    private String phone;
+
+    @Column(name = "candidate_dob",nullable = false)
+    private LocalDate birthday;
 
     @ElementCollection
     @CollectionTable(name = "candidate_photos")
     private List<byte[]> photos;
 
-//    @ManyToOne
-//    @JoinColumn(name = "created_by", insertable = false, updatable = false)
-//    private HrTeam hrTeam;
+    @Enumerated(EnumType.STRING)
+    @Column(name="position_type",nullable = false)
+    private PositionType positionType;
 
+    @Min(1)
+    @Max(5)
+    @Column(name = "candidate_rating")
+    private Integer rate;
 
+    @Column(name = "candidate_comment")
+    private String comment;
+
+//    @OneToOne(mappedBy = "candidate")
+//    private Interview interview;
+
+//    @OneToOne(mappedBy = "candidate")
+//    @JsonIgnore
+//    private Interview interview;
 }
+

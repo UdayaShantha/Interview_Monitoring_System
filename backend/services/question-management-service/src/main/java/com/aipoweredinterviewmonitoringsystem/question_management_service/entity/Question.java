@@ -1,51 +1,32 @@
 package com.aipoweredinterviewmonitoringsystem.question_management_service.entity;
 
-import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.enums.DifficultyLevel;
+import com.aipoweredinterviewmonitoringsystem.question_management_service.entity.enums.QuestionType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@ToString
 @Table(name = "questions")
+@Inheritance(strategy = InheritanceType.JOINED)
 public class Question {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "question_id")
-    private Long questionId;
+    private long questionId;
 
-    @Column(nullable = false)
-    private String content;
-
-    @Column(nullable = false)
-    private String category;
-
+    @Column(name="category",nullable = false)
     @Enumerated(EnumType.STRING)
-    @Column(name = "difficulty_level", nullable = false)
-    private DifficultyLevel difficultyLevel;
+    private QuestionType category;
 
-    @Column(name = "created_by", nullable = false)
-    private Long createdBy;
+//    @Column(name = "created_by", nullable = false)
+//    private Long createdBy;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
-
-    @OneToOne(mappedBy = "question" , cascade = CascadeType.ALL)
-    private CommonQuestion commonQuestion;
-
-    @OneToOne(mappedBy = "question" , cascade = CascadeType.ALL)
-    private QuestionSE questionSE;
-
-    @OneToOne(mappedBy = "question" , cascade = CascadeType.ALL)
-    private QuestionDS questionDS;
-
-    @OneToOne(mappedBy = "question" , cascade = CascadeType.ALL)
-    private QuestionQA questionQA;
-
+    private LocalDate createdAt;
 }

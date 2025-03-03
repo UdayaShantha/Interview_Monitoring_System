@@ -1,37 +1,50 @@
 package com.aipoweredinterviewmonitoringsystem.question_management_service.entity;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 
 @Entity
-@Data
+@Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "common_question")
-public class CommonQuestion {
+public class CommonQuestion extends Question {
 
-    @Setter
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Long commonQuestionId;
+    @Column(name = "duration", nullable = false)
+    private long duration;
 
-    @OneToOne
-    @JoinColumn(name = "question_id", nullable = false)
-    private Question question;
+    @Column(name="common_question_content",nullable = false,unique = true)
+    private String content;
 
-    @Column(name = "duration" ,nullable = false)
-    private LocalTime duration;
+    @Column(name = "common_keywords", nullable = false)
+    private String keywords;
 
-    public void setCommonQuestionId(Long commonQuestionId) {
-        this.commonQuestionId = commonQuestionId;
+    public void setKeywords(List<String> keywords) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            this.keywords = objectMapper.writeValueAsString(keywords); // Serialize list to JSON
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize keywords", e);
+        }
     }
 
+    public List<String> getKeywords() {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return this.keywords == null ? new ArrayList<>() : objectMapper.readValue(this.keywords, new TypeReference<List<String>>() {});
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to deserialize keywords", e);
+        }
+    }
 }
-

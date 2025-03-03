@@ -7,16 +7,15 @@ import lombok.Data;
 @Data
 @Entity
 @Table(name = "hr_team")
-public class HrTeam {
-    @Id
-    private Long userId;
+public class HrTeam extends User {
 
-    @OneToOne
-    @JoinColumn(name = "user_id")
-    @MapsId
-    private User user;
-
+    @Column(name = "hr_name", nullable = false)
     private String name;
-    private String department;
+
+    @Column(name = "hr_position", nullable = false)
     private String position;
+
+    @Column(name = "hr_comment", length = 255)
+    private String comment;
+
 }

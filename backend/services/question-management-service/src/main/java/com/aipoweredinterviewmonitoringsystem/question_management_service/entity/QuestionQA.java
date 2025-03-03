@@ -1,33 +1,48 @@
 package com.aipoweredinterviewmonitoringsystem.question_management_service.entity;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Data
+@Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "question_QA")
 
-public class QuestionQA {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "question_qa_id")
-    private Long questionQAId;
+public class QuestionQA extends Question{
 
-    @OneToOne
-    @JoinColumn(name = "question_id", nullable = false)
-    private Question question;
+    @Column(name = "duration", nullable = false)
+    private long duration;
 
-    @Column(name = "duration" ,nullable = false)
-    private LocalTime duration;
+    @Column(name="qa_question_content",nullable = false,unique = true)
+    private String content;
 
-    public void setQuestionQAId(Long id) {
-        this.questionQAId = id;
+    @Column(name = "qa_keywords", nullable = false)
+    private String keywords;
+
+    public void setKeywords(List<String> keywords) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            this.keywords = objectMapper.writeValueAsString(keywords); // Serialize list to JSON
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize keywords", e);
+        }
+    }
+
+    public List<String> getKeywords() {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return this.keywords == null ? new ArrayList<>() : objectMapper.readValue(this.keywords, new TypeReference<List<String>>() {});
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to deserialize keywords", e);
+        }
     }
 }
-
