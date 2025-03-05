@@ -8,7 +8,7 @@ from datetime import datetime
 import cv2
 import mediapipe as mp
 import numpy as np
-import face_recognition  # New dependency
+import face_recognition # New dependency
 
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
