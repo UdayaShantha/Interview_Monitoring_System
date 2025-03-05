@@ -12,6 +12,7 @@
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "autoprefixer": "^10.4.20",
+    "axios": "^1.8.1",
     "chart.js": "^4.4.8",
     "axios": "^1.7.9",
     "date-fns": "^4.1.0",

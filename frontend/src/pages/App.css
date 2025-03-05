@@ -62,6 +62,7 @@ body, html {
   display: block;
 }
 
+
 .input-with-icon {
   display: flex;
   align-items: center;
@@ -123,7 +124,7 @@ body, html {
 }
 
 .clear-btn {
-  background-color: #a9dcab;
+  background-color: #e19b8b;
   color: white;
 }
 
@@ -153,8 +154,6 @@ body, html {
     flex-direction: column;
   }
 }
-
-
 
 
 
@@ -345,15 +344,11 @@ body, html {
 
 
 
-
-
-/*css for About Us page*/
+/*css for about us page*/
 
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Lobster&display=swap');
 
-
 /* 🌐 General Styles */
-
 .about-container {
   font-family: 'Montserrat', sans-serif;
   background: linear-gradient(to bottom, rgba(107, 153, 142, 0.8), rgba(46, 125, 50, 0.8)),
@@ -590,6 +585,72 @@ body, html {
 
 
 
+
+
+/*css styles for candidate page*/
+
+/* Navbar */
+.navbar {
+  position: relative;
+  background-color: #fff;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar-links {
+  list-style-type: none;
+  display: flex;
+  gap: 20px;
+}
+
+.navbar-links li {
+  padding: 10px;
+}
+
+.navbar-links.open {
+  display: block;
+}
+
+.navbar-links li a {
+  text-decoration: none;
+  color: #333;
+}
+
+.navbar-toggle {
+  display: none;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .navbar-links {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: 60px;
+    left: 0;
+    width: 100%;
+    background-color: #fff;
+    padding: 20px;
+  }
+
+  .navbar-toggle {
+    display: block;
+  }
+
+  .navbar-links.open {
+    display: block;
+  }
+}
+
+
+
+
+
+
+
+
 /*css for user profile page*/
 
 .user-container {
@@ -691,7 +752,7 @@ body, html {
   cursor: pointer;
   border: none;
   transition: transform 0.3s ease-in-out, background 0.3s ease-in-out;
-  animation: bounce 1s infinite alternate;
+ 
 }
 
 .start-btn:hover {
@@ -862,7 +923,7 @@ body, html {
 
 
 
-
+/* css styles for candidate page*/
 
 /* General Page Styling */
 .candidates-page {
@@ -1040,6 +1101,93 @@ body, html {
     gap: 10px;
   }
 }
+
+.candidates-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.candidates-table th,
+.candidates-table td {
+  padding: 12px 16px;
+  text-align: left;
+}
+
+.candidates-table th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
+
+.candidates-table .left-align {
+  text-align: left;
+  padding-left: 20px;
+}
+
+.candidates-table .center-align {
+  text-align: center;
+}
+
+.candidates-table .right-align {
+  text-align: right;
+  padding-right: 20px;
+}
+
+.candidates-table tr {
+  border-bottom: 1px solid #ddd;
+}
+
+.candidates-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+.action-icons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+}
+
+.view-icon,
+.delete-icon {
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.view-icon:hover {
+  color: #007bff;
+}
+
+.delete-icon:hover {
+  color: #dc3545;
+}
+
+.pagination {
+  margin-top: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.pagination button {
+  padding: 8px 12px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pagination button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+
 
 
 
