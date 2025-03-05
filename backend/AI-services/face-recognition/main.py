@@ -55,7 +55,6 @@ async def load_stream_mesh():
     """
     Starts the face landmark detection asynchronously for a given interview ID.
     """
-
     def start_detection():
         face_verify(
             model='face_landmarker.task',
@@ -208,7 +207,6 @@ async def get_candidate_data(interviewId: int):
                 detail=f"SpringBoot service error: {e.response.text}"
             )
 
-
 @app.get("/load/model/face-recognition")
 async def load_stream_face_recognition(
         interviewId: int,
@@ -328,7 +326,6 @@ async def load_stream_face_recognition(
         filename=f"report_{interviewId}_{candidateId}.csv"
     )
 
-
 @app.get("/monitoring/status/{interviewId}")
 async def get_monitoring_status(interviewId: int):
     process = active_processes.get(interviewId)
@@ -339,7 +336,6 @@ async def get_monitoring_status(interviewId: int):
         "status": "running" if process["thread"].is_alive() else "completed",
         "report_generated": process["report_path"] is not None
     }
-
 
 @app.get("/stop/monitoring/{interviewId}")
 async def stop_monitoring(interviewId: int):
