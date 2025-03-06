@@ -1,11 +1,8 @@
-import os
 
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-DB_USER = os.environ.get("YOUR_USERNAME")
-DB_PASS = os.environ.get("YOUR_PASSWORD")
-DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@localhost:5432/ai_services_db1"
+DATABASE_URL = "postgresql+asyncpg://postgres:Udaya123?@localhost:5432/ai_services_db1"
 
 Base = declarative_base()
 
