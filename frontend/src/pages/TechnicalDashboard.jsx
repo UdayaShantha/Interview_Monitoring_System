@@ -64,7 +64,7 @@ function HRDashboard() {
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <ul className="md:hidden bg-green-400 text-white space-y-6 text-center py-5 absolute top-16 left-0 w-full shadow-md z-10">
-          {["Home", "Candidates", "Interviews"].map((text, index) => (
+          {["Home", "Questions", "Interviews"].map((text, index) => (
             <li key={index}>
               <NavLink 
                 to={`/${text.toLowerCase()}`} 
