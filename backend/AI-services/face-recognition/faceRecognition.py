@@ -1,4 +1,5 @@
 import argparse
+import base64
 import sys
 import os
 import time
@@ -11,6 +12,8 @@ from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 from deepface import DeepFace
 import warnings
+import threading
+import concurrent.futures
 
 # Suppress DeepFace warnings for cleaner output
 warnings.filterwarnings("ignore")
@@ -31,6 +34,12 @@ class InterviewMonitoringSystem:
         self.max_simultaneous_faces = 0
         self.off_screen_duration = 0
         self.last_frame_time = time.time()
+        self.mismatch_start_time = None
+        self.verification_running = True
+
+        # Frame processing
+        self.frame_count = 0
+        self.skip_frames = 2  # Process every 3rd frame for DeepFace to reduce CPU load
 
         # Existing emotion tracking
         self.emotion_totals = {}
@@ -40,6 +49,7 @@ class InterviewMonitoringSystem:
         self.violations = {
             'face_off_screen': 0,
             'multiple_faces': 0,
+            'identity_mismatch': 0,
             'head_movement': {
                 'excessive_rotation': 0,
                 'total_rotations': []
@@ -71,48 +81,156 @@ class InterviewMonitoringSystem:
             }
         }
 
-        # Store candidate photos as numpy arrays
-        self.candidate_photos = [self.base64_to_image(photo) for photo in candidate_photos]
+        # Store candidate photos as numpy arrays for face verification
+        self.candidate_photos = []
+        for base64_str in candidate_photos:
+            try:
+                img = self.base64_to_image(base64_str)
+                if img is not None:
+                    self.candidate_photos.append(img)
+            except Exception as e:
+                print(f"Error loading candidate photo: {e}")
+
+        if not self.candidate_photos:
+            raise ValueError("No valid candidate photos provided")
+
+        print(f"Loaded {len(self.candidate_photos)} candidate photos for verification")
+
+        # Verification parameters
         self.verification_threshold = 5
-        self.results = {
+        self.identity_verification_results = {
             'matches': 0,
             'mismatches': 0,
             'consecutive_mismatches': 0,
             'violation_triggered': False
         }
 
+        # Result path
+        self.report_path = None
+
+        # ThreadPoolExecutor for parallel processing
+        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
+
     def base64_to_image(self, base64_str):
-        img_bytes = base64.b64decode(base64_str)
-        nparr = np.frombuffer(img_bytes, np.uint8)
-        return cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        """Convert base64 string to OpenCV image"""
+        try:
+            # If the string has a data URI prefix, remove it
+            if ',' in base64_str:
+                base64_str = base64_str.split(',')[1]
+
+            img_bytes = base64.b64decode(base64_str)
+            nparr = np.frombuffer(img_bytes, np.uint8)
+            img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+            if img is None:
+                print("Warning: Failed to decode image from base64 string")
+                return None
+
+            return img
+        except Exception as e:
+            print(f"Error converting base64 to image: {e}")
+            return None
 
     def verify_face(self, frame):
+        """Verify if the face in the frame matches any of the candidate photos"""
+        try:
+            # Skip frames to reduce CPU load if needed
+            self.frame_count += 1
+            if self.frame_count % (self.skip_frames + 1) != 0 and self.identity_verification_results[
+                'consecutive_mismatches'] < 3:
+                # If we're not in alert mode (consecutive mismatches < 3), we can skip frames
+                return True
+
+            # Process verification in parallel
+            future = self.executor.submit(self._verify_face_worker, frame)
+            return future.result()
+
+        except Exception as e:
+            print(f"Verification execution error: {e}")
+            return True  # Default to true on error to avoid false alerts
+
+    def _verify_face_worker(self, frame):
+        """Worker function for face verification to run in executor"""
+        matched = False
         try:
             for stored_img in self.candidate_photos:
-                result = DeepFace.verify(
-                    img1_path=frame,
-                    img2_path=stored_img,
-                    enforce_detection=False,
-                    detector_backend='opencv'
-                )
-                if result['verified']:
-                    self.results['matches'] += 1
-                    self.results['consecutive_mismatches'] = 0
-                    return True
-            self.results['mismatches'] += 1
-            self.results['consecutive_mismatches'] += 1
+                if not self.verification_running:
+                    return True  # Exit early if verification is being terminated
 
-            if self.results['consecutive_mismatches'] >= self.verification_threshold:
-                self.results['violation_triggered'] = True
-                return False
+                try:
+                    result = DeepFace.verify(
+                        img1_path=frame,
+                        img2_path=stored_img,
+                        enforce_detection=False,
+                        detector_backend='opencv',
+                        model_name='Facenet',
+                        distance_metric='cosine'
+                    )
+
+                    if result['verified']:
+                        self.identity_verification_results['matches'] += 1
+                        self.identity_verification_results['consecutive_mismatches'] = 0
+                        self.deepface_data['verification']['matches'] += 1
+                        self.deepface_data['verification']['consecutive_mismatches'] = 0
+                        matched = True
+                        break
+
+                except Exception as inner_e:
+                    print(f"Individual verification error: {inner_e}")
+                    continue
+
+            if not matched:
+                self.identity_verification_results['mismatches'] += 1
+                self.identity_verification_results['consecutive_mismatches'] += 1
+                self.deepface_data['verification']['mismatches'] += 1
+                self.deepface_data['verification']['consecutive_mismatches'] += 1
+
+                if self.identity_verification_results['consecutive_mismatches'] >= self.verification_threshold:
+                    self.identity_verification_results['violation_triggered'] = True
+                    self.deepface_data['verification']['violation_triggered'] = True
+                    self.violations['identity_mismatch'] += 1
+                    return False
+
             return True
 
         except Exception as e:
-            print(f"Verification error: {e}")
-            return False
+            print(f"Worker verification error: {e}")
+            return True  # Default to true on error
+
+    def calculate_head_rotation(self, face_landmarks):
+        """Calculate approximate head rotation from face landmarks"""
+        # Take nose landmark as reference (landmark 1)
+        nose = [face_landmarks[1].x, face_landmarks[1].y, face_landmarks[1].z]
+
+        # Calculate angle based on nose and eye positions
+        left_eye = [face_landmarks[33].x, face_landmarks[33].y, face_landmarks[33].z]
+        right_eye = [face_landmarks[263].x, face_landmarks[263].y, face_landmarks[263].z]
+
+        eye_line = np.array([right_eye[0] - left_eye[0], right_eye[1] - left_eye[1]])
+        eye_angle = np.degrees(np.arctan2(eye_line[1], eye_line[0]))
+
+        return eye_angle
+
+    def update_emotion_scores(self, face_blendshapes):
+        """Update emotion scores from MediaPipe blendshapes"""
+        if not face_blendshapes:
+            return
+
+        for face_blendshape in face_blendshapes:
+            for blendshape in face_blendshape:
+                name = blendshape.category_name
+                score = blendshape.score
+
+                if name in self.emotion_keywords:
+                    if name not in self.emotion_totals:
+                        self.emotion_totals[name] = 0
+                        self.emotion_frame_counts[name] = 0
+
+                    self.emotion_totals[name] += score
+                    self.emotion_frame_counts[name] += 1
 
     def update_tracking(self, detection_result, image_shape):
-        # Existing MediaPipe tracking logic remains unchanged
+        """Update tracking data from MediaPipe detection results"""
         current_time = time.time()
         frame_duration = current_time - self.last_frame_time
         self.last_frame_time = current_time
@@ -126,11 +244,13 @@ class InterviewMonitoringSystem:
                 self.violations['multiple_faces'] += 1
 
             for face_landmarks in detection_result.face_landmarks:
+                # Check if face is partially off screen
                 if any(landmark.x < 0 or landmark.x > 1 or landmark.y < 0 or landmark.y > 1 for landmark in
                        face_landmarks):
                     self.off_screen_duration += frame_duration
                     self.violations['face_off_screen'] += 1
 
+                # Calculate and track head rotation
                 head_rotation = self.calculate_head_rotation(face_landmarks)
                 self.violations['head_movement']['total_rotations'].append(head_rotation)
                 if abs(head_rotation) > 30:
@@ -140,11 +260,18 @@ class InterviewMonitoringSystem:
             self.update_emotion_scores(detection_result.face_blendshapes)
 
     def update_deepface_analysis(self, frame):
-        # Existing DeepFace analysis with verification check
+        """Perform DeepFace analysis on the current frame"""
+        # Skip frames to reduce CPU load
+        self.frame_count += 1
+        if self.frame_count % (self.skip_frames + 1) != 0:
+            return True
+
         try:
+            # First verify identity
             if not self.verify_face(frame):
                 return False
 
+            # Then analyze facial attributes
             results = DeepFace.analyze(
                 img_path=frame,
                 actions=['emotion', 'age', 'gender', 'race'],
@@ -166,11 +293,13 @@ class InterviewMonitoringSystem:
 
                     # Track gender probabilities
                     for gender, score in result['gender'].items():
-                        self.deepface_data['gender'][gender] += score
+                        if gender in self.deepface_data['gender']:
+                            self.deepface_data['gender'][gender] += score
 
                     # Track race probabilities
                     for race, score in result['race'].items():
-                        self.deepface_data['race'][race] += score
+                        if race in self.deepface_data['race']:
+                            self.deepface_data['race'][race] += score
 
                     # Track age and confidence
                     self.deepface_data['age'].append(result.get('age', 0))
@@ -179,13 +308,32 @@ class InterviewMonitoringSystem:
             return True
 
         except Exception as e:
-            print(f"DeepFace error: {str(e)}")
-            return False
+            print(f"DeepFace analysis error: {str(e)}")
+            return True  # Default to true on error
+
+    def _calculate_avg_percentages(self, data_dict):
+        """Calculate average percentages for a dictionary of values"""
+        total = sum(data_dict.values())
+        if total <= 0:
+            return {k: 0 for k in data_dict}
+
+        return {k: f"{(v / total * 100):.2f}%" for k, v in data_dict.items()}
+
+    def _calculate_avg(self, data_list):
+        """Calculate average for a list of values"""
+        if not data_list:
+            return 0
+        return f"{(sum(data_list) / len(data_list)):.2f}"
 
     def generate_interview_report(self):
-        # Existing report generation with verification metrics
-        emotion_percentages = {k: (v / self.emotion_frame_counts[k] * 100) if k in self.emotion_frame_counts else 0
-                               for k, v in self.emotion_totals.items()}
+        """Generate comprehensive interview report with all metrics"""
+        # Calculate MediaPipe emotion percentages
+        emotion_percentages = {
+            k: (v / self.emotion_frame_counts[k] * 100) if k in self.emotion_frame_counts and self.emotion_frame_counts[
+                k] > 0 else 0
+            for k, v in self.emotion_totals.items()}
+
+        # Calculate head movement metrics
         avg_head_rotation = np.mean(self.violations['head_movement']['total_rotations']) if \
             self.violations['head_movement']['total_rotations'] else 0
 
@@ -201,12 +349,13 @@ class InterviewMonitoringSystem:
             'analyzed_frames': self.deepface_data['analyzed_frames'],
             'valid_faces': self.deepface_data['valid_faces'],
             'verification': {
-                'total_matches': self.deepface_data['verification']['matches'],
-                'total_mismatches': self.deepface_data['verification']['mismatches'],
-                'violation_triggered': self.deepface_data['verification']['violation_triggered']
+                'total_matches': self.identity_verification_results['matches'],
+                'total_mismatches': self.identity_verification_results['mismatches'],
+                'violation_triggered': self.identity_verification_results['violation_triggered']
             }
         }
 
+        # Complete report with all metrics
         report = {
             "Interview Duration": f"{self.total_interview_duration:.2f} seconds",
             "Maximum Simultaneous Faces": self.max_simultaneous_faces,
@@ -215,7 +364,8 @@ class InterviewMonitoringSystem:
                 "Multiple Faces Detected": self.violations['multiple_faces'],
                 "Face Off-Screen Instances": self.violations['face_off_screen'],
                 "Excessive Head Rotation Instances": self.violations['head_movement']['excessive_rotation'],
-                "Identity Verification Failed": self.deepface_data['verification']['violation_triggered']
+                "Identity Verification Failed": self.identity_verification_results['violation_triggered'],
+                "Identity Mismatch Count": self.violations['identity_mismatch']
             },
             "Average Head Rotation": f"{avg_head_rotation:.2f} degrees",
             "MediaPipe Emotion Percentages": emotion_percentages,
@@ -408,7 +558,6 @@ def main():
         height=args.frame_height,
         candidate_photos=candidate_photos
     )
-
 
 if __name__ == '__main__':
     main()
