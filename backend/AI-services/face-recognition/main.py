@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import csv
 import os
 from datetime import time, datetime
@@ -92,152 +93,133 @@ def find_latest_report():
         print(f"Error finding report: {e}")
         return None
 
-
 @app.get("/load/model/report")
 async def load_stream_report(interviewId: int, candidateId: int, db: AsyncSession = Depends(get_db)):
-    """Start and manage the entire report generation lifecycle"""
+    """Enhanced report generation endpoint"""
     global report_process, stop_event
 
     if report_process and report_process.is_alive():
         raise HTTPException(status_code=400, detail="Report generation already running")
 
-    # Create interview_reports directory if not exists
+    # Initialize tracking
     os.makedirs("interview_reports", exist_ok=True)
+    initial_files = set(os.listdir("interview_reports"))
 
-    # Get initial list of CSV files
-    initial_files = set()
-    if os.path.exists("interview_reports"):
-        initial_files = set(os.listdir("interview_reports"))
+    # Create a stop event for controlled shutdown
+    stop_event = threading.Event()
 
     def run_monitoring():
-        """Wrapper function to run report generation"""
         try:
             report_generation(
                 model='face_landmarker.task',
-                num_faces=3,
-                min_face_detection_confidence=0.6,
-                min_face_presence_confidence=0.6,
-                min_tracking_confidence=0.6,
+                num_faces=1,  # Expect only 1 face
+                min_face_detection_confidence=0.7,
+                min_face_presence_confidence=0.7,
+                min_tracking_confidence=0.7,
                 camera_id=0,
                 width=720,
-                height=480
+                height=480,
+                stop_event=stop_event
             )
         except Exception as e:
             print(f"Report generation error: {str(e)}")
         finally:
             stop_event.set()
 
-    # Start monitoring thread
-    stop_event.clear()
+    # Start and monitor thread
     report_process = threading.Thread(target=run_monitoring, daemon=True)
     report_process.start()
 
-    # Wait for process completion with timeout
+    # Wait with increased timeout
     try:
-        for _ in range(60):  # 60 retries = 30 seconds timeout
+        for _ in range(120):  # 60 seconds timeout
             if not report_process.is_alive():
                 break
             await asyncio.sleep(0.5)
         else:
+            stop_event.set()
             raise HTTPException(status_code=504, detail="Report generation timeout")
     except Exception as e:
+        stop_event.set()
         raise HTTPException(status_code=500, detail=f"Monitoring error: {str(e)}")
 
-    # Find new CSV files created after our process started
-    final_files = set(os.listdir("interview_reports")) if os.path.exists("interview_reports") else set()
-    new_files = [f for f in final_files - initial_files if f.endswith(".csv")]
+    # Find and process report
+    latest_csv = find_latest_report()
+    if not latest_csv or not os.path.exists(latest_csv):
+        raise HTTPException(status_code=500, detail="No CSV generated")
 
-    if not new_files:
-        raise HTTPException(status_code=500, detail="No CSV generated - check report generation logs")
-
-    # Get most recent CSV file
-    csv_files = [os.path.join("interview_reports", f) for f in new_files]
-    latest_csv = max(csv_files, key=os.path.getctime)
-
-    # Database operations
+    # Database operations with transaction management
     try:
-        with open(latest_csv, "r") as f:
-            csv_content = f.read()
+        async with db.begin():
+            with open(latest_csv, "r") as f:
+                csv_content = f.read()
 
-        interview_report = InterviewReport(
-            interview_id=interviewId,
-            candidate_id=candidateId,
-            photos=[],
-            report=csv_content,
-            csv_file_path=latest_csv
+            interview_report = InterviewReport(
+                interview_id=interviewId,
+                candidate_id=candidateId,
+                photos=[],
+                report=csv_content,
+                csv_file_path=latest_csv
+            )
+
+            db.add(interview_report)
+            await db.commit()
+
+        return FileResponse(
+            latest_csv,
+            media_type="text/csv",
+            filename=f"report_{interviewId}_{candidateId}.csv"
         )
-
-        db.add(interview_report)
-        await db.commit()
-        await db.refresh(interview_report)
     except Exception as e:
+        await db.rollback()
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
-    # Return generated report
-    return FileResponse(
-        latest_csv,
-        media_type="text/csv",
-        filename=f"report_{interviewId}_{candidateId}.csv"
-    )
 
-async def get_candidate_data(interviewId: int):
+async def get_candidate_data(interview_id: int):
     async with httpx.AsyncClient() as client:
         try:
             # Get candidate ID
             candidate_response = await client.get(
                 "http://localhost:9191/api/v1/interviews/get/candidateId/by/interviewId",
-                params={"interviewId": interviewId}
+                params={"interviewId": interview_id}
             )
             candidate_response.raise_for_status()
-            candidateId = candidate_response.json()['data']
+            candidate_id = candidate_response.json()['data']
 
             # Get candidate photos
             photos_response = await client.get(
                 "http://localhost:9191/api/v1/users/get/candidate/photos",
-                params={"userId": candidateId}
+                params={"userId": candidate_id}
             )
             photos_response.raise_for_status()
-            photos = photos_response.json()['data']['photos']
-
-            return candidateId, [photo.encode() for photo in photos]  # Convert to bytes
+            return candidate_id, photos_response.json()['data']['photos']
 
         except httpx.HTTPStatusError as e:
             raise HTTPException(
                 status_code=e.response.status_code,
-                detail=f"SpringBoot service error: {e.response.text}"
+                detail=f"External service error: {e.response.text}"
             )
+
 
 @app.get("/load/model/face-recognition")
 async def load_stream_face_recognition(
-        interviewId: int,
+        interview_id: int,
         db: AsyncSession = Depends(get_db)
 ):
-    """Start facial recognition process with verification"""
     # Check existing interview
     existing = await db.execute(
-        select(InterviewReport).where(InterviewReport.interview_id == interviewId)
+        select(InterviewReport).where(InterviewReport.interview_id == interview_id)
     )
     if existing.scalars().first():
         raise HTTPException(status_code=400, detail="Interview ID already exists")
 
-    # Get candidate data
     try:
-        candidateId, candidate_photos = await get_candidate_data(interviewId)
-    except HTTPException as e:
-        return JSONResponse(
-            status_code=e.status_code,
-            content={"message": e.detail}
-        )
+        candidate_id, candidate_photos = await get_candidate_data(interview_id)
 
-    # Create interview_reports directory
-    os.makedirs("interview_reports", exist_ok=True)
-    initial_files = set(os.listdir("interview_reports"))
-
-    # Store initial data in database
-    try:
+        # Store in database
         db_report = InterviewReport(
-            interview_id=interviewId,
-            candidate_id=candidateId,
+            interview_id=interview_id,
+            candidate_id=candidate_id,
             photos=candidate_photos,
             report="",
             csv_file_path=""
@@ -245,86 +227,26 @@ async def load_stream_face_recognition(
         db.add(db_report)
         await db.commit()
         await db.refresh(db_report)
+
+        # Start face recognition process
+        from faceRecognition import run_face_recognition
+        report_path = await run_face_recognition(candidate_photos)
+
+        # Update report
+        with open(report_path, "r") as f:
+            db_report.report = f.read()
+            db_report.csv_file_path = report_path
+            await db.commit()
+
+        return FileResponse(
+            report_path,
+            media_type="text/csv",
+            filename=f"report_{interview_id}_{candidate_id}.csv"
+        )
+
     except Exception as e:
         await db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
-
-    # Create process control objects
-    stop_event = threading.Event()
-    process_data = {
-        "stop_event": stop_event,
-        "candidate_photos": candidate_photos,
-        "report_path": None
-    }
-    active_processes[interviewId] = process_data
-
-    def run_monitoring():
-        """Wrapper function to run facial recognition"""
-        try:
-            face_recognition(
-                model='face_landmarker.task',
-                num_faces=3,
-                min_face_detection_confidence=0.6,
-                min_face_presence_confidence=0.6,
-                min_tracking_confidence=0.6,
-                camera_id=0,
-                width=720,
-                height=480,
-                candidate_photos=candidate_photos
-            )
-        except Exception as e:
-            print(f"Face recognition error: {str(e)}")
-        finally:
-            stop_event.set()
-
-    # Start monitoring thread
-    report_thread = threading.Thread(target=run_monitoring, daemon=True)
-    report_thread.start()
-    active_processes[interviewId]["thread"] = report_thread
-
-    # Wait for process completion
-    try:
-        for _ in range(300):  # 5 minute timeout
-            if stop_event.is_set() or not report_thread.is_alive():
-                break
-            await asyncio.sleep(1)
-        else:
-            raise HTTPException(status_code=504, detail="Face recognition timeout")
-    except Exception as e:
-        stop_event.set()
-        raise HTTPException(status_code=500, detail=f"Monitoring error: {str(e)}")
-
-    # Find generated report
-    final_files = set(os.listdir("interview_reports"))
-    new_files = [f for f in final_files - initial_files if f.endswith(".csv")]
-
-    if not new_files:
-        raise HTTPException(status_code=500, detail="No CSV generated")
-
-    # Get latest report
-    csv_files = [os.path.join("interview_reports", f) for f in new_files]
-    latest_csv = max(csv_files, key=os.path.getctime)
-    process_data["report_path"] = latest_csv
-
-    # Update database with report
-    try:
-        with open(latest_csv, "r") as f:
-            csv_content = f.read()
-
-        db_report.csv_file_path = latest_csv
-        db_report.report = csv_content
-        await db.commit()
-        await db.refresh(db_report)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Report update error: {str(e)}")
-
-    # Cleanup and return
-    del active_processes[interviewId]
-    return FileResponse(
-        latest_csv,
-        media_type="text/csv",
-        filename=f"report_{interviewId}_{candidateId}.csv"
-    )
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/monitoring/status/{interviewId}")
 async def get_monitoring_status(interviewId: int):
