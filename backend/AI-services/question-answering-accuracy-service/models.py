@@ -4,6 +4,7 @@ class AnsweringAccuracy(Base):
     __tablename__ = "answering_accuracy"
     interview_id = Column(Integer, primary_key=True)
     question_id = Column(Integer, primary_key=True)
+    content = Column(Text, nullable=False)
     keywords = Column(Text, nullable=False)
     accuracy = Column(Float, nullable=False)
 
