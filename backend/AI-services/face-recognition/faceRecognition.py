@@ -23,7 +23,7 @@ mp_drawing_styles = mp.solutions.drawing_styles
 
 
 class InterviewMonitoringSystem:
-    def __init__(self, candidate_photos: list):
+    def __init__(self, candidate_photos):
         # Existing MediaPipe Tracking
         self.start_time = time.time()
         self.total_interview_duration = 0
@@ -72,41 +72,43 @@ class InterviewMonitoringSystem:
         }
 
         # Store candidate photos as numpy arrays
-        self.candidate_photos = [self.bytes_to_image(photo) for photo in candidate_photos]
-        self.verification_threshold = 5  # Allowed consecutive mismatches
+        self.candidate_photos = [self.base64_to_image(photo) for photo in candidate_photos]
+        self.verification_threshold = 5
+        self.results = {
+            'matches': 0,
+            'mismatches': 0,
+            'consecutive_mismatches': 0,
+            'violation_triggered': False
+        }
 
-    def bytes_to_image(self, photo_bytes):
-        """Convert stored bytes to OpenCV image"""
-        nparr = np.frombuffer(photo_bytes, np.uint8)
+    def base64_to_image(self, base64_str):
+        img_bytes = base64.b64decode(base64_str)
+        nparr = np.frombuffer(img_bytes, np.uint8)
         return cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
     def verify_face(self, frame):
-        """Verify if frame matches any candidate photos"""
         try:
             for stored_img in self.candidate_photos:
                 result = DeepFace.verify(
                     img1_path=frame,
                     img2_path=stored_img,
-                    detector_backend='opencv',
                     enforce_detection=False,
-                    silent=True
+                    detector_backend='opencv'
                 )
                 if result['verified']:
-                    self.deepface_data['verification']['matches'] += 1
-                    self.deepface_data['verification']['consecutive_mismatches'] = 0
+                    self.results['matches'] += 1
+                    self.results['consecutive_mismatches'] = 0
                     return True
+            self.results['mismatches'] += 1
+            self.results['consecutive_mismatches'] += 1
 
-            self.deepface_data['verification']['mismatches'] += 1
-            self.deepface_data['verification']['consecutive_mismatches'] += 1
-
-            if self.deepface_data['verification']['consecutive_mismatches'] >= self.verification_threshold:
-                self.deepface_data['verification']['violation_triggered'] = True
+            if self.results['consecutive_mismatches'] >= self.verification_threshold:
+                self.results['violation_triggered'] = True
                 return False
-
             return True
 
         except Exception as e:
-            print(f"Verification error: {str(e)}")
+            print(f"Verification error: {e}")
             return False
 
     def update_tracking(self, detection_result, image_shape):
@@ -222,7 +224,6 @@ class InterviewMonitoringSystem:
         return report
 
     def save_report_to_csv(self, report):
-        # Existing CSV saving with verification data
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"interview_report_{timestamp}.csv"
         os.makedirs("interview_reports", exist_ok=True)
@@ -230,52 +231,38 @@ class InterviewMonitoringSystem:
 
         with open(filepath, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
-
-            # Basic Metrics
             writer.writerow(["Metric", "Value"])
             writer.writerow(["Interview Duration", report["Interview Duration"]])
             writer.writerow(["Maximum Simultaneous Faces", report["Maximum Simultaneous Faces"]])
             writer.writerow(["Off-Screen Duration", report["Off-Screen Duration"]])
             writer.writerow(["Average Head Rotation", report["Average Head Rotation"]])
-
-            # Violations
             writer.writerow([])
             writer.writerow(["Violations", ""])
             for violation, count in report["Violations"].items():
                 writer.writerow([violation, count])
-
-            # MediaPipe Emotions
             writer.writerow([])
             writer.writerow(["MediaPipe Emotion Percentages", ""])
             for emotion, percentage in report["MediaPipe Emotion Percentages"].items():
                 writer.writerow([emotion, f"{percentage:.2f}%"])
-
-            # DeepFace Analysis
             writer.writerow([])
             writer.writerow(["DeepFace Analysis", ""])
             writer.writerow(["Emotion", "Percentage"])
             for emotion, percentage in report["DeepFace Analysis"]["emotion"].items():
                 writer.writerow([emotion, percentage])
-
             writer.writerow(["Gender", "Percentage"])
             for gender, percentage in report["DeepFace Analysis"]["gender"].items():
                 writer.writerow([gender, percentage])
-
             writer.writerow(["Race", "Percentage"])
             for race, percentage in report["DeepFace Analysis"]["race"].items():
                 writer.writerow([race, percentage])
+            writer.writerow(["Average Age", report["DeepFace Analysis"]["age"]])
+            writer.writerow(["Average Face Confidence", report["DeepFace Analysis"]["face_confidence"]])
+            writer.writerow(["Face Detection Rate", f"{report['DeepFace Analysis']['face_detection_rate']:.2f}%"])
+            writer.writerow(["Analyzed Frames", report["DeepFace Analysis"]["analyzed_frames"]])
+            writer.writerow(["Valid Face Detections", report["DeepFace Analysis"]["valid_faces"]])
 
-            # Verification Metrics
-            writer.writerow([])
-            writer.writerow(["Facial Verification", ""])
-            writer.writerow(["Total Matches", report["DeepFace Analysis"]["verification"]["total_matches"]])
-            writer.writerow(["Total Mismatches", report["DeepFace Analysis"]["verification"]["total_mismatches"]])
-            writer.writerow(["Violation Triggered", report["DeepFace Analysis"]["verification"]["violation_triggered"]])
-
-            # Existing DeepFace metrics...
-
+        print(f"Report saved to {filepath}")
         return filepath
-
 
 def run(model: str, num_faces: int, min_face_detection_confidence: float,
         min_face_presence_confidence: float, min_tracking_confidence: float,
@@ -341,7 +328,6 @@ def run(model: str, num_faces: int, min_face_detection_confidence: float,
     detector.close()
     cap.release()
     cv2.destroyAllWindows()
-
 
 def main():
     parser = argparse.ArgumentParser(
