@@ -1,12 +1,15 @@
 import argparse
+import asyncio
 import sys
 import os
+import threading
 import time
 import csv
 from datetime import datetime
 import cv2
 import mediapipe as mp
 import numpy as np
+from concurrent.futures import ThreadPoolExecutor
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 from deepface import DeepFace
@@ -17,6 +20,7 @@ mp_face_mesh = mp.solutions.face_mesh
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 
+executor = ThreadPoolExecutor(max_workers=4)  # Optimized for parallel processing
 
 class InterviewMonitoringSystem:
     def __init__(self):
@@ -27,7 +31,9 @@ class InterviewMonitoringSystem:
         self.max_simultaneous_faces = 0
         self.off_screen_duration = 0
         self.last_frame_time = time.time()
-
+        self.frame_counter = 0
+        self.deepface_frame_skip = 15  # Process DeepFace every 15 frames
+        self.processing_lock = threading.Lock()
         self.emotion_totals = {}
         self.emotion_frame_counts = {}
 
@@ -47,7 +53,7 @@ class InterviewMonitoringSystem:
             'jawOpen', 'jawForward'
         ]
 
-        # DeepFace Tracking
+        # Enhanced DeepFace Tracking with locks
         self.deepface_data = {
             'emotions': dict.fromkeys(['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral'], 0.0),
             'gender': {'Man': 0.0, 'Woman': 0.0},
@@ -57,6 +63,7 @@ class InterviewMonitoringSystem:
             'analyzed_frames': 0,
             'valid_faces': 0
         }
+        self.deepface_lock = threading.Lock()
 
     def update_tracking(self, detection_result, image_shape):
         current_time = time.time()
@@ -85,38 +92,50 @@ class InterviewMonitoringSystem:
         if detection_result and detection_result.face_blendshapes:
             self.update_emotion_scores(detection_result.face_blendshapes)
 
-    def update_deepface_analysis(self, frame):
+    async def update_deepface_analysis(self, frame):
+        self.frame_counter += 1
+        if self.frame_counter % self.deepface_frame_skip != 0:
+            return
+
+        # Convert frame to RGB for DeepFace
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        loop = asyncio.get_event_loop()
         try:
-            results = DeepFace.analyze(
-                img_path=frame,
-                actions=['emotion', 'age', 'gender', 'race'],
-                enforce_detection=False,
-                detector_backend='opencv',
-                silent=True
+            results = await loop.run_in_executor(
+                executor,
+                lambda: DeepFace.analyze(
+                    img_path=rgb_frame,
+                    actions=['emotion', 'age', 'gender', 'race'],
+                    enforce_detection=False,
+                    detector_backend='retinaface',  # Use retinaface for better accuracy
+                    silent=True
+                )
             )
 
             if results and isinstance(results, list):
-                self.deepface_data['analyzed_frames'] += 1
-                result = results[0]
+                with self.deepface_lock:
+                    self.deepface_data['analyzed_frames'] += 1
+                    result = results[0]
 
-                if result.get('face_confidence', 0) > 0.5:
-                    self.deepdata_data['valid_faces'] += 1
+                    if result.get('face_confidence', 0) > 0.5:
+                        self.deepface_data['valid_faces'] += 1
 
-                    # Track all emotions
-                    for emotion, score in result['emotion'].items():
-                        self.deepface_data['emotions'][emotion] += score
+                        # Update emotions
+                        for emotion, score in result['emotion'].items():
+                            self.deepface_data['emotions'][emotion] += score
 
-                    # Track gender probabilities
-                    for gender, score in result['gender'].items():
-                        self.deepface_data['gender'][gender] += score
+                        # Update gender
+                        for gender, score in result['gender'].items():
+                            self.deepface_data['gender'][gender] += score
 
-                    # Track race probabilities
-                    for race, score in result['race'].items():
-                        self.deepface_data['race'][race] += score
+                        # Update race
+                        for race, score in result['race'].items():
+                            self.deepface_data['race'][race] += score
 
-                    # Track age and confidence
-                    self.deepface_data['age'].append(result.get('age', 0))
-                    self.deepface_data['face_confidence'].append(result.get('face_confidence', 0))
+                        # Update age and confidence
+                        self.deepface_data['age'].append(result.get('age', 0))
+                        self.deepface_data['face_confidence'].append(result.get('face_confidence', 0))
 
         except Exception as e:
             print(f"DeepFace error: {str(e)}")
@@ -138,21 +157,16 @@ class InterviewMonitoringSystem:
                     self.emotion_frame_counts[category_name] = self.emotion_frame_counts.get(category_name, 0) + 1
 
     def generate_interview_report(self):
-        # MediaPipe Metrics
-        emotion_percentages = {k: (v / self.emotion_frame_counts[k] * 100) if k in self.emotion_frame_counts else 0
-                               for k, v in self.emotion_totals.items()}
-        avg_head_rotation = np.mean(self.violations['head_movement']['total_rotations']) if \
-        self.violations['head_movement']['total_rotations'] else 0
+        emotion_percentages = {k: (v / self.emotion_frame_counts[k] * 100) if k in self.emotion_frame_counts else 0 for k, v in self.emotion_totals.items()}
+        avg_head_rotation = np.mean(self.violations['head_movement']['total_rotations']) if self.violations['head_movement']['total_rotations'] else 0
 
-        # DeepFace Metrics
         deepface_report = {
             'emotion': self._calculate_avg_percentages(self.deepface_data['emotions']),
             'gender': self._calculate_avg_percentages(self.deepface_data['gender']),
             'race': self._calculate_avg_percentages(self.deepface_data['race']),
             'age': self._calculate_avg(self.deepface_data['age']),
             'face_confidence': self._calculate_avg(self.deepface_data['face_confidence']),
-            'face_detection_rate': (self.deepface_data['valid_faces'] / self.deepface_data['analyzed_frames'] * 100
-                                    if self.deepface_data['analyzed_frames'] > 0 else 0),
+            'face_detection_rate': (self.deepface_data['valid_faces'] / self.deepface_data['analyzed_frames'] * 100 if self.deepface_data['analyzed_frames'] > 0 else 0),
             'analyzed_frames': self.deepface_data['analyzed_frames'],
             'valid_faces': self.deepface_data['valid_faces']
         }
@@ -187,41 +201,30 @@ class InterviewMonitoringSystem:
 
         with open(filepath, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
-
-            # Basic Metrics
             writer.writerow(["Metric", "Value"])
             writer.writerow(["Interview Duration", report["Interview Duration"]])
             writer.writerow(["Maximum Simultaneous Faces", report["Maximum Simultaneous Faces"]])
             writer.writerow(["Off-Screen Duration", report["Off-Screen Duration"]])
             writer.writerow(["Average Head Rotation", report["Average Head Rotation"]])
-
-            # Violations
             writer.writerow([])
             writer.writerow(["Violations", ""])
             for violation, count in report["Violations"].items():
                 writer.writerow([violation, count])
-
-            # MediaPipe Emotions
             writer.writerow([])
             writer.writerow(["MediaPipe Emotion Percentages", ""])
             for emotion, percentage in report["MediaPipe Emotion Percentages"].items():
                 writer.writerow([emotion, f"{percentage:.2f}%"])
-
-            # DeepFace Analysis
             writer.writerow([])
             writer.writerow(["DeepFace Analysis", ""])
             writer.writerow(["Emotion", "Percentage"])
             for emotion, percentage in report["DeepFace Analysis"]["emotion"].items():
                 writer.writerow([emotion, percentage])
-
             writer.writerow(["Gender", "Percentage"])
             for gender, percentage in report["DeepFace Analysis"]["gender"].items():
                 writer.writerow([gender, percentage])
-
             writer.writerow(["Race", "Percentage"])
             for race, percentage in report["DeepFace Analysis"]["race"].items():
                 writer.writerow([race, percentage])
-
             writer.writerow(["Average Age", report["DeepFace Analysis"]["age"]])
             writer.writerow(["Average Face Confidence", report["DeepFace Analysis"]["face_confidence"]])
             writer.writerow(["Face Detection Rate", f"{report['DeepFace Analysis']['face_detection_rate']:.2f}%"])
@@ -233,125 +236,81 @@ class InterviewMonitoringSystem:
 
 def run(model: str, num_faces: int, min_face_detection_confidence: float,
         min_face_presence_confidence: float, min_tracking_confidence: float,
-        camera_id: int, width: int, height: int) -> None:
+        camera_id: int, width: int, height: int, stop_event: threading.Event) -> None:
 
     interview_monitor = InterviewMonitoringSystem()
 
-    if not os.path.exists(model):
-        print(f"Error: Model file not found at {model}")
-        sys.exit(1)
-
+    # Initialize camera with lower resolution first
     cap = cv2.VideoCapture(camera_id)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    time.sleep(2)  # Warm-up camera
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
 
+    # Initialize MediaPipe with higher confidence thresholds
     base_options = python.BaseOptions(model_asset_path=model)
     options = vision.FaceLandmarkerOptions(
         base_options=base_options,
         running_mode=vision.RunningMode.LIVE_STREAM,
-        num_faces=num_faces,
-        min_face_detection_confidence=min_face_detection_confidence,
-        min_face_presence_confidence=min_face_presence_confidence,
-        min_tracking_confidence=min_tracking_confidence,
+        num_faces=1,  # Only expect 1 face
+        min_face_detection_confidence=0.7,
+        min_face_presence_confidence=0.7,
+        min_tracking_confidence=0.7,
         output_face_blendshapes=True,
         result_callback=lambda result, output_image, timestamp:
-        interview_monitor.update_tracking(result, output_image.numpy_view().shape))
+        interview_monitor.update_tracking(result, output_image.numpy_view().shape)
+    )
     detector = vision.FaceLandmarker.create_from_options(options)
 
-    while cap.isOpened():
+    while not stop_event.is_set():
         success, image = cap.read()
         if not success:
-            sys.exit('ERROR: Unable to read from webcam.')
+            break
 
         image = cv2.flip(image, 1)
         rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_image)
 
-        # Run DeepFace analysis
-        interview_monitor.update_deepface_analysis(image)
+        # Run DeepFace analysis asynchronously
+        asyncio.run(interview_monitor.update_deepface_analysis(image))
 
-        # Original MediaPipe processing
         detector.detect_async(mp_image, time.time_ns() // 1_000_000)
         cv2.imshow('Interview Monitoring System', image)
 
-        if cv2.waitKey(1) == 27:
+        if cv2.waitKey(1) == 27:  # ESC key to stop
+            stop_event.set()
             break
 
-    final_report = interview_monitor.generate_interview_report()
-    report_path = interview_monitor.save_report_to_csv(final_report)
-
-    print("\n--- Interview Monitoring Report ---")
-    for key, value in final_report.items():
-        print(f"{key}: {value}")
-
+    # Cleanup
     detector.close()
     cap.release()
     cv2.destroyAllWindows()
 
 def main():
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument(
-        '--model',
-        help='Path to face landmarker model.',
-        required=False,
-        default=DEFAULT_MODEL_PATH)
-    parser.add_argument(
-        '--num_faces',  # Changed from --numFaces to match Python naming convention
-        help='Max number of faces that can be detected by the landmarker.',
-        required=False,
-        default=5,
-        type=int)
-    parser.add_argument(
-        '--min_face_detection_confidence',  # Changed from camelCase to snake_case
-        help='The minimum confidence score for face detection to be considered successful.',
-        required=False,
-        default=0.5,
-        type=float)
-    parser.add_argument(
-        '--min_face_presence_confidence',  # Changed from camelCase to snake_case
-        help='The minimum confidence score of face presence score in the face landmark detection.',
-        required=False,
-        default=0.5,
-        type=float)
-    parser.add_argument(
-        '--min_tracking_confidence',  # Changed from camelCase to snake_case
-        help='The minimum confidence score for the face tracking to be considered successful.',
-        required=False,
-        default=0.5,
-        type=float)
-    parser.add_argument(
-        '--camera_id',  # Changed from camelCase to snake_case
-        help='Id of camera.',
-        required=False,
-        default=0,
-        type=int)
-    parser.add_argument(
-        '--frame_width',  # Changed from camelCase to snake_case
-        help='Width of frame to capture from camera.',
-        required=False,
-        default=1920,
-        type=int)
-    parser.add_argument(
-        '--frame_height',  # Changed from camelCase to snake_case
-        help='Height of frame to capture from camera.',
-        required=False,
-        default=1080,
-        type=int)
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--model', help='Path to face landmarker model.', required=False, default=DEFAULT_MODEL_PATH)
+    parser.add_argument('--num_faces', help='Max number of faces that can be detected by the landmarker.', required=False, default=5, type=int)
+    parser.add_argument('--min_face_detection_confidence', help='The minimum confidence score for face detection to be considered successful.', required=False, default=0.5, type=float)
+    parser.add_argument('--min_face_presence_confidence', help='The minimum confidence score of face presence score in the face landmark detection.', required=False, default=0.5, type=float)
+    parser.add_argument('--min_tracking_confidence', help='The minimum confidence score for the face tracking to be considered successful.', required=False, default=0.5, type=float)
+    parser.add_argument('--camera_id', help='Id of camera.', required=False, default=0, type=int)
+    parser.add_argument('--frame_width', help='Width of frame to capture from camera.', required=False, default=1920, type=int)
+    parser.add_argument('--frame_height', help='Height of frame to capture from camera.', required=False, default=1080, type=int)
 
-    # Parse arguments
     args = parser.parse_args()
 
-    # Update the run function call to use the new argument names
+    stop_event = threading.Event()
     run(
         model=args.model,
-        num_faces=args.num_faces,  # Now matches the argument name
+        num_faces=args.num_faces,
         min_face_detection_confidence=args.min_face_detection_confidence,
         min_face_presence_confidence=args.min_face_presence_confidence,
         min_tracking_confidence=args.min_tracking_confidence,
         camera_id=args.camera_id,
         width=args.frame_width,
-        height=args.frame_height
+        height=args.frame_height,
+        stop_event=stop_event
     )
 
 if __name__ == '__main__':
