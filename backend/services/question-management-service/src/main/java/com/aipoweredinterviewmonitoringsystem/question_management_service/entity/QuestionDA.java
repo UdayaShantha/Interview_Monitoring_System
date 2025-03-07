@@ -16,12 +16,12 @@ import java.util.List;
 @AllArgsConstructor
 @Table(name = "question_DS")
 
-public class QuestionDA extends Question{
+public class QuestionDA extends Question {
 
     @Column(name = "duration", nullable = false)
     private long duration;
 
-    @Column(name="da_question_content",nullable = false,unique = true)
+    @Column(name = "da_question_content", nullable = false, unique = true)
     private String content;
 
     @Column(name = "da_keywords", nullable = false)
@@ -36,12 +36,12 @@ public class QuestionDA extends Question{
         }
     }
 
-    public List<String> getKeywords() {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            return this.keywords == null ? new ArrayList<>() : objectMapper.readValue(this.keywords, new TypeReference<List<String>>() {});
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to deserialize keywords", e);
-        }
-    }
+//    public List<String> getKeywords() {
+//        try {
+//            ObjectMapper objectMapper = new ObjectMapper();
+//            return this.keywords == null ? new ArrayList<>() : objectMapper.readValue(this.keywords, new TypeReference<List<String>>() {});
+//        } catch (JsonProcessingException e) {
+//            throw new RuntimeException("Failed to deserialize keywords", e);
+//        }
+//    }
 }

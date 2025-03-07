@@ -13,8 +13,7 @@ import java.util.List;
 @Getter
 public class CommonQuestionDTO {
     private Question question;
-    private Long duration;
+    private long duration;
     private String content;
     private List<String> commonKeywords;
-
 }
