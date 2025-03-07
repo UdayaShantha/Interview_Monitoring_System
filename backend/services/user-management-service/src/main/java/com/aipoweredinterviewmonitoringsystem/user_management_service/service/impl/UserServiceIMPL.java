@@ -262,8 +262,11 @@ public class UserServiceIMPL implements UserService {
     @Override
     public String saveCandidateFeedback(long userId, int rate,String comment) {
         if(userRepository.existsById(userId) && candidateRepository.existsById(userId)){
+            Candidate candidate=candidateRepository.findCandidateByUserId(userId);
+            candidate.setRate(rate);
+            candidate.setComment(comment);
             try {
-                candidateRepository.saveRateAndComment(rate,comment);
+                candidateRepository.save(candidate);
                 return "Comment saved";
             } catch (RuntimeException e) {
                 throw new RuntimeException("Feedback not saved", e);
