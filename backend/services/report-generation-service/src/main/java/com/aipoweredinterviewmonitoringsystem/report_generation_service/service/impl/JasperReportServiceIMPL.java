@@ -26,7 +26,7 @@ public class JasperReportServiceIMPL implements JasperReportService {
             // Fill the report with data
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, new JREmptyDataSource());
 
-            // Convert the report to a byte array (instead of writing to a file)
+            // Convert the report to a byte array 
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             JasperExportManager.exportReportToPdfStream(jasperPrint, outputStream);
 
