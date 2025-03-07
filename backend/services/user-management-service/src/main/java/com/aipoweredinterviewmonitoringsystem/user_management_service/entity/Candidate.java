@@ -51,7 +51,7 @@ public class Candidate extends User{
     @Enumerated(EnumType.STRING)
     @Column(name="position_type",nullable = false)
     private PositionType positionType;
-
+ 
     @Min(1)
     @Max(5)
     @Column(name = "candidate_rating")

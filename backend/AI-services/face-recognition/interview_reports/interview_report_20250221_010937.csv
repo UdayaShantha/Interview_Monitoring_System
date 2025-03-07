@@ -1,0 +1,26 @@
+Metric,Value
+Interview Duration,43.16 seconds
+Maximum Simultaneous Faces,1
+Off-Screen Duration,41.92 seconds
+Average Head Rotation,-90.66 degrees
+,
+Violations,
+Multiple Faces Detected,0
+Face Off-Screen Instances,779
+Excessive Head Rotation Instances,779
+,
+Emotion Percentages,
+browDownLeft,6.23%
+browDownRight,4.11%
+browInnerUp,10.61%
+browOuterUpLeft,23.26%
+browOuterUpRight,20.63%
+eyeSquintLeft,28.88%
+eyeSquintRight,32.04%
+jawForward,0.01%
+jawOpen,1.08%
+mouthFrownLeft,0.43%
+mouthFrownRight,0.59%
+mouthPucker,34.42%
+mouthSmileLeft,0.12%
+mouthSmileRight,0.09%
