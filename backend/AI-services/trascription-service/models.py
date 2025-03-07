@@ -8,7 +8,6 @@ class Transcription(Base):
     question_id = Column(Integer, primary_key=True)
     filename = Column(String(255), nullable=False)
     text = Column(Text, nullable=False)
-    score = Column(Float, nullable=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
 
     def __repr__(self):

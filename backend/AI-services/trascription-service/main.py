@@ -1,3 +1,4 @@
+import uvicorn
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -91,3 +92,6 @@ async def transcribe_audio(
     finally:
         if os.path.exists(temp_file):
             os.remove(temp_file)
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="127.0.0.1", port=8000)
