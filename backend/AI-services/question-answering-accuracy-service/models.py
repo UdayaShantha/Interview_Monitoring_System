@@ -6,7 +6,7 @@ class AnsweringAccuracy(Base):
     question_id = Column(Integer, primary_key=True)
     content = Column(Text, nullable=False)
     keywords = Column(Text, nullable=False)
-    answeer = Column(Text, nullable=False)
+    answer = Column(Text, nullable=False)
     accuracy = Column(Float, nullable=False)
 
     def __repr__(self):
