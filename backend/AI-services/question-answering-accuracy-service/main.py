@@ -9,5 +9,10 @@ app = FastAPI(title="Question Answering Accuracy Service")
 async def startup_event():
     await create_tables()
 
+@app.post("save/answering/accuracy")
+async def save_answer(interviewId : int):
+    NotImplemented
+
+
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8002)

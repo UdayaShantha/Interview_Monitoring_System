@@ -119,7 +119,6 @@ public class InterviewController {
 
     }
 
-
     @GetMapping(value={"/get/interview/questions"},params = {"interviewId"})
     public ResponseEntity<StandardResponse> getInterviewQuestions(@RequestParam(value = "interviewId") long interviewId) {
         try {

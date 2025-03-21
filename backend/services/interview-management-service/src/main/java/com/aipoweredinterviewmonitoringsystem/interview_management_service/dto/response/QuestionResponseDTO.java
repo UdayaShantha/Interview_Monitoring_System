@@ -10,5 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class QuestionResponseDTO {
+    private long questionId;
     private String content;
+    private String keywords;
 }
