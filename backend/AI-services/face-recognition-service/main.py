@@ -196,7 +196,7 @@ async def convert_spring_photos_to_base64(photos_data):
 
 async def get_candidate_data(interview_id: int):
     """Get candidate ID and photos from Spring Boot endpoints"""
-    async with httpx.AsyncClient(timeout=30.0) as client:
+    async with httpx.AsyncClient(timeout=120.0) as client:
         try:
             # Get candidate ID
             candidate_response = await client.get(
