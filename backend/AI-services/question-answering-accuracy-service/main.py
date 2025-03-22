@@ -101,6 +101,45 @@ async def save_answer(
             status_code=500,
             detail=f"Internal server error: {str(e)}"
         )
+@app.get("/get/question/answer/accuracy")
+async def get_question_answer_accuracy(
+    interviewId: int,
+    db: Session = Depends(get_db)
+):
+    try:
+        results = db.query(AnsweringAccuracy)\
+            .filter(AnsweringAccuracy.interview_id == interviewId)\
+            .all()
+
+        if not results:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No accuracy data found for interview ID {interviewId}"
+            )
+        accuracy_data = []
+        for record in results:
+            accuracy_data.append({
+                "interview_id": record.interview_id,
+                "question_id": record.question_id,
+                "content": record.content,
+                "keywords": record.keywords.split(","),
+                "answer": record.answer,
+                "accuracy":record.accuracy
+            })
+
+        return {
+            "interview_id": interviewId,
+            "total_questions": len(accuracy_data),
+            "accuracy_data": accuracy_data
+        }
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error retrieving accuracy data: {str(e)}"
+        )
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8002)
