@@ -17,6 +17,9 @@ import com.aipoweredinterviewmonitoringsystem.interview_management_service.entit
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.service.InterviewService;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.util.StandardResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -35,6 +38,18 @@ public class InterviewController {
 
     @Autowired
     private InterviewService interviewService;
+
+
+    private static final Logger logger = LoggerFactory.getLogger(InterviewController.class);
+
+    @GetMapping("/list")
+    public String listInterviews(HttpServletRequest request) {
+        logger.info("Authorization: {}", request.getHeader("Authorization"));
+        logger.info("X-User-Name: {}", request.getHeader("X-User-Name"));
+        logger.info("X-User-Type: {}", request.getHeader("X-User-Type"));
+        return "Interview list";
+    }
+
 
     @PostMapping
     public ResponseEntity<StandardResponse> saveInterview(@RequestBody InterviewSaveDTO interviewSaveDTO) {

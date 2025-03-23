@@ -25,6 +25,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.MultipartBodyBuilder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -59,12 +60,16 @@ public class UserServiceIMPL implements UserService {
     @Autowired
     private InterviewFeignClient interviewFeignClient;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Override
     @Transactional
     public CandidateSaveDTO saveCandidate(CandidateSaveDTO candidateSaveDTO, CandidatePhotoSaveDTO candidatePhotoSaveDTO) {
         Candidate candidate = modelMapper.map(candidateSaveDTO, Candidate.class);
         candidate.setUserType(UserType.CANDIDATE);
         candidate.setCreatedAt(LocalDateTime.now());
+        candidate.setPassword(passwordEncoder.encode(candidate.getPassword()));
 
         if (candidatePhotoSaveDTO.getPhotos() != null && !candidatePhotoSaveDTO.getPhotos().isEmpty()) {
             try {
@@ -197,7 +202,7 @@ public class UserServiceIMPL implements UserService {
         try {
             Candidate candidate = candidateRepository.findById(userId).get();
             candidate.setUsername(candidateUpdateDTO.getUsername());
-            candidate.setPassword(candidateUpdateDTO.getPassword());
+            candidate.setPassword(passwordEncoder.encode(candidateUpdateDTO.getPassword()));
             candidate.setName(candidateUpdateDTO.getName());
             candidate.setNic(candidateUpdateDTO.getNic());
             candidate.setEmail(candidateUpdateDTO.getEmail());
