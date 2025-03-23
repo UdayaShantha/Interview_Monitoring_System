@@ -1,7 +1,5 @@
 package com.aipoweredinterviewmonitoringsystem.interview_management_service.controller;
 
-
-
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.advisor.QuestionNotFoundException;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.GetInterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewDTO;
@@ -143,7 +141,6 @@ public class InterviewController {
 
     }
 
-
     @GetMapping(value={"/get/interview/questions"},params = {"interviewId"})
     public ResponseEntity<StandardResponse> getInterviewQuestions(@RequestParam(value = "interviewId") long interviewId) {
         try {
@@ -164,9 +161,8 @@ public class InterviewController {
                 new StandardResponse(200, "Success", percentage),
                 HttpStatus.OK
         );
-
-
     }
+
     @GetMapping("/success-rate")
     public ResponseEntity<StandardResponse> getSuccessRate() {
         double successRate = interviewService.calculateSuccessRate();

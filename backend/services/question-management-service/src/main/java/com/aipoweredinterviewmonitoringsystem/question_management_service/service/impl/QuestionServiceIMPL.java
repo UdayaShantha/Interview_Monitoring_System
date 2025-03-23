@@ -513,63 +513,63 @@ public class QuestionServiceIMPL implements QuestionService {
     }
 
 //  Question Shuffling algorithm --->
-@Override
-public List<QuestionResponseDTO> getInterviewQuestionsShuffle(String positionType) {
-    if (positionType != null) {
-        List<QuestionResponseDTO> questionResponseDTOList = new ArrayList<>();
-        if (positionType.equalsIgnoreCase("SOFTWARE_ENGINEER")) {
-            int count_c = 5;
-            int count_se = 8;
-            questionResponseDTOList.addAll(
-                    commonQuestionRepository.getCommonQuestionByCount(count_c)
-                            .stream()
-                            .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
-                            .collect(Collectors.toList())
-            );
-            questionResponseDTOList.addAll(
-                    questionSERepository.getQuestionsSEByPoistionAndCount(count_se)
-                            .stream()
-                            .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
-                            .collect(Collectors.toList())
-            );
+    @Override
+    public List<QuestionResponseDTO> getInterviewQuestionsShuffle(String positionType) {
+        if (positionType != null) {
+            List<QuestionResponseDTO> questionResponseDTOList = new ArrayList<>();
+            if (positionType.equalsIgnoreCase("SOFTWARE_ENGINEER")) {
+                int count_c = 5;
+                int count_se = 8;
+                questionResponseDTOList.addAll(
+                        commonQuestionRepository.getCommonQuestionByCount(count_c)
+                                .stream()
+                                .map(q -> new QuestionResponseDTO(q.getQuestionId(), q.getContent(), q.getKeywords()))
+                                .collect(Collectors.toList())
+                );
+                questionResponseDTOList.addAll(
+                        questionSERepository.getQuestionsSEByPoistionAndCount(count_se)
+                                .stream()
+                                .map(q -> new QuestionResponseDTO(q.getQuestionId(), q.getContent(), q.getKeywords()))
+                                .collect(Collectors.toList())
+                );
+            }
+            if (positionType.equalsIgnoreCase("QA")) {
+                int count_c = 5;
+                int count_qa = 7;
+                questionResponseDTOList.addAll(
+                        commonQuestionRepository.getCommonQuestionByCount(count_c)
+                                .stream()
+                                .map(q -> new QuestionResponseDTO(q.getQuestionId(), q.getContent(), q.getKeywords()))
+                                .collect(Collectors.toList())
+                );
+                questionResponseDTOList.addAll(
+                        questionQARepository.getQuestionsQAByPoistionAndCount(count_qa)
+                                .stream()
+                                .map(q -> new QuestionResponseDTO(q.getQuestionId(), q.getContent(), q.getKeywords()))
+                                .collect(Collectors.toList())
+                );
+            }
+            if (positionType.equalsIgnoreCase("DATA_ANALYTICS")) {
+                int count_c = 5;
+                int count_da = 8;
+                questionResponseDTOList.addAll(
+                        commonQuestionRepository.getCommonQuestionByCount(count_c)
+                                .stream()
+                                .map(q -> new QuestionResponseDTO(q.getQuestionId(), q.getContent(), q.getKeywords()))
+                                .collect(Collectors.toList())
+                );
+                questionResponseDTOList.addAll(
+                        questionDARepository.getQuestionsDAByPositionAndCount(count_da)
+                                .stream()
+                                .map(q -> new QuestionResponseDTO(q.getQuestionId(), q.getContent(), q.getKeywords()))
+                                .collect(Collectors.toList())
+                );
+            }
+            fisherYatesShuffle(questionResponseDTOList);
+            return checkTotalDuration(questionResponseDTOList, positionType);
         }
-        if (positionType.equalsIgnoreCase("QA")) {
-            int count_c = 5;
-            int count_qa = 7;
-            questionResponseDTOList.addAll(
-                    commonQuestionRepository.getCommonQuestionByCount(count_c)
-                            .stream()
-                            .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
-                            .collect(Collectors.toList())
-            );
-            questionResponseDTOList.addAll(
-                    questionQARepository.getQuestionsQAByPoistionAndCount(count_qa)
-                            .stream()
-                            .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
-                            .collect(Collectors.toList())
-            );
-        }
-        if (positionType.equalsIgnoreCase("DATA_ANALYTICS")) {
-            int count_c = 5;
-            int count_da = 8;
-            questionResponseDTOList.addAll(
-                    commonQuestionRepository.getCommonQuestionByCount(count_c)
-                            .stream()
-                            .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
-                            .collect(Collectors.toList())
-            );
-            questionResponseDTOList.addAll(
-                    questionDARepository.getQuestionsDAByPositionAndCount(count_da)
-                            .stream()
-                            .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
-                            .collect(Collectors.toList())
-            );
-        }
-        fisherYatesShuffle(questionResponseDTOList);
-        return checkTotalDuration(questionResponseDTOList, positionType);
+        throw new QuestionNotFoundException("Questions not found");
     }
-    throw new QuestionNotFoundException("Questions not found");
-}
 
     private void fisherYatesShuffle(List<QuestionResponseDTO> questionResponseDTOList) {
         Random random = new Random();

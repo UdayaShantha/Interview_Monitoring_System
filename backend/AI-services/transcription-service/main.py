@@ -1,3 +1,4 @@
+import uvicorn
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -5,6 +6,9 @@ import whisper
 import aiofiles
 import os
 import logging
+
+from sqlalchemy.orm import Session
+
 from database import get_db, create_tables, engine
 from models import Transcription
 
@@ -91,3 +95,26 @@ async def transcribe_audio(
     finally:
         if os.path.exists(temp_file):
             os.remove(temp_file)
+
+@app.get("/get/question/answer")
+async def get_question_answer(
+        interviewId: int,
+        questionId: int,
+        db: Session = Depends(get_db)):
+
+    transcription = db.query(Transcription).filter(
+        Transcription.interview_id == interviewId,
+        Transcription.question_id == questionId
+    ).first()
+
+    if not transcription:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Answer not found for interview ID {interviewId} and question ID {questionId}"
+        )
+
+    return transcription.text
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="127.0.0.1", port=8000)

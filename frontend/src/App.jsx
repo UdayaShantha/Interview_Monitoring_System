@@ -3,38 +3,36 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import LoginPage from './pages/LoginPage';
 import InstructionPage from './pages/InstructionPage';
 import AboutUs from './pages/AboutUs';
-import HRDashboard from './pages/HRDashboard';
-import CandidatesPage from './pages/CandidatesPage';
-import TechnicalDashboard from './pages/TechnicalDashboard'; 
 import UserProfilePage from './pages/UserProfilePage';
-import InterviewPage from './pages/InterviewPage'; 
+import HRDashboard from './pages/HRDashboard';
+import TechnicalDashboard from './pages/TechnicalDashboard';
+import CandidatesPage from './pages/CandidatesPage'; 
+import InterviewPage from './pages/InterviewPage';
+import CandidateForm from "./pages/CandidateForm";
+import QuestionPage from './pages/QuestionPage'; 
 import './pages/App.css';
 
 function App() {
   return (
-
-    <div>
-
-      <Router>
+    <Router>
       <Routes>
 
         <Route path="/" element={<Navigate to="/login" />} />
-        
+
         <Route path="/login" element={<LoginPage />} />
         <Route path="/instructions" element={<InstructionPage />} />
         <Route path="/about-us" element={<AboutUs />} />
-        <Route path="/hr-dashboard" element={<HRDashboard />} />
-        <Route path="/candidates" element={<CandidatesPage />} /> 
-        <Route path="/technical-dashboard" element={<TechnicalDashboard />} />
         <Route path="/user-profile" element={<UserProfilePage />} />
+        <Route path="/hr-dashboard" element={<HRDashboard />} />
+        <Route path="/technical-dashboard" element={<TechnicalDashboard />} />
+        <Route path="/candidates" element={<CandidatesPage />} /> 
         <Route path="/interviews" element={<InterviewPage />} />
-
-
-
-        </Routes>
+        <Route path="/candidate-form" element={<CandidateForm />} />
+        <Route path="/questions" element={<QuestionPage />} /> 
+        
+      </Routes>
     </Router>
-    </div>
-    
+
   );
 }
 
