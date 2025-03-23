@@ -13,6 +13,7 @@ import com.aipoweredinterviewmonitoringsystem.interview_management_service.repos
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.service.InterviewService;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.util.StandardResponse;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -168,11 +169,11 @@ public class InterviewServiceIMPL implements InterviewService {
         }
     }
 
-    @Override
-    public String deleteInterview(Long interviewId) {
-        interviewRepository.deleteById(interviewId);
-        return "Inteview with id: "+interviewId.toString() + " deleted";
-    }
+//    @Override
+//    public String deleteInterview(Long interviewId) {
+//        interviewRepository.deleteById(interviewId);
+//        return "Inteview with id: "+interviewId.toString() + " deleted";
+//    }
 
     @Override
     public InterviewUpdateDTO updateInterview(Long interviewId, InterviewUpdateDTO interviewUpdateDTO) {
@@ -365,4 +366,17 @@ public class InterviewServiceIMPL implements InterviewService {
         }
         throw new InterviewNotFountException("Not found this interview");
     }
+
+    @Transactional
+    @Override
+    public String deleteInterviewByUserId(Long userId) {
+        Interview interview = interviewRepository.findByCandidateId(userId);
+
+        if (interview != null) {
+            interviewRepository.deleteById(interview.getInterviewId());
+            return "Interview for candidate ID: " + userId + " deleted";
+        }
+        return "No such interview found";
+    }
+
 }

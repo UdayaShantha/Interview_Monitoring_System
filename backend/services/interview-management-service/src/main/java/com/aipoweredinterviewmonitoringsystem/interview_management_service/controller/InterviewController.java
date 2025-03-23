@@ -91,9 +91,18 @@ public class InterviewController {
         );
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<StandardResponse> deleteInterview(@PathVariable(value = "id") Long interviewId) {
-        String message = interviewService.deleteInterview(interviewId);
+//    @DeleteMapping("/delete/{id}")
+//    public ResponseEntity<StandardResponse> deleteInterview(@PathVariable(value = "id") Long interviewId) {
+//        String message = interviewService.deleteInterview(interviewId);
+//        return new ResponseEntity<StandardResponse>(
+//                new StandardResponse(200,"Success",message),
+//                HttpStatus.OK
+//        );
+//    }
+
+    @DeleteMapping("/delete/user/{userId}")
+    public ResponseEntity<StandardResponse> deleteInterviewByUserId(@PathVariable(value = "userId") Long userId) {
+        String message = interviewService.deleteInterviewByUserId(userId);
         return new ResponseEntity<StandardResponse>(
                 new StandardResponse(200,"Success",message),
                 HttpStatus.OK

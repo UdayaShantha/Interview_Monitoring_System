@@ -55,6 +55,8 @@ public interface InterviewRepository extends JpaRepository<Interview, Long> {
     @Query("SELECT COUNT(i) FROM Interview i WHERE i.scheduleDate = :today")
     long countByDate(LocalDate today);
 
+
+
 //    @Query("SELECT DISTINCT'*' FROM  Candidate c WHERE c.userId= :candidateId")
 //    Candidate findCandidateByCandidateId(long candidateID);
 }

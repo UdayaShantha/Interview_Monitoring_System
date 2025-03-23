@@ -20,7 +20,7 @@ public interface InterviewService {
 
     GetInterviewDTO getInterviewById(Long interviewId);
 
-    String deleteInterview(Long interviewId);
+//    String deleteInterview(Long interviewId);
 
     InterviewUpdateDTO updateInterview(Long interviewId, InterviewUpdateDTO interviewUpdateDTO);
 
@@ -54,5 +54,7 @@ public interface InterviewService {
     LocalTime getInterviewStartTime(long interviewId);
 
     long getCandidateIdByInterviewId(long interviewId);
+
+    String deleteInterviewByUserId(Long userId);
 }
 

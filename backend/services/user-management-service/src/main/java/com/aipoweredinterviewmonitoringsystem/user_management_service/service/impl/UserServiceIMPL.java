@@ -180,25 +180,24 @@ public class UserServiceIMPL implements UserService {
         return photoDTO;
     }
 
-
-
+    @Transactional
     @Override
     public String deleteCandidate(Long userId) {
-        if(!candidateRepository.existsById(userId)){
+        if (!candidateRepository.existsById(userId)) {
             throw new CandidateNotFoundException("No such kind of candidate found");
         }
         candidateRepository.deleteById(userId);
 
-        ResponseEntity<StandardResponse> response = interviewFeignClient.getInterviewById(userId);
-
-        if (response.getBody() != null && response.getBody().getData() != null) {
-            Map<String, Object> data = (Map<String, Object>) response.getBody().getData();
-            Long interviewId = (Long)data.get("id");
-            interviewFeignClient.deleteInterview(interviewId);
+        try {
+            ResponseEntity<StandardResponse> response = interviewFeignClient.deleteInterviewByUserId(userId);
+            System.out.println("Feign Response: " + response.getBody());
+        } catch (Exception e) {
+            System.err.println("Feign Client Error: " + e.getMessage());
         }
 
         return "Candidate with id: " + userId + " deleted";
     }
+
 
     @Override
     @Transactional
