@@ -220,4 +220,20 @@ public class UserController {
             );
         }
     }
+
+    @PostMapping("technical/technical/save")
+    public ResponseEntity<StandardResponse> saveTechnical(@RequestBody TechnicalSaveDTO technicalSaveDTO){
+        try {
+            String savedTechnical = userService.saveTechnical(technicalSaveDTO);
+            return new ResponseEntity<>(
+                    new StandardResponse(201, "Technical Saved", savedTechnical),
+                    HttpStatus.CREATED
+            );
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    new StandardResponse(500, "Internal Server Error", e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 }

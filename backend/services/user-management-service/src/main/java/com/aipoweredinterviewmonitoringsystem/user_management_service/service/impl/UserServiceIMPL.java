@@ -12,6 +12,7 @@ import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.respon
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.response.PositionResponse;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.HrTeam;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.TechnicalTeam;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.feign.InterviewFeignClient;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.*;
@@ -292,5 +293,15 @@ public class UserServiceIMPL implements UserService {
         hrTeamRepository.save(hrTeam);
         return "HR saved";
 
+    }
+
+    @Override
+    public String saveTechnical(TechnicalSaveDTO technicalSaveDTO) {
+        TechnicalTeam technicalTeam = modelMapper.map(technicalSaveDTO, TechnicalTeam.class);
+        technicalTeam.setUserType(UserType.TECHNICAL);
+        technicalTeam.setCreatedAt(LocalDateTime.now());
+        technicalTeam.setPassword(passwordEncoder.encode(technicalSaveDTO.getPassword()));
+        technicalTeamRepository.save(technicalTeam);
+        return "Technical saved";
     }
 }
