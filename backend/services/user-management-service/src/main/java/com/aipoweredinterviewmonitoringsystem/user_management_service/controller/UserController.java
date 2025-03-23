@@ -27,7 +27,7 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @PostMapping(value = "/candidate/save", consumes = {"multipart/form-data"})
+    @PostMapping(value = "/hr/candidate/save", consumes = {"multipart/form-data"})
     public ResponseEntity<StandardResponse> saveCandidate(
             @RequestPart("candidate") String candidateJson,
             @RequestPart("photos") List<MultipartFile> photos) {
@@ -44,7 +44,7 @@ public class UserController {
         }
     }
 
-    @GetMapping("/candidate-interview/{id}")
+    @GetMapping("/hr/candidate-interview/{id}")
     public ResponseEntity<StandardResponse> getCandidateAndInterviewById(@PathVariable(value = "id") Long userId) {
         try {
             CandidateAndInterviewDTO candidateAndInterviewDTO = userService.getCandidateAndInterviewById(userId);
@@ -65,7 +65,7 @@ public class UserController {
         }
     }
 
-    @GetMapping ("/candidate/all/")
+    @GetMapping ("/hr/candidate/all/")
     public ResponseEntity<StandardResponse> getAllCandidates() {
         List<AllCandidatesDTO> allCandidates = userService.getAllCandidates();
         return new ResponseEntity<StandardResponse>(
@@ -75,7 +75,7 @@ public class UserController {
     }
 
     @GetMapping(
-            path = "/candidate/all/paginated",
+            path = "/hr/candidate/all/paginated",
             params = {"page", "size"}
     )
     public ResponseEntity<StandardResponse> getAllCandidates(
@@ -89,7 +89,7 @@ public class UserController {
     }
 
 
-    @DeleteMapping("/candidate/{id}")
+    @DeleteMapping("/hr/candidate/{id}")
     public ResponseEntity<StandardResponse> deleteCandidate(@PathVariable(value = "id") Long userId) {
         String message = userService.deleteCandidate(userId);
         return new ResponseEntity<StandardResponse>(
@@ -98,7 +98,7 @@ public class UserController {
         );
     }
 
-    @PutMapping("/candidate/{id}")
+    @PutMapping("/hr/candidate/{id}")
     public ResponseEntity<StandardResponse> updateCandidate(@PathVariable(value = "id") Long userId, @RequestBody CandidateUpdateDTO candidateUpdateDTO) {
         CandidateUpdateDTO updatedCandidate = userService.updateCandidate(userId, candidateUpdateDTO);
         return new ResponseEntity<StandardResponse>(
@@ -139,7 +139,7 @@ public class UserController {
         }
     }
 
-    @GetMapping(path={"/candidate/position"},params={"user_id"})
+    @GetMapping(path={"/hr/candidate/position"},params={"user_id"})
     public ResponseEntity<StandardResponse> getCandidatePosition(@RequestParam(value = "user_id") long user_id){
         PositionResponse positionResponse =userService.getCandidatePosition(user_id);
         try {
@@ -170,7 +170,7 @@ public class UserController {
         }
     }
 
-    @GetMapping("/candidate/position/{id}")
+    @GetMapping("/hr/candidate/position/{id}")
     public ResponseEntity<StandardResponse> getCandidatePositionById(@PathVariable(value = "id") Long userId){
         try {
             String position = userService.getCandidatePositionById(userId);
@@ -185,7 +185,7 @@ public class UserController {
         }
     }
 
-    @GetMapping("/get/candidate/photos")
+    @GetMapping("/hr/get/candidate/photos")
     public ResponseEntity<StandardResponse> getCandidatePhotosById(@RequestParam long userId) {
         try {
             CandidatePhotoResponse photoDTO = userService.getCandidatePhotosById(userId);
@@ -197,6 +197,21 @@ public class UserController {
             return new ResponseEntity<>(
                     new StandardResponse(404, "User Not Found", e.getMessage()),
                     HttpStatus.NOT_FOUND
+            );
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    new StandardResponse(500, "Internal Server Error", e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+    @PostMapping("hr/hr/save")
+    public ResponseEntity<StandardResponse> saveHr(@RequestBody HrSaveDTO hrSaveDTO){
+        try {
+            String savedHr = userService.saveHr(hrSaveDTO);
+            return new ResponseEntity<>(
+                    new StandardResponse(201, "HR Saved", savedHr),
+                    HttpStatus.CREATED
             );
         } catch (Exception e) {
             return new ResponseEntity<>(

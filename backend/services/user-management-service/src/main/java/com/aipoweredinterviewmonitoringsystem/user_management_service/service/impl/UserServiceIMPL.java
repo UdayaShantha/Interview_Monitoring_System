@@ -11,6 +11,7 @@ import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.pagina
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.response.CandidatePhotoResponse;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.response.PositionResponse;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.HrTeam;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.feign.InterviewFeignClient;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.*;
@@ -178,6 +179,8 @@ public class UserServiceIMPL implements UserService {
         return photoDTO;
     }
 
+
+
     @Override
     public String deleteCandidate(Long userId) {
         if(!candidateRepository.existsById(userId)){
@@ -278,5 +281,16 @@ public class UserServiceIMPL implements UserService {
             }
         }
         throw new UserNotFoundException("No such kind of User");
+    }
+
+    @Override
+    public String saveHr(HrSaveDTO hrSaveDTO) {
+        HrTeam hrTeam = modelMapper.map(hrSaveDTO, HrTeam.class);
+        hrTeam.setUserType(UserType.HR);
+        hrTeam.setCreatedAt(LocalDateTime.now());
+        hrTeam.setPassword(passwordEncoder.encode(hrSaveDTO.getPassword()));
+        hrTeamRepository.save(hrTeam);
+        return "HR saved";
+
     }
 }

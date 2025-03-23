@@ -21,15 +21,16 @@ public class JwtAuthenticationFilter implements GlobalFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        logger.info("JwtAuthenticationFilter is executing for path: " + exchange.getRequest().getPath());
         String path = exchange.getRequest().getPath().toString();
         logger.info("Processing request for path: {}", path);
 
+        // Allow unauthenticated access to /auth endpoints
         if (path.contains("/auth/")) {
             logger.info("Allowing unauthenticated access to /auth endpoint");
             return chain.filter(exchange);
         }
 
+        // Check for Authorization header
         String authHeader = exchange.getRequest().getHeaders().getFirst("Authorization");
         if (authHeader == null) {
             logger.warn("Authorization header is missing");
@@ -40,6 +41,7 @@ public class JwtAuthenticationFilter implements GlobalFilter {
             return unauthorizedResponse(exchange);
         }
 
+        // Extract and validate token
         String token = authHeader.substring(7);
         logger.info("Extracted token: {}", token);
 
@@ -57,11 +59,18 @@ public class JwtAuthenticationFilter implements GlobalFilter {
             String userType = claims.get("userType", String.class);
             logger.info("Extracted claims - Username: {}, UserType: {}", username, userType);
 
+            // Role-based access control
+            if (!isAuthorizedForPath(path, userType)) {
+                logger.warn("User with role {} is not authorized for path {}", userType, path);
+                return forbiddenResponse(exchange);
+            }
+
+            // Modify request with headers
             ServerWebExchange modifiedExchange = exchange.mutate()
                     .request(exchange.getRequest().mutate()
                             .header("X-User-Name", username)
                             .header("X-User-Type", userType)
-                            .header("Authorization", authHeader)
+                            .header("Authorization", authHeader) // Optional: pass token if needed
                             .build())
                     .build();
 
@@ -73,9 +82,30 @@ public class JwtAuthenticationFilter implements GlobalFilter {
         }
     }
 
+    // Role-based access control logic
+    private boolean isAuthorizedForPath(String path, String userType) {
+        // Define role-based access rules
+        if (path.startsWith("/api/v1/users/hr") && !"HR".equals(userType)) {
+            return false; // Only HR can access user management endpoints
+        }
+        if (path.startsWith("/api/v1/interviews/") && !"TECHNICAL".equals(userType)) {
+            return false; // Only TECHNICAL can access interview endpoints
+        }
+        if (path.startsWith("/api/v1/users/candidate/") && !"CANDIDATE".equals(userType)) {
+            return false; // Only CANDIDATE can access candidate endpoints
+        }
+        return true; // Allow other paths if no specific restriction
+    }
+
     private Mono<Void> unauthorizedResponse(ServerWebExchange exchange) {
         exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
         logger.warn("Returning 401 Unauthorized response");
+        return exchange.getResponse().setComplete();
+    }
+
+    private Mono<Void> forbiddenResponse(ServerWebExchange exchange) {
+        exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
+        logger.warn("Returning 403 Forbidden response");
         return exchange.getResponse().setComplete();
     }
 }
