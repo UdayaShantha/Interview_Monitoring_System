@@ -310,11 +310,14 @@ public class QuestionServiceIMPL implements QuestionService {
 
     @Override
     public QuestionPaiginatedDTO getQuestionsPaiginated(int page, int size) {
-        //create the list
+        // Create the list
         List<UpdateResponseDTO> questionDTOList = new ArrayList<>();
 
         // Fetch questions based on pagination
         Page<Question> questions = questionRepository.findAll(PageRequest.of(page, size, Sort.by("createdAt").descending()));
+
+        // Get the total number of questions
+        long totalQuestions = questions.getTotalElements();
 
         // Collect all questions
         for (Question question : questions) {
@@ -343,10 +346,15 @@ public class QuestionServiceIMPL implements QuestionService {
                 );
             }
         }
+
+        // Create the response DTO
         QuestionPaiginatedDTO list = new QuestionPaiginatedDTO();
         list.setUpdateResponseDTOS(questionDTOList);
+        list.setTotalQuestions(totalQuestions); // Add total questions
+
         return list;
     }
+
 
 
     @Override

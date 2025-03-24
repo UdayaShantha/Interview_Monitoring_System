@@ -94,6 +94,9 @@ public class JwtAuthenticationFilter implements GlobalFilter {
         if (path.startsWith("/api/v1/users/candidate/") && !"CANDIDATE".equals(userType)) {
             return false; // Only CANDIDATE can access candidate endpoints
         }
+        if (path.startsWith("/api/v1/questions") && !"TECHNICAL".equals(userType)) {
+            return false; // Only CANDIDATE can access candidate endpoints
+        }
         return true; // Allow other paths if no specific restriction
     }
 
