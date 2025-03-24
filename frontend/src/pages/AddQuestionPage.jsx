@@ -17,7 +17,7 @@ function AddQuestionPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("/questions", {
+      await axios.post("/questions/save", {
         content: formData.question,
         category: formData.category,
         duration: formData.time,
@@ -73,9 +73,10 @@ function AddQuestionPage() {
                 required
               >
                 <option value="">Select Category</option>
-                <option value="QA_ENGINEER">QA Engineer</option>
-                <option value="SOFTWARE_ENGINEER">Software Engineer</option>
-                <option value="DATA_ANALYST">Data Analyst</option>
+                <option value="QA">QA Engineer</option>
+                <option value="SOFTWARE_ENGINEERING">Software Engineer</option>
+                <option value="DATA_ANALYTICS">Data Analyst</option>
+                <option value="COMMON">Common</option>
               </select>
             </div>
 

@@ -11,6 +11,7 @@ import java.util.List;
 @Getter
 @ToString
 public class UpdateResponseDTO {
+    private Long id;
     private String content;
     private QuestionType category;
     private long duration;
