@@ -30,7 +30,6 @@ import java.time.LocalTime;
 import java.util.List;
 
 @RestController
-@CrossOrigin
 @RequestMapping("/api/v1/interviews")
 public class InterviewController {
 

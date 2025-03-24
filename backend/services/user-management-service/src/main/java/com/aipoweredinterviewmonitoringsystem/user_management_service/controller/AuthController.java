@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@CrossOrigin
 @RequestMapping("api/v1/auth")
 public class AuthController {
 
