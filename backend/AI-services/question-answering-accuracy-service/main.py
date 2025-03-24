@@ -124,9 +124,8 @@ async def get_question_answer_accuracy(
                 "content": record.content,
                 "keywords": record.keywords.split(","),
                 "answer": record.answer,
-                "accuracy":record.accuracy
+                "accuracy": record.accuracy
             })
-
         return {
             "interview_id": interviewId,
             "total_questions": len(accuracy_data),
