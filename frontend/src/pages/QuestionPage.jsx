@@ -6,6 +6,9 @@ import Footer from "../components/Footer";
 import axios from "../axiosInstance";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { FaPlus, FaEdit, FaTrash } from "react-icons/fa";
+import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 
@@ -24,14 +27,88 @@ function QuestionPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedQuestionId, setSelectedQuestionId] = useState(null);
   const pageSize = 6;
 
-  // Fetch questions from backend
-  const fetchQuestions = async (page) => {
+  const DeleteConfirmationModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <motion.div
+        initial={{ scale: 0.8 }}
+        animate={{ scale: 1 }}
+        className="bg-white rounded-lg p-6 w-80"
+      >
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">Confirm Delete</h3>
+        <p className="text-gray-600 mb-6">Are you sure you want to remove this item?</p>
+        <div className="flex justify-end space-x-4">
+          <button
+            onClick={() => {
+              setShowDeleteModal(false);
+              setSelectedQuestionId(null);
+            }}
+            className="px-4 py-2 text-gray-600 hover:text-gray-800 transition duration-300"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleConfirmDelete}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition duration-300"
+          >
+            Delete
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+
+  const handleConfirmDelete = async () => {
+    try {
+      await axios.delete(`/question/remove?questionId=${selectedQuestionId}`);
+      toast.success("Question deleted successfully");
+      fetchQuestions(); // Refresh the list
+    } catch (error) {
+      toast.error("Failed to delete question");
+      console.error("Delete error:", error);
+    } finally {
+      setShowDeleteModal(false);
+      setSelectedQuestionId(null);
+    }
+  };
+
+  
+  // Function to format category for ENUM format
+const formatCategory = (category) => {
+  return category.replace(/\s+/g, "_").toUpperCase(); // Converts to ENUM format
+};
+
+
+
+  // Fetch questions (filtered or unfiltered)
+  const fetchQuestions = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`questions/get/questions/paiginated?page=${page}&size=${pageSize}`);
+      let url = categoryFilter || timeFilter 
+        ? `/filter/questions/paiginated?page=${currentPage}&size=${pageSize}&category=${categoryFilter}&duration=${timeFilter}`
+        : `/get/questions/paiginated?page=${currentPage}&size=${pageSize}`;
+
+        // Apply category filter if available
+        if (categoryFilter) {
+          const formattedCategory = formatCategory(categoryFilter);
+          url += `&category=${formattedCategory}`;
+      }
+
+      // Apply duration filter if available
+      if (timeFilter) {
+          url += `&duration=${timeFilter}`;
+      }
+
+      console.log("Request URL:", url); // Debugging log
+      
+      const response = await axios.get(url);
+
       console.log("API Response:", response.data);
       
       if (response.status === 200) {
@@ -45,15 +122,18 @@ function QuestionPage() {
       setLoading(false);
     }
   };
-  // Fetch data on component mount & page change
-  useEffect(() => {
-    fetchQuestions(currentPage);
-  }, [currentPage]);
 
-  // Debugging filtered data
+  // Fetch data on component mount & when filters/page change
   useEffect(() => {
-    console.log("Filtered Questions:", questions);
-  }, [questions]);
+    fetchQuestions();
+    if (location.state?.refresh) {
+      fetchQuestions();
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [currentPage, categoryFilter, timeFilter, location.state]);
+
+
+
 
   return (
     <div className="min-h-screen flex flex-col font-['Poppins'] bg-gradient-to-b from-green-50 to-green-100">
@@ -106,9 +186,13 @@ function QuestionPage() {
             onChange={(e) => setTimeFilter(e.target.value)}
           >
             <option value="">Filter by Time</option>
-            <option value="5min">5min</option>
-            <option value="10min">10min</option>
-            <option value="15min">15min</option>
+            <option value="5min">1min</option>
+            <option value="10min">2min</option>
+            <option value="15min">3min</option>
+            <option value="15min">4min</option>
+            <option value="15min">5min</option>
+            <option value="15min">6min</option>
+            <option value="15min">8min</option>
           </select>
         </div>
 
@@ -145,9 +229,23 @@ function QuestionPage() {
                   <td className="py-2 px-3 md:py-3 md:px-4">{q.category || "No Category"}</td>
                   <td className="py-2 px-3 md:py-3 md:px-4">{q.duration ? `${q.duration} min` : "N/A"}</td>
                   <td className="py-2 px-3 md:py-3 md:px-4 flex justify-center space-x-3">
-                    <button className="text-blue-500 hover:text-blue-700"><FaEdit /></button>
-                    <button className="text-red-500 hover:text-red-700"><FaTrash /></button>
-                  </td>
+    <Link 
+      to={`/edit-question/${q.id}`}
+      className="text-blue-500 hover:text-blue-700"
+    >
+      <FaEdit />
+    </Link>
+    <button 
+      onClick={() => {
+        setSelectedQuestionId(q.id);
+        setShowDeleteModal(true);
+      }}
+      className="text-red-500 hover:text-red-700"
+    >
+      <FaTrash />
+    </button>
+  </td>
+
                 </motion.tr>
               ))}
             </tbody>
@@ -177,7 +275,7 @@ function QuestionPage() {
 
 
 
-
+      {showDeleteModal && <DeleteConfirmationModal />}
 
       {/* Footer */}
       <Footer />
