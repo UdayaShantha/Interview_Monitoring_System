@@ -31,12 +31,12 @@ function QuestionPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`/get/questions/paiginated?page=${page}&size=${pageSize}`);
+      const response = await axios.get(`questions/get/questions/paiginated?page=${page}&size=${pageSize}`);
       console.log("API Response:", response.data);
       
       if (response.status === 200) {
         setQuestions(response.data.data.updateResponseDTOS || []);
-        setTotalPages(response.data.totalPages || 50);
+        setTotalPages(Math.ceil(response.data.data.totalQuestions / pageSize));
       }
     } catch (error) {
       setError("Failed to load questions");
