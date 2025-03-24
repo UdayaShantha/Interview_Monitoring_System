@@ -96,7 +96,7 @@ public class QuestionServiceIMPL implements QuestionService {
                 long duration = (long) data[2];
                 String keywordsString = (String) data[3];
                 List<String> keywords = Arrays.asList(keywordsString.split(","));
-                return new GetQuestionDTO(content, category, duration, keywords);
+                return new GetQuestionDTO(questionId,content, category, duration, keywords);
             }
             if (questionDARepository.existsById(questionId)) {
                 Object result = questionDARepository.getQuestionDAByQuestionId(questionId);
@@ -109,7 +109,7 @@ public class QuestionServiceIMPL implements QuestionService {
                 long duration = (long) data[2];
                 String keywordsString = (String) data[3];
                 List<String> keywords = Arrays.asList(keywordsString.split(","));
-                return new GetQuestionDTO(content, category, duration, keywords);
+                return new GetQuestionDTO(questionId,content, category, duration, keywords);
             }
             if (questionQARepository.existsById(questionId)) {
                 Object result = questionQARepository.getQuestionQAByQuestionId(questionId);
@@ -122,7 +122,7 @@ public class QuestionServiceIMPL implements QuestionService {
                 long duration = (long) data[2];
                 String keywordsString = (String) data[3];
                 List<String> keywords = Arrays.asList(keywordsString.split(","));
-                return new GetQuestionDTO(content, category, duration, keywords);
+                return new GetQuestionDTO(questionId,content, category, duration, keywords);
             }
             if (questionSERepository.existsById(questionId)) {
                 Object result = questionSERepository.getQuestionSEByQuestionId(questionId);
@@ -135,7 +135,7 @@ public class QuestionServiceIMPL implements QuestionService {
                 long duration = (long) data[2];
                 String keywordsString = (String) data[3];
                 List<String> keywords = Arrays.asList(keywordsString.split(","));
-                return new GetQuestionDTO(content, category, duration, keywords);
+                return new GetQuestionDTO(questionId,content, category, duration, keywords);
             }
         }
         return null;
@@ -184,6 +184,7 @@ public class QuestionServiceIMPL implements QuestionService {
                 throw new RuntimeException("Failed to update question with ID: " + questionId);
             }
             return new UpdateResponseDTO(
+                    getQuestionDTO.getId(),
                     getQuestionDTO.getContent(),
                     getQuestionDTO.getCategory(),
                     getQuestionDTO.getDuration()

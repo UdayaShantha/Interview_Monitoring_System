@@ -1,25 +1,23 @@
-import React, { useState } from "react";
-import { useEffect } from 'react';
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Footer from "../components/Footer";
 import axios from "../axiosInstance";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { FaPlus, FaEdit, FaTrash } from "react-icons/fa";
-import { useLocation, useNavigate } from "react-router-dom";
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
-
-
-const chartData = [
-  { name: "Common Questions", value: 30 },
-  { name: "Software Engineering", value: 25 },
-  { name: "QA Questions", value: 20 },
-  { name: "Data Analytics", value: 25 },
-];
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function QuestionPage() {
+  // States for chart counts
+  const [counts, setCounts] = useState({
+    common: 0,
+    softwareEngineering: 0,
+    qa: 0,
+    dataAnalytics: 0,
+  });
+
+  // Other states
   const [categoryFilter, setCategoryFilter] = useState("");
   const [timeFilter, setTimeFilter] = useState("");
   const [questions, setQuestions] = useState([]);
@@ -32,6 +30,35 @@ function QuestionPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedQuestionId, setSelectedQuestionId] = useState(null);
   const pageSize = 6;
+
+  // Fetch counts for the chart
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const commonRes = await axios.get("questions/count/common-question");
+        const seRes = await axios.get("questions/count/questionSE");
+        const qaRes = await axios.get("questions/count/questionQA");
+        const daRes = await axios.get("questions/count/questionDA");
+        setCounts({
+          common: commonRes.data,
+          softwareEngineering: seRes.data,
+          qa: qaRes.data,
+          dataAnalytics: daRes.data,
+        });
+      } catch (error) {
+        console.error("Error fetching counts:", error);
+      }
+    };
+    fetchCounts();
+  }, []);
+
+  // Chart data based on counts state
+  const chartData = [
+    { name: "Common Questions", value: counts.common || 0 },
+    { name: "Software Engineering", value: counts.softwareEngineering || 0},
+    { name: "QA Questions", value: counts.qa || 0},
+    { name: "Data Analytics", value: counts.dataAnalytics || 0},
+  ];
 
   const DeleteConfirmationModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -65,7 +92,7 @@ function QuestionPage() {
 
   const handleConfirmDelete = async () => {
     try {
-      await axios.delete(`/question/remove?questionId=${selectedQuestionId}`);
+      await axios.delete(`questions/question/remove?questionId=${selectedQuestionId}`);
       toast.success("Question deleted successfully");
       fetchQuestions(); // Refresh the list
     } catch (error) {
@@ -77,40 +104,33 @@ function QuestionPage() {
     }
   };
 
-  
   // Function to format category for ENUM format
-const formatCategory = (category) => {
-  return category.replace(/\s+/g, "_").toUpperCase(); // Converts to ENUM format
-};
-
-
+  const formatCategory = (category) => {
+    return category.replace(/\s+/g, "_").toUpperCase(); // Converts to ENUM format
+  };
 
   // Fetch questions (filtered or unfiltered)
   const fetchQuestions = async () => {
     setLoading(true);
     setError(null);
     try {
-      let url = categoryFilter || timeFilter 
-        ? `/filter/questions/paiginated?page=${currentPage}&size=${pageSize}&category=${categoryFilter}&duration=${timeFilter}`
-        : `/get/questions/paiginated?page=${currentPage}&size=${pageSize}`;
+      let url =
+        categoryFilter || timeFilter
+          ? `questions/filter/questions/paiginated?page=${currentPage}&size=${pageSize}`
+          : `questions/get/questions/paiginated?page=${currentPage}&size=${pageSize}`;
 
-        // Apply category filter if available
-        if (categoryFilter) {
-          const formattedCategory = formatCategory(categoryFilter);
-          url += `&category=${formattedCategory}`;
+      if (categoryFilter) {
+        const formattedCategory = formatCategory(categoryFilter);
+        url += `&category=${formattedCategory}`;
       }
-
-      // Apply duration filter if available
       if (timeFilter) {
-          url += `&duration=${timeFilter}`;
+        url += `&duration=${timeFilter}`;
       }
 
       console.log("Request URL:", url); // Debugging log
-      
-      const response = await axios.get(url);
 
-      console.log("API Response:", response.data);
-      
+      const response = await axios.get(url);
+      // Update questions and pagination (adjust based on your API response structure)
       if (response.status === 200) {
         setQuestions(response.data.data.updateResponseDTOS || []);
         setTotalPages(Math.ceil(response.data.data.totalQuestions / pageSize));
@@ -131,9 +151,6 @@ const formatCategory = (category) => {
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [currentPage, categoryFilter, timeFilter, location.state]);
-
-
-
 
   return (
     <div className="min-h-screen flex flex-col font-['Poppins'] bg-gradient-to-b from-green-50 to-green-100">
@@ -162,7 +179,13 @@ const formatCategory = (category) => {
             <YAxis stroke="#4CAF50" />
             <CartesianGrid strokeDasharray="3 3" />
             <Tooltip />
-            <Area type="monotone" dataKey="value" stroke="#388E3C" fillOpacity={1} fill="url(#colorGreen)" />
+            <Area
+              type="monotone"
+              dataKey="value"
+              stroke="#388E3C"
+              fillOpacity={1}
+              fill="url(#colorGreen)"
+            />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -175,10 +198,10 @@ const formatCategory = (category) => {
             onChange={(e) => setCategoryFilter(e.target.value)}
           >
             <option value="">Filter by Category</option>
-            <option value="Software Engineering">Software Engineering</option>
+            <option value="SOFTWARE_ENGINEERING">Software Engineering</option>
             <option value="QA">Quality Assurance</option>
-            <option value="Data Analytics">Data Analytics</option>
-            <option value="Common">Common Questions</option>
+            <option value="DATA_ANALYTICS">Data Analytics</option>
+            <option value="COMMON">Common Questions</option>
           </select>
 
           <select
@@ -186,13 +209,13 @@ const formatCategory = (category) => {
             onChange={(e) => setTimeFilter(e.target.value)}
           >
             <option value="">Filter by Time</option>
-            <option value="5min">1min</option>
-            <option value="10min">2min</option>
-            <option value="15min">3min</option>
-            <option value="15min">4min</option>
-            <option value="15min">5min</option>
-            <option value="15min">6min</option>
-            <option value="15min">8min</option>
+            <option value="1">1min</option>
+            <option value="2">2min</option>
+            <option value="3">3min</option>
+            <option value="4">4min</option>
+            <option value="5">5min</option>
+            <option value="6">6min</option>
+            <option value="8">8min</option>
           </select>
         </div>
 
@@ -204,10 +227,8 @@ const formatCategory = (category) => {
         </Link>
       </div>
 
-      
-
-    {/* Question Table */}
-    <div className="px-4 md:px-8 pb-16 overflow-x-auto">
+      {/* Question Table */}
+      <div className="px-4 md:px-8 pb-16 overflow-x-auto">
         {loading ? (
           <p className="text-center text-gray-500">Loading questions...</p>
         ) : error ? (
@@ -227,31 +248,30 @@ const formatCategory = (category) => {
                 <motion.tr key={index} className="border-b hover:bg-green-100 transition duration-300">
                   <td className="py-2 px-3 md:py-3 md:px-4">{q.content || "No Content"}</td>
                   <td className="py-2 px-3 md:py-3 md:px-4">{q.category || "No Category"}</td>
-                  <td className="py-2 px-3 md:py-3 md:px-4">{q.duration ? `${q.duration} min` : "N/A"}</td>
+                  <td className="py-2 px-3 md:py-3 md:px-4">
+                    {q.duration ? `${q.duration} min` : "N/A"}
+                  </td>
                   <td className="py-2 px-3 md:py-3 md:px-4 flex justify-center space-x-3">
-    <Link 
-      to={`/edit-question/${q.id}`}
-      className="text-blue-500 hover:text-blue-700"
-    >
-      <FaEdit />
-    </Link>
-    <button 
-      onClick={() => {
-        setSelectedQuestionId(q.id);
-        setShowDeleteModal(true);
-      }}
-      className="text-red-500 hover:text-red-700"
-    >
-      <FaTrash />
-    </button>
-  </td>
-
+                    <Link to={`/edit-question/${q.id}`} className="text-blue-500 hover:text-blue-700">
+                      <FaEdit />
+                    </Link>
+                    <button
+                      onClick={() => {
+                        setSelectedQuestionId(q.id);
+                        setShowDeleteModal(true);
+                      }}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <FaTrash />
+                    </button>
+                  </td>
                 </motion.tr>
               ))}
             </tbody>
           </table>
         )}
       </div>
+
       {/* Pagination */}
       <div className="flex justify-center space-x-2 my-6">
         <button
@@ -273,10 +293,7 @@ const formatCategory = (category) => {
         </button>
       </div>
 
-
-
       {showDeleteModal && <DeleteConfirmationModal />}
-
       {/* Footer */}
       <Footer />
     </div>

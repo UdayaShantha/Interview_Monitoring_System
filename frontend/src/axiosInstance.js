@@ -1,15 +1,16 @@
-import axios from "axios";
+import axios from 'axios';
 
 const instance = axios.create({
-  baseURL: "http://localhost:9191/api/v1/",
+  baseURL: 'http://localhost:9191/api/v1', // Base API Gateway URL
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
 });
 
+// Add a request interceptor to attach the token
 instance.interceptors.request.use(
   (config) => {
-    const accessToken = localStorage.getItem("accessToken");
+    const accessToken = localStorage.getItem('accessToken');
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
@@ -18,6 +19,7 @@ instance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Add a response interceptor to handle token refresh
 instance.interceptors.response.use(
   (response) => response,
   async (error) => {

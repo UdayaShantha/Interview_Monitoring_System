@@ -10,8 +10,10 @@ import java.util.List;
 @Setter
 @Getter
 public class GetQuestionDTO {
+    private Long id;
     private String content;
     private QuestionType category;
     private long duration;
     private List<String> keywords;
+
 }
