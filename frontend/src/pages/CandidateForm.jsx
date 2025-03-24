@@ -27,7 +27,11 @@ const CandidateForm = ({ onClose }) => {
   };
 
   const handleImageUpload = (e) => {
-    const newFiles = Array.from(e.target.files);
+    const newFiles = Array.from(e.target.files).filter(file => {
+      const validTypes = ["image/jpeg", "image/png", "image/gif"];
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      return validTypes.includes(file.type) && file.size <= maxSize;
+    });
     const updatedFiles = [...formData.images, ...newFiles].slice(0, 5);
     setFormData({ ...formData, images: updatedFiles });
   };
@@ -154,7 +158,7 @@ const CandidateForm = ({ onClose }) => {
                     {formData.images.map((file, index) => (
                       <div key={index} className="relative">
                         <img
-                          src={URL.createObjectURL(file)}
+                          src={file && URL.createObjectURL(file)}
                           alt={`upload ${index}`}
                           className="h-12 w-12 object-cover rounded"
                         />
