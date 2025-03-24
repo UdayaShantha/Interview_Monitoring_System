@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/report")
+@RequestMapping("api/v1/reports")
 public class JasperReportController {
 
     private final JasperReportService jasperReportService;

@@ -11,6 +11,12 @@ import reportImage from "../assets/report.jpg";
 function HRDashboard() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const handleLogout = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    window.location.href = '/login';
+  };
+
   return (
     <div className="min-h-screen flex flex-col font-['Poppins'] bg-gradient-to-b from-green-50 to-green-100">
       <nav className="bg-gradient-to-r from-green-500 to-green-300 text-white p-5 flex justify-between items-center shadow-xl">
@@ -49,7 +55,7 @@ function HRDashboard() {
             </NavLink>
           </li>
           <li>
-            <Link to="/login" className="hover:text-red-400 transition duration-300">
+            <Link to="/login" className="hover:text-red-400 transition duration-300" onClick={handleLogout}>
               Logout
             </Link>
           </li>

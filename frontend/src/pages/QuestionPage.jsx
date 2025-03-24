@@ -108,11 +108,12 @@ const formatCategory = (category) => {
       console.log("Request URL:", url); // Debugging log
       
       const response = await axios.get(url);
+
       console.log("API Response:", response.data);
       
       if (response.status === 200) {
         setQuestions(response.data.data.updateResponseDTOS || []);
-        setTotalPages(response.data.totalPages || 50);
+        setTotalPages(Math.ceil(response.data.data.totalQuestions / pageSize));
       }
     } catch (error) {
       setError("Failed to load questions");
