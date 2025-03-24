@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { FaTimes } from "react-icons/fa";
+import DOMPurify from "dompurify";
 
 const CandidateForm = ({ onClose }) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -161,7 +162,7 @@ const CandidateForm = ({ onClose }) => {
                     {formData.images.map((file, index) => (
                       <div key={index} className="relative">
                         <img
-                          src={file ? URL.createObjectURL(file) : ""}
+                          src={file ? DOMPurify.sanitize(URL.createObjectURL(file)) : ""}
                           alt={`upload ${index}`}
                           className="h-12 w-12 object-cover rounded"
                         />
