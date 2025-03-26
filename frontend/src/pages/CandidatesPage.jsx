@@ -1,11 +1,81 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Footer from "../components/Footer";
-import { FaTrash, FaPlus, FaEye, FaBars } from "react-icons/fa";
+import { FaTrash, FaPlus, FaEye, FaBars, FaTimes } from "react-icons/fa";
 import { motion } from "framer-motion";
 import CandidateForm from "./CandidateForm";
-import axios from "../axiosInstance"; 
+import axios from "../axiosInstance";
 import "./App.css";
+
+const CandidateViewForm = ({ candidate, onClose }) => {
+  return (
+    <div className="view-form-overlay">
+      <motion.div 
+        className="view-form-container"
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div className="view-form-header">
+          <h3>Candidate Details</h3>
+          <button className="close-button" onClick={onClose}>
+            <FaTimes />
+          </button>
+        </div>
+
+        <div className="details-sections">
+          <div className="details-section">
+            <h4 className="section-title">Personal Details</h4>
+            <div className="details-grid">
+              <div className="detail-item">
+                <label>Full Name</label>
+                <input type="text" value={candidate.name || ''} disabled />
+              </div>
+              <div className="detail-item">
+                <label>NIC Number</label>
+                <input type="text" value={candidate.nic || ''} disabled />
+              </div>
+              <div className="detail-item">
+                <label>Contact Number</label>
+                <input type="text" value={candidate.contactNumber || ''} disabled />
+              </div>
+              <div className="detail-item">
+                <label>Email Address</label>
+                <input type="email" value={candidate.email || ''} disabled />
+              </div>
+              <div className="detail-item full-width">
+                <label>Address</label>
+                <textarea value={candidate.address || ''} disabled />
+              </div>
+            </div>
+          </div>
+
+          <div className="details-section">
+            <h4 className="section-title">Interview Details</h4>
+            <div className="details-grid">
+              <div className="detail-item">
+                <label>Position</label>
+                <input type="text" value={candidate.positionType || ''} disabled />
+              </div>
+              <div className="detail-item">
+                <label>Interview Date</label>
+                <input type="date" value={candidate.interviewDate || ''} disabled />
+              </div>
+              <div className="detail-item">
+                <label>Interview Time</label>
+                <input type="time" value={candidate.interviewTime || ''} disabled />
+              </div>
+              <div className="detail-item">
+                <label>Duration (mins)</label>
+                <input type="number" value={candidate.interviewDuration || ''} disabled />
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 
 const CandidatesPage = () => {
   const [candidates, setCandidates] = useState([]);
@@ -15,23 +85,34 @@ const CandidatesPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedCandidate, setSelectedCandidate] = useState(null);
+
+  const handleAddCandidate = async (newCandidate) => {
+    try {
+      setLoading(true);
+      const response = await axios.post("/candidate/create", newCandidate);
+      if (response.status === 201) {
+        setCurrentPage(0);
+        fetchCandidates(0);
+        setShowForm(false);
+      }
+    } catch (error) {
+      setError("Failed to add candidate");
+      console.error("Error adding candidate:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const toggleNavbar = () => setIsNavbarOpen(!isNavbarOpen);
-
-  
 
   const fetchCandidates = async (page) => {
     setLoading(true);
     setError(null);
     try {
       const response = await axios.get(`/candidate/all/paginated?page=${page}&size=10`);
-      console.log("API Response:", response.data); 
-
       const fetchedData = response.data.data?.list || [];
-      if (fetchedData.length > 0) {
-        console.log("Candidate Data:", fetchedData);
-      }
-
+      
       if (response.status === 200) {
         setCandidates(fetchedData);
         setTotalPages(Math.ceil(response.data.data?.totalCandidates / 10));
@@ -47,6 +128,14 @@ const CandidatesPage = () => {
   useEffect(() => {
     fetchCandidates(currentPage);
   }, [currentPage]);
+
+  const handleViewCandidate = (candidate) => {
+    setSelectedCandidate(candidate);
+  };
+
+  const handleCloseView = () => {
+    setSelectedCandidate(null);
+  };
 
   return (
     <div className="candidates-page">
@@ -78,13 +167,14 @@ const CandidatesPage = () => {
         <button className="add-button" onClick={() => setShowForm(true)}>
           <FaPlus /> Add New Candidate
         </button>
-
-        
       </motion.div>
 
-      {showForm && <CandidateForm onClose={() => setShowForm(false)} />}
-
-      <h3 className="subheading" style={{ marginTop: "20px", marginLeft: "10px", color: "#333" }}>Upcoming Today</h3>
+      {showForm && (
+        <CandidateForm 
+          onClose={() => setShowForm(false)}
+          onSubmit={handleAddCandidate}
+        />
+      )}
 
       <motion.div className="table-wrapper" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1 }}>
         {loading ? (
@@ -109,7 +199,11 @@ const CandidatesPage = () => {
                     <td className="left-align">{candidate.name}</td>
                     <td className="center-align">{candidate.positionType}</td>
                     <td className="right-align action-icons">
-                      <FaEye className="view-icon" title="View Candidate" />
+                      <FaEye 
+                        className="view-icon" 
+                        title="View Candidate" 
+                        onClick={() => handleViewCandidate(candidate)} 
+                      />
                       <FaTrash className="delete-icon" title="Delete Candidate" />
                     </td>
                   </tr>
@@ -117,7 +211,6 @@ const CandidatesPage = () => {
               </tbody>
             </table>
 
-            {/* Pagination Controls */}
             <div className="pagination">
               <button
                 disabled={currentPage === 0}
@@ -135,8 +228,16 @@ const CandidatesPage = () => {
             </div>
           </>
         )}
-      </motion.div><br></br><br></br>
+      </motion.div>
 
+      {selectedCandidate && (
+        <CandidateViewForm 
+          candidate={selectedCandidate} 
+          onClose={handleCloseView}
+        />
+      )}
+
+      <br /><br />
       <Footer />
     </div>
   );
