@@ -7,6 +7,32 @@ import CandidateForm from "./CandidateForm";
 import axios from "../axiosInstance";
 import "./App.css";
 
+const DeleteConfirmationModal = ({ isOpen, onConfirm, onCancel, candidateName }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="delete-modal-overlay">
+      <motion.div 
+        className="delete-modal-container"
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        <h3>Confirm Delete</h3>
+        <p>Are you sure you want to delete candidate <strong>{candidateName}</strong>?</p>
+        <div className="modal-button-group">
+          <button className="confirm-btn" onClick={onConfirm}>
+            OK
+          </button>
+          <button className="cancel-btn" onClick={onCancel}>
+            Cancel
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
 const CandidateViewForm = ({ candidate, onClose }) => {
   return (
     <div className="view-form-overlay">
@@ -86,6 +112,7 @@ const CandidatesPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [deletingCandidate, setDeletingCandidate] = useState(null);
 
   const handleAddCandidate = async (newCandidate) => {
     try {
@@ -135,6 +162,22 @@ const CandidatesPage = () => {
 
   const handleCloseView = () => {
     setSelectedCandidate(null);
+  };
+
+  const handleDeleteCandidate = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.delete(`/candidate/delete/${deletingCandidate.userId}`);
+      if (response.status === 200) {
+        fetchCandidates(currentPage);
+      }
+    } catch (error) {
+      setError("Failed to delete candidate");
+      console.error("Error deleting candidate:", error);
+    } finally {
+      setLoading(false);
+      setDeletingCandidate(null);
+    }
   };
 
   return (
@@ -204,7 +247,11 @@ const CandidatesPage = () => {
                         title="View Candidate" 
                         onClick={() => handleViewCandidate(candidate)} 
                       />
-                      <FaTrash className="delete-icon" title="Delete Candidate" />
+                      <FaTrash 
+                        className="delete-icon" 
+                        title="Delete Candidate" 
+                        onClick={() => setDeletingCandidate(candidate)}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -236,6 +283,13 @@ const CandidatesPage = () => {
           onClose={handleCloseView}
         />
       )}
+
+      <DeleteConfirmationModal
+        isOpen={!!deletingCandidate}
+        onConfirm={handleDeleteCandidate}
+        onCancel={() => setDeletingCandidate(null)}
+        candidateName={deletingCandidate?.name || ''}
+      />
 
       <br /><br />
       <Footer />
