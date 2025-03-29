@@ -19,6 +19,8 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend,
 function CompletedInterviewsPage() {
   const [completedInterviews, setCompletedInterviews] = useState([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [selectedInterviewToDelete, setSelectedInterviewToDelete] = useState(null);
 
   useEffect(() => {
     const fetchCompletedInterviews = async () => {
@@ -33,6 +35,62 @@ function CompletedInterviewsPage() {
     };
     fetchCompletedInterviews();
   }, []);
+
+  const handleDeleteClick = (interview) => {
+    setSelectedInterviewToDelete(interview);
+    setShowDeleteConfirmation(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/interviews/${selectedInterviewToDelete.id}`,
+        { method: 'DELETE' }
+      );
+      
+      if (!response.ok) throw new Error('Failed to delete interview');
+      
+      setCompletedInterviews(prev => 
+        prev.filter(interview => interview.id !== selectedInterviewToDelete.id)
+      );
+    } catch (error) {
+      console.error("Error deleting interview:", error);
+    } finally {
+      setShowDeleteConfirmation(false);
+      setSelectedInterviewToDelete(null);
+    }
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteConfirmation(false);
+    setSelectedInterviewToDelete(null);
+  };
+
+  const DeleteConfirmationModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-xl shadow-lg w-full max-w-md mx-auto p-6">
+        <div className="text-center">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+            Confirm deletion?
+          </h3>
+          <div className="flex justify-center space-x-4">
+            <button
+              onClick={confirmDelete}
+              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            >
+              OK
+            </button>
+            <button
+              onClick={cancelDelete}
+              className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   const chartOptions = {
     responsive: true,
@@ -70,10 +128,11 @@ function CompletedInterviewsPage() {
             <h1 className="text-2xl font-bold tracking-tight">Interview Portal</h1>
             <div className="hidden md:block">
               <div className="flex space-x-8">
-                <Link to="/hr-dashboard" className="hover:text-green-200">Dashboard</Link>
+                <Link to="/interviews" className="hover:text-green-200">Dashboard</Link>
                 <Link to="/interviews/upcoming" className="hover:text-green-200">Upcoming</Link>
                 <Link to="/interviews/completed" className="text-green-200 border-b-2 border-green-200">Completed</Link>
                 <Link to="/interviews/postponed" className="hover:text-green-200">Postponed</Link>
+                <Link to="/interviews/cancelled" className="hover:text-green-200">Cancelled</Link>
               </div>
             </div>
             <button className="md:hidden p-2 text-green-200" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
@@ -84,10 +143,11 @@ function CompletedInterviewsPage() {
         {isMobileMenuOpen && (
           <div className="md:hidden px-4 pb-4">
             <div className="flex flex-col space-y-4">
-              <Link to="/hr-dashboard" className="text-green-200">Dashboard</Link>
+              <Link to="/interviews" className="text-green-200">Dashboard</Link>
               <Link to="/interviews/upcoming" className="text-green-200">Upcoming</Link>
               <Link to="/interviews/completed" className="text-green-200 border-l-4 pl-2">Completed</Link>
               <Link to="/interviews/postponed" className="text-green-200">Postponed</Link>
+              <Link to="/interviews/cancelled" className="text-green-200">Cancelled</Link>
             </div>
           </div>
         )}
@@ -143,7 +203,10 @@ function CompletedInterviewsPage() {
                         <button className="text-blue-600 hover:text-blue-800">
                           <FaDownload />
                         </button>
-                        <button className="text-red-600 hover:text-red-800">
+                        <button 
+                          onClick={() => handleDeleteClick(interview)}
+                          className="text-red-600 hover:text-red-800"
+                        >
                           <FaTrashAlt />
                         </button>
                       </td>
@@ -155,6 +218,9 @@ function CompletedInterviewsPage() {
           </div>
         </div>
       </main>
+
+      {showDeleteConfirmation && <DeleteConfirmationModal />}
+
       <Footer />
     </div>
   );
