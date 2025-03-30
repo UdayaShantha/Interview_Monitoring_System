@@ -274,6 +274,11 @@ async def start_face_recognition(interview_id: int, db: AsyncSession = Depends(g
 
         def run_face_recognition_process():
             try:
+                # Get reference to main event loop
+                main_loop = asyncio.get_event_loop()
+            except RuntimeError:
+                main_loop = asyncio.new_event_loop()
+            try:
                 report_path = face_recognition(
                     candidate_photos=candidate_photos,
                     stop_event=stop_event,  # Pass stop_event
@@ -289,6 +294,12 @@ async def start_face_recognition(interview_id: int, db: AsyncSession = Depends(g
                 asyncio.set_event_loop(loop)
                 loop.run_until_complete(update_db_with_report(interview_id, report_path, db))
                 loop.close()
+
+                future = asyncio.run_coroutine_threadsafe(
+                    update_db_with_report(interview_id, report_path, db),
+                    main_loop
+                )
+                future.result()
 
             except Exception as e:
                 print(f"Face recognition error: {str(e)}")
@@ -313,22 +324,27 @@ async def start_face_recognition(interview_id: int, db: AsyncSession = Depends(g
             detail=f"Error starting face recognition: {str(e)}"
         )
 
+
 async def update_db_with_report(interview_id, report_path, db):
-    """Update the database with the report after face recognition completes."""
     try:
+        # Read report content safely
+        with open(report_path, "r", encoding="utf-8") as f:
+            csv_content = f.read()
+
         async with db.begin():
             result = await db.execute(
-                select(InterviewReport).where(InterviewReport.interview_id == interview_id)
+                select(InterviewReport)
+                .where(InterviewReport.interview_id == interview_id)
+                .with_for_update()
             )
             report = result.scalars().first()
-            if report and report_path and os.path.exists(report_path):
-                with open(report_path, "r") as f:
-                    csv_content = f.read()
+            if report:
                 report.report = csv_content
                 report.csv_file_path = report_path
                 await db.commit()
+                print(f"Successfully updated report for interview {interview_id}")
     except Exception as e:
-        print(f"Error updating database with report: {str(e)}")
+        print(f"Database update error: {str(e)}")
         await db.rollback()
 
 @app.get("/monitoring/report/{interview_id}")
