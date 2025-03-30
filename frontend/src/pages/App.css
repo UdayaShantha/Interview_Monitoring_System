@@ -1786,3 +1786,32 @@ h3.form-subtitle {
 
 
 
+
+/* css for vedio meeting page*/
+
+.video-preview {
+  position: relative;
+  overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .video-container {
+    padding: 0;
+  }
+  
+  .video-preview {
+    height: calc(100vh - 120px);
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+
+

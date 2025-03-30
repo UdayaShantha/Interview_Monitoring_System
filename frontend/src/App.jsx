@@ -18,6 +18,10 @@ import UpcomingInterviewsPage from './pages/UpcomingInterviewsPage';
 import CompletedInterviewsPage from './pages/CompletedInterviewsPage';
 import PostponedInterviewsPage from './pages/PostponedInterviewsPage';
 import CancelledInterviewsPage from './pages/CancelledInterviewsPage';
+import VideoScreen from './pages/VideoScreen';
+import VideoPage from './pages/VideoPage';
+import FeedbackPage from './pages/FeedbackPage';
+
 import './pages/App.css';
 
 function App() {
@@ -44,6 +48,9 @@ function App() {
         <Route path="/interviews/completed" element={<CompletedInterviewsPage />} />
         <Route path="/interviews/postponed" element={<PostponedInterviewsPage />} />
         <Route path="/interviews/cancelled" element={<CancelledInterviewsPage />} />
+        <Route path="/video-screen" element={<VideoScreen />} />
+        <Route path="/video-session" element={<VideoPage />} />
+        <Route path="/feedback" element={<FeedbackPage />} />
 
         
       </Routes>
