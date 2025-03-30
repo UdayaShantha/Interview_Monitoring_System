@@ -255,7 +255,7 @@ async def start_face_recognition(
     try:
         # Check if interview already exists
         existing = await db.execute(
-            select(InterviewReport).where(InterviewReport.interview_id == interview_id)
+            select(InterviewReport).where( InterviewReport.interview_id == interview_id )
         )
         if existing.scalars().first():
             raise HTTPException(
@@ -415,7 +415,6 @@ async def get_status(interview_id: int, db: AsyncSession = Depends(get_db)):
         }
 
     return {"status": "not_found"}
-
 
 @app.get("/stop/monitoring/{interview_id}")
 async def stop_monitoring(interview_id: int):
