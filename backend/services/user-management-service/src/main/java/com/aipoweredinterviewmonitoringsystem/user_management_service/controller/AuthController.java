@@ -3,7 +3,9 @@ package com.aipoweredinterviewmonitoringsystem.user_management_service.controlle
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.JwtResponse;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.LoginRequest;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.RefreshTokenRequest;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Client;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.RefreshToken;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.ClientRepository;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.RefreshTokenRepository;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.CustomUserDetailsService;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.util.JwtTokenUtil;
@@ -36,6 +38,9 @@ public class AuthController {
 
     @Autowired
     private CustomUserDetailsService customUserDetailsService; // Use your existing service
+
+    @Autowired
+    private ClientRepository clientRepository;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
@@ -122,5 +127,21 @@ public class AuthController {
         } else {
             return ResponseEntity.status(400).body("Invalid refresh token");
         }
+    }
+
+    @PostMapping("/client-token")
+    public ResponseEntity<?> getClientToken(@RequestBody Map<String, String> request) {
+        String clientId = request.get("client_id");
+        String clientSecret = request.get("client_secret");
+
+        Client client = clientRepository.findByClientId(clientId);
+        if (client == null || !client.getClientSecret().equals(clientSecret)) {
+            return ResponseEntity.status(401).body("Invalid client credentials");
+        }
+
+        String accessToken = jwtTokenUtil.generateClientToken(client);
+        Map<String, String> response = new HashMap<>();
+        response.put("accessToken", accessToken);
+        return ResponseEntity.ok(response);
     }
 }

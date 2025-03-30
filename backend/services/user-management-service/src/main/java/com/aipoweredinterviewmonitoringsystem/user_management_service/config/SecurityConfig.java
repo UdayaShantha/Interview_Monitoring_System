@@ -24,12 +24,21 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.disable())
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/v1/auth/**").permitAll()
+
+                .csrf(csrf-> csrf.disable()) // Enable CSRF protection
+                .cors(cors -> cors.disable()) // Disable CORS protection
+                .authorizeHttpRequests(authorize -> authorize
+                        // Allow unauthenticated access to auth endpoints
+                        .requestMatchers("/api/v1/auth/**","api/v1/auth/client-token").permitAll()
+
                         .requestMatchers("/api/v1/users/hr/hr/save",
-                                        "/api/v1/users/technical/technical/save")
+                                        "/api/v1/users/technical/technical/save",
+                                        "/api/v1/users/hr/candidate/save")
                                         .permitAll()
                         // Allow Swagger endpoints
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
