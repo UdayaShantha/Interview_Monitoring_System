@@ -519,7 +519,7 @@ class InterviewMonitoringSystem:
 def run(candidate_photos: list,
     stop_event: threading.Event,  # Added stop_event parameter
     camera_id: int = 0,
-    width: int = 720,
+    width: int = 640,
     height: int = 480,
     model: str = DEFAULT_MODEL_PATH,
     num_faces: int = 1,  # Default to single face

@@ -283,7 +283,7 @@ async def start_face_recognition(interview_id: int, db: AsyncSession = Depends(g
                     candidate_photos=candidate_photos,
                     stop_event=stop_event,  # Pass stop_event
                     camera_id=0,
-                    width=720,
+                    width=640,
                     height=480
                 )
                 process["report_path"] = report_path
