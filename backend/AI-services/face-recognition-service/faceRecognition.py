@@ -41,6 +41,14 @@ class InterviewMonitoringSystem:
         :param emotion_library: "deepface" (default) or "fer" for emotion analysis.
         """
         # Tracking metrics
+        self.deepface_models = {
+            'Facenet': DeepFace.build_model('Facenet'),
+            'Emotion': DeepFace.build_model('Emotion'),
+            'Age': DeepFace.build_model('Age'),
+            'Gender': DeepFace.build_model('Gender'),
+            'Race': DeepFace.build_model('Race')
+        }
+
         self.start_time = time.time()
         self.total_interview_duration = 0
         self.face_detection_count = 0
@@ -49,10 +57,10 @@ class InterviewMonitoringSystem:
         self.last_frame_time = time.time()
         self.mismatch_start_time = None
         self.verification_running = True
-
-        # Frame processing
+        self.analysis_interval = 0.5
+        self.last_analysis = 0
         self.frame_count = 0
-        self.skip_frames = 2  # Process every 3rd frame for analysis to reduce CPU load
+        self.skip_frames = 2
 
         # Emotion tracking using MediaPipe blendshapes
         self.emotion_totals = {}
@@ -97,12 +105,9 @@ class InterviewMonitoringSystem:
         # Load candidate photos from base64 strings or bytes into numpy arrays
         self.candidate_photos = []
         for photo in candidate_photos:
-            try:
-                img = self.base64_to_image(photo)
-                if img is not None:
-                    self.candidate_photos.append(img)
-            except Exception as e:
-                print(f"Error loading candidate photo: {e}")
+            img = self.base64_to_image(photo)
+            if img is not None:
+                self.candidate_photos.append(img)
 
         if not self.candidate_photos:
             raise ValueError("No valid candidate photos provided")
@@ -121,7 +126,7 @@ class InterviewMonitoringSystem:
         self.report_path = None
 
         # ThreadPoolExecutor for parallel processing
-        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
+        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=4)
 
         # Store which emotion analysis library to use
         self.emotion_library = emotion_library.lower()
@@ -174,14 +179,11 @@ class InterviewMonitoringSystem:
                     self.identity_verification_results['consecutive_mismatches'] < 3:
                 return True
 
-            # Process verification in parallel
             future = self.executor.submit(self._verify_face_worker, frame)
             return future.result()
-
         except Exception as e:
-            print(f"Verification execution error: {e}")
-            return True  # Default to true on error to avoid false alerts
-
+            print(f"Verification error: {e}")
+            return True
     def _verify_face_worker(self, frame) -> bool:
         """
         Worker function for face verification running in executor.
@@ -193,11 +195,27 @@ class InterviewMonitoringSystem:
         try:
             for stored_img in self.candidate_photos:
                 if not self.verification_running:
-                    return True  # Exit early if verification is terminated
+                    return True
+                models = {
+                    "Facenet": DeepFace.build_model("Facenet"),
+                    "Emotion": DeepFace.build_model("Emotion"),
+                    "Age": DeepFace.build_model("Age"),
+                    "Gender": DeepFace.build_model("Gender"),
+                    "Race": DeepFace.build_model("Race")
+                }
                 try:
                     result = DeepFace.verify(
                         img1_path=frame,
                         img2_path=stored_img,
+                        model=models["Facenet"],
+                        enforce_detection=False,
+                        detector_backend='ssd',
+                        model_name='Facenet',
+                        distance_metric='cosine'
+                    )
+                    analysis = DeepFace.analyze(
+                        img_path=frame,
+                        models=models['facenet'],
                         enforce_detection=False,
                         detector_backend='opencv',
                         model_name='Facenet',
@@ -520,8 +538,10 @@ def run(candidate_photos: list,
         sys.exit(1)
 
     cap = cv2.VideoCapture(camera_id)
+    cap.set(cv2.CAP_PROP_FPS, 30)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
     base_options = python.BaseOptions(model_asset_path=model)
     options = vision.FaceLandmarkerOptions(
@@ -537,8 +557,14 @@ def run(candidate_photos: list,
     )
     detector = vision.FaceLandmarker.create_from_options(options)
 
+    frame_skip = 2  # Process every 3rd frame
+    frame_counter = 0
+
     while cap.isOpened():
         success, image = cap.read()
+        frame_counter += 1
+        if frame_counter % frame_skip != 0:
+            continue
         if not success:
             sys.exit('ERROR: Unable to read from webcam.')
 
@@ -591,9 +617,9 @@ def main():
     parser.add_argument('--camera_id', help='ID of camera.',
                         required=False, default=0, type=int)
     parser.add_argument('--frame_width', help='Width of frame to capture from camera.',
-                        required=False, default=1920, type=int)
+                        required=False, default=640, type=int)
     parser.add_argument('--frame_height', help='Height of frame to capture from camera.',
-                        required=False, default=1080, type=int)
+                        required=False, default=480, type=int)
     parser.add_argument('--candidate_id', help='Candidate ID to fetch stored photos',
                         required=True, type=int)
     parser.add_argument('--emotion_library', help="Emotion analysis library: 'deepface' (default) or 'fer'.",
