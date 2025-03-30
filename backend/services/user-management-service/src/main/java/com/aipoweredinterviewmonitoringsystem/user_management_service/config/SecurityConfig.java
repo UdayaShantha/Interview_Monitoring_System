@@ -30,9 +30,9 @@ public class SecurityConfig {
                         // Allow unauthenticated access to auth endpoints
                         .requestMatchers("/api/v1/auth/**","api/v1/auth/client-token").permitAll()
                         .requestMatchers("/api/v1/users/hr/hr/save",
-                                        "/api/v1/users/technical/technical/save",
-                                        "/api/v1/users/hr/candidate/save")
-                                        .permitAll()
+                                "/api/v1/users/technical/technical/save",
+                                "/api/v1/users/hr/candidate/save")
+                        .permitAll()
                         // Allow Swagger endpoints
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         // Require authentication for user endpoints
