@@ -1,5 +1,6 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.util;
 
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Client;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -63,5 +64,19 @@ public class JwtTokenUtil {
     public String getUsernameFromToken(String token) {
         Claims claims = validateToken(token);
         return claims.getSubject();
+    }
+
+    public String generateClientToken(Client client) {
+        byte[] keyBytes = SECRET_KEY.getBytes(StandardCharsets.UTF_8);
+        var signingKey = Keys.hmacShaKeyFor(keyBytes);
+
+        return Jwts.builder()
+                .subject(client.getClientId())
+                .claim("scopes", client.getScopes())
+                .claim("userType", "SERVICE") // Optional: distinguish service tokens
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION))
+                .signWith(signingKey, Jwts.SIG.HS512)
+                .compact();
     }
 }

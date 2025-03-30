@@ -48,6 +48,10 @@ public class JwtAuthenticationFilter implements GlobalFilter {
         try {
             logger.info("Attempting to validate token...");
             Claims claims = jwtTokenUtil.validateToken(token);
+            if (claims == null) {
+                logger.warn("Token validation failed: claims are null");
+                return unauthorizedResponse(exchange);
+            }
             logger.info("Token validated successfully. Subject: {}", claims.getSubject());
 
             if (jwtTokenUtil.isTokenExpired(claims)) {
@@ -60,7 +64,7 @@ public class JwtAuthenticationFilter implements GlobalFilter {
             logger.info("Extracted claims - Username: {}, UserType: {}", username, userType);
 
             // Role-based access control
-            if (!isAuthorizedForPath(path, userType)) {
+            if (!isAuthorizedForPath(path, userType, claims)) {
                 logger.warn("User with role {} is not authorized for path {}", userType, path);
                 return forbiddenResponse(exchange);
             }
@@ -83,21 +87,40 @@ public class JwtAuthenticationFilter implements GlobalFilter {
     }
 
     // Role-based access control logic
-    private boolean isAuthorizedForPath(String path, String userType) {
-        // Define role-based access rules
-        if (path.startsWith("/api/v1/users/hr") && !"HR".equals(userType)) {
-            return false; // Only HR can access user management endpoints
+    private boolean isAuthorizedForPath(String path, String userType, Claims claims) {
+        if ("SERVICE".equals(userType)) {
+            // Extract scopes from claims (assumes scopes are space-separated)
+            String scopes = claims.get("scopes", String.class);
+            if (scopes == null) {
+                logger.warn("Scopes claim is missing for SERVICE userType");
+                return false;
+            }
+
+            // Define scope-based access rules
+            if (path.startsWith("/api/v1/interviews/") && scopes.contains("read:interviews")) {
+                return true;
+            }
+            if (path.startsWith("/api/v1/users/hr/get/candidate/photos") && scopes.contains("read:interviews")) {
+                return true;
+            }
+            // Add more scope-based rules as needed
+            return false;
+        } else {
+            // Existing user-based logic
+            if (path.startsWith("/api/v1/users/hr") && !"HR".equals(userType)) {
+                return false;
+            }
+            if (path.startsWith("/api/v1/interviews/") && !("TECHNICAL".equals(userType) || "HR".equals(userType))) {
+                return false;
+            }
+            if (path.startsWith("/api/v1/users/candidate/") && !"CANDIDATE".equals(userType)) {
+                return false;
+            }
+            if (path.startsWith("/api/v1/questions") && !"TECHNICAL".equals(userType)) {
+                return false;
+            }
+            return true;
         }
-        if (path.startsWith("/api/v1/interviews/") && !("TECHNICAL".equals(userType) || "HR".equals(userType))) {
-            return false; // Only TECHNICAL can access interview endpoints
-        }
-        if (path.startsWith("/api/v1/users/candidate/") && !"CANDIDATE".equals(userType)) {
-            return false; // Only CANDIDATE can access candidate endpoints
-        }
-        if (path.startsWith("/api/v1/questions") && !"TECHNICAL".equals(userType)) {
-            return false; // Only CANDIDATE can access candidate endpoints
-        }
-        return true; // Allow other paths if no specific restriction
     }
 
     private Mono<Void> unauthorizedResponse(ServerWebExchange exchange) {

@@ -28,7 +28,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.disable()) // Disable CORS protection
                 .authorizeHttpRequests(authorize -> authorize
                         // Allow unauthenticated access to auth endpoints
-                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/v1/auth/**","api/v1/auth/client-token").permitAll()
                         .requestMatchers("/api/v1/users/hr/hr/save",
                                         "/api/v1/users/technical/technical/save",
                                         "/api/v1/users/hr/candidate/save")
