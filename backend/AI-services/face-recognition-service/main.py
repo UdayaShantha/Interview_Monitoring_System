@@ -276,14 +276,20 @@ async def start_face_recognition(interview_id: int, db: AsyncSession = Depends(g
             try:
                 report_path = face_recognition(
                     candidate_photos=candidate_photos,
-                    stop_event=stop_event,
+                    stop_event=stop_event,  # Pass stop_event
                     camera_id=0,
                     width=720,
                     height=480
                 )
                 process["report_path"] = report_path
                 process["completed"] = True
-                asyncio.run(update_db_with_report(interview_id, report_path, db))
+
+                # Proper async handling in thread
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                loop.run_until_complete(update_db_with_report(interview_id, report_path, db))
+                loop.close()
+
             except Exception as e:
                 print(f"Face recognition error: {str(e)}")
                 process["error"] = str(e)

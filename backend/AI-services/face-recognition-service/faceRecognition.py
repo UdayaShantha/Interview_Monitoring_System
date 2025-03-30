@@ -498,9 +498,18 @@ class InterviewMonitoringSystem:
             return ""
 
 
-def run(model: str, num_faces: int, min_face_detection_confidence: float,
-        min_face_presence_confidence: float, min_tracking_confidence: float,
-        camera_id: int, width: int, height: int, candidate_photos: list, emotion_library: str) -> None:
+def run(candidate_photos: list,
+    stop_event: threading.Event,  # Added stop_event parameter
+    camera_id: int = 0,
+    width: int = 720,
+    height: int = 480,
+    model: str = DEFAULT_MODEL_PATH,
+    num_faces: int = 1,  # Default to single face
+    min_face_detection_confidence: float = 0.5,
+    min_face_presence_confidence: float = 0.5,
+    min_tracking_confidence: float = 0.5,
+    emotion_library: str = "deepface"
+) -> str:
     """
     Run the interview monitoring process.
     """
@@ -564,7 +573,6 @@ def run(model: str, num_faces: int, min_face_detection_confidence: float,
     cap.release()
     cv2.destroyAllWindows()
 
-
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--model', help='Path to face landmarker model.',
@@ -590,7 +598,6 @@ def main():
                         required=True, type=int)
     parser.add_argument('--emotion_library', help="Emotion analysis library: 'deepface' (default) or 'fer'.",
                         required=False, default="deepface", type=str)
-
     args = parser.parse_args()
 
     # Mock database call - replace with actual DB fetch.
