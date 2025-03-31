@@ -504,10 +504,10 @@ def run(
     width: int = 640,
     height: int = 480,
     model: str = DEFAULT_MODEL_PATH,
-    num_faces: int = 1,
-    min_face_detection_confidence: float = 0.5,  # Add parameter
-    min_face_presence_confidence: float = 0.5,   # Add parameter
-    min_tracking_confidence: float = 0.5,        # Add parameter
+    num_faces: int = 3,
+    min_face_detection_confidence: float = 0.5,
+    min_face_presence_confidence: float = 0.5,
+    min_tracking_confidence: float = 0.5,
     emotion_library: str = "deepface"
 ) -> str:
     """
@@ -595,7 +595,7 @@ def main():
     parser.add_argument('--model', help='Path to face landmarker model.',
                         required=False, default=DEFAULT_MODEL_PATH)
     parser.add_argument('--num_faces', help='Max number of faces that can be detected by the landmarker.',
-                        required=False, default=5, type=int)
+                        required=False, default=3, type=int)
     parser.add_argument('--min_face_detection_confidence',
                         help='The minimum confidence score for face detection to be considered successful.',
                         required=False, default=0.5, type=float)
