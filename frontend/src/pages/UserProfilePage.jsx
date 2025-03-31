@@ -38,13 +38,19 @@ function UserProfilePage() {
     navigate('/login');
   }
 
+  function handleStartInterview() {
+    navigate('/video-screen');
+  }
+
   return (
     <div className="user-container bg-white text-green-700 font-sans">
       <header className="user-header bg-gradient-to-r from-green-300 to-green-500 p-6 shadow-lg">
         <h1 className="company-name text-white text-2xl font-bold tracking-wide">LOGO</h1>
         <nav className="header-buttons flex justify-between items-center">
-          
-          <button className="logout-btn bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition duration-300" onClick={handleLogout}>
+          <button 
+            className="logout-btn bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition duration-300" 
+            onClick={handleLogout}
+          >
             Log Out
           </button>
         </nav>
@@ -60,14 +66,17 @@ function UserProfilePage() {
           <p className="profile-description text-gray-700 mb-6">
             Experience AI-driven hiring with real-time facial and emotion analysis.
           </p>
-          <button className="start-btn bg-green-500 text-white py-3 px-6 rounded-lg hover:bg-green-600 transition duration-300">
+          <button 
+            className="start-btn bg-green-500 text-white py-3 px-6 rounded-lg hover:bg-green-600 transition duration-300"
+            onClick={handleStartInterview}
+          >
             Start Interview
           </button>
           <p className="time-left text-xl text-green-600 mt-6">Time Left: {timeLeft}</p>
         </div>
 
         <div className="profile-picture flex justify-center items-center">
-        <img src={bobImage} alt="User Profile" className="profile-img w-48 h-48 rounded-full shadow-lg" />
+          <img src={bobImage} alt="User Profile" className="profile-img w-48 h-48 rounded-full shadow-lg" />
         </div>
       </main>
       
