@@ -11,8 +11,8 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-        working-directory:  ./webapp-frontend
+        working-directory:  ./frontend
 
       - name: Build
         run: npm run build
-        working-directory:  ./webapp-frontend
+        working-directory:  ./frontend
