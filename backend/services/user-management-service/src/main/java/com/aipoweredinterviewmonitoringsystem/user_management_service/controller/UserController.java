@@ -10,10 +10,15 @@ import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.respon
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.*;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.UserService;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.util.StandardResponse;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,21 +31,43 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @PostMapping(value = "/hr/candidate/save", consumes = {"multipart/form-data"})
+    @PostMapping(value = "/hr/candidate/save", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StandardResponse> saveCandidate(
-            @RequestPart("candidate") String candidateJson,
+            @RequestPart("candidate") @Valid String candidateJson,
             @RequestPart("photos") List<MultipartFile> photos) {
         try {
+            if (photos == null || photos.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(new StandardResponse(400, "At least one photo is required", null));
+            }
+
             ObjectMapper objectMapper = new ObjectMapper();
             objectMapper.registerModule(new JavaTimeModule());
+            objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true);
+
             CandidateSaveDTO candidateSaveDTO = objectMapper.readValue(candidateJson, CandidateSaveDTO.class);
+
+            // Additional validation
+            if (candidateSaveDTO.getPositionType() == null) {
+                return ResponseEntity.badRequest()
+                        .body(new StandardResponse(400, "Position type is required", null));
+            }
+
             CandidatePhotoSaveDTO candidatePhotoSaveDTO = new CandidatePhotoSaveDTO();
             candidatePhotoSaveDTO.setPhotos(photos);
             CandidateSaveDTO savedCandidate = userService.saveCandidate(candidateSaveDTO, candidatePhotoSaveDTO);
             return new ResponseEntity<>(new StandardResponse(201, "Success", savedCandidate), HttpStatus.CREATED);
-        } catch (Exception e) {
-            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        } catch (JsonParseException e) {
+        return ResponseEntity.badRequest()
+                .body(new StandardResponse(400, "Invalid JSON format", null));
+    } catch (JsonMappingException e) {
+        return ResponseEntity.badRequest()
+                .body(new StandardResponse(400, "Field mismatch: " + e.getMessage(), null));
+    } catch (Exception e) {
+        return ResponseEntity.internalServerError()
+                .body(new StandardResponse(500, "Error: " + e.getMessage(), null));
+    }
+
     }
 
     @GetMapping("/hr/candidate-interview/{id}")
