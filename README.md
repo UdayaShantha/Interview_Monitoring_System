@@ -40,7 +40,5 @@ HTTPS protocols<br>
 Data encryption<br>
 Secure authentication mechanisms
 
-Contributing
-Please read our contributing guidelines before submitting pull requests.
 
 

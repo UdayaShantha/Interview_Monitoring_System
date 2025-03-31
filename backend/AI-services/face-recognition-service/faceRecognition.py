@@ -40,14 +40,14 @@ class InterviewMonitoringSystem:
         :param candidate_photos: List of candidate photos (base64 strings or bytes).
         :param emotion_library: "deepface" (default) or "fer" for emotion analysis.
         """
-        # Tracking metrics
-        self.deepface_models = {
-            'Facenet': DeepFace.build_model('Facenet'),
-            'Emotion': DeepFace.build_model('Emotion'),
-            'Age': DeepFace.build_model('Age'),
-            'Gender': DeepFace.build_model('Gender'),
-            'Race': DeepFace.build_model('Race')
-        }
+        self.deepface_models = {}
+        try:
+            # Initialize DeepFace models with error handling
+            self.deepface_models = {
+                'Facenet': DeepFace.build_model('Facenet')  # Only needed for verification
+            }
+        except Exception as e:
+            raise RuntimeError(f"Failed to initialize DeepFace models: {str(e)}")
 
         self.start_time = time.time()
         self.total_interview_duration = 0
@@ -184,41 +184,23 @@ class InterviewMonitoringSystem:
         except Exception as e:
             print(f"Verification error: {e}")
             return True
+
     def _verify_face_worker(self, frame) -> bool:
         """
         Worker function for face verification running in executor.
-
-        :param frame: The image frame.
-        :return: True if a match is found or below threshold; False if verification violation.
         """
         matched = False
         try:
             for stored_img in self.candidate_photos:
                 if not self.verification_running:
                     return True
-                models = {
-                    "Facenet": DeepFace.build_model("Facenet"),
-                    "Emotion": DeepFace.build_model("Emotion"),
-                    "Age": DeepFace.build_model("Age"),
-                    "Gender": DeepFace.build_model("Gender"),
-                    "Race": DeepFace.build_model("Race")
-                }
                 try:
                     result = DeepFace.verify(
                         img1_path=frame,
                         img2_path=stored_img,
-                        model=models["Facenet"],
+                        model=self.deepface_models["Facenet"],
                         enforce_detection=False,
                         detector_backend='ssd',
-                        model_name='Facenet',
-                        distance_metric='cosine'
-                    )
-                    analysis = DeepFace.analyze(
-                        img_path=frame,
-                        models=models['facenet'],
-                        enforce_detection=False,
-                        detector_backend='opencv',
-                        model_name='Facenet',
                         distance_metric='cosine'
                     )
                     if result.get('verified'):
@@ -231,7 +213,6 @@ class InterviewMonitoringSystem:
                 except Exception as inner_e:
                     print(f"Individual verification error: {inner_e}")
                     continue
-
             if not matched:
                 self.identity_verification_results['mismatches'] += 1
                 self.identity_verification_results['consecutive_mismatches'] += 1
@@ -359,9 +340,9 @@ class InterviewMonitoringSystem:
                 # Default: Use DeepFace for full facial attribute analysis
                 results = DeepFace.analyze(
                     img_path=frame,
-                    actions=['emotion', 'age', 'gender', 'race'],
-                    enforce_detection=False,
+                    actions=['emotion'],
                     detector_backend='opencv',
+                    enforce_detection=False,
                     silent=True
                 )
                 if results and isinstance(results, list):
@@ -516,21 +497,26 @@ class InterviewMonitoringSystem:
             return ""
 
 
-def run(candidate_photos: list,
-    stop_event: threading.Event,  # Added stop_event parameter
+def run(
+    candidate_photos: list,
+    stop_event: threading.Event,
     camera_id: int = 0,
-    width: int = 720,
+    width: int = 640,
     height: int = 480,
     model: str = DEFAULT_MODEL_PATH,
-    num_faces: int = 1,  # Default to single face
-    min_face_detection_confidence: float = 0.5,
-    min_face_presence_confidence: float = 0.5,
-    min_tracking_confidence: float = 0.5,
+    num_faces: int = 1,
+    min_face_detection_confidence: float = 0.5,  # Add parameter
+    min_face_presence_confidence: float = 0.5,   # Add parameter
+    min_tracking_confidence: float = 0.5,        # Add parameter
     emotion_library: str = "deepface"
 ) -> str:
     """
     Run the interview monitoring process.
     """
+    # Create a default stop_event if none provided
+    if stop_event is None:
+        stop_event = threading.Event()
+
     interview_monitor = InterviewMonitoringSystem(candidate_photos, emotion_library=emotion_library)
 
     if not os.path.exists(model):
@@ -548,9 +534,9 @@ def run(candidate_photos: list,
         base_options=base_options,
         running_mode=vision.RunningMode.LIVE_STREAM,
         num_faces=num_faces,
-        min_face_detection_confidence=min_face_detection_confidence,
-        min_face_presence_confidence=min_face_presence_confidence,
-        min_tracking_confidence=min_tracking_confidence,
+        min_face_detection_confidence=min_face_detection_confidence,  # Use parameter
+        min_face_presence_confidence=min_face_presence_confidence,  # Use parameter
+        min_tracking_confidence=min_tracking_confidence,  # Use parameter
         output_face_blendshapes=True,
         result_callback=lambda result, output_image, timestamp:
         interview_monitor.update_tracking(result, output_image.numpy_view().shape)
@@ -559,14 +545,16 @@ def run(candidate_photos: list,
 
     frame_skip = 2  # Process every 3rd frame
     frame_counter = 0
-
-    while cap.isOpened():
+    cv2.namedWindow('Interview Monitoring System', cv2.WINDOW_NORMAL)
+    cap = cv2.VideoCapture(camera_id)
+    while cap.isOpened() and not stop_event.is_set():  # Added check for stop_event
         success, image = cap.read()
         frame_counter += 1
         if frame_counter % frame_skip != 0:
             continue
         if not success:
-            sys.exit('ERROR: Unable to read from webcam.')
+            print("ERROR: Unable to read from webcam.")
+            break  # Changed to break instead of sys.exit
 
         # Perform face verification and emotion/attribute analysis
         verification_result = interview_monitor.update_deepface_analysis(image)
@@ -598,6 +586,9 @@ def run(candidate_photos: list,
     detector.close()
     cap.release()
     cv2.destroyAllWindows()
+
+    return report_path
+
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
