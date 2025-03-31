@@ -24,7 +24,7 @@ const CandidatesPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`/candidate/all/paginated?page=${page}&size=10`);
+      const response = await axios.get(users/hr/candidate/all/paginated?page=${page}&size=10);
       console.log("API Response:", response.data); 
 
       const fetchedData = response.data.data?.list || [];
