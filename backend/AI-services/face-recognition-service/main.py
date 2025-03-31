@@ -15,9 +15,9 @@ from sqlalchemy.future import select
 from basicDetect import run as basic_detect
 from faceVerify import run as face_verify
 from reportGeneration import run as report_generation
-from faceRecognition import run as face_recognition
+from faceRecognition import run as face_recognition, run
 import threading
-from database import get_db, create_tables
+from database import get_db, create_tables, async_session_maker
 from models import InterviewReport
 
 app = FastAPI(title="Face-Recognition")
@@ -53,7 +53,6 @@ active_processes = {}
 @app.on_event("startup")
 async def startup_event():
     await create_tables()
-
 @app.get("/load/basic/model/mesh/matrice")
 async def load_basic_model():
     """Starts the face landmark detection process asynchronously when called."""
@@ -233,20 +232,20 @@ async def get_candidate_data(interview_id: int):
                 detail=f"Connection error: {str(e)}"
             )
 
+
 @app.get("/load/model/face-recognition/{interview_id}")
 async def start_face_recognition(
-    interview_id: int,
-    emotion_library: str = "deepface",
-    min_face_detection: float = 0.5,
-    min_face_presence: float = 0.5,
-    min_tracking: float = 0.5,
-    db: AsyncSession = Depends(get_db)
+        interview_id: int,
+        emotion_library: str = "deepface",
+        min_face_detection: float = 0.5,
+        min_face_presence: float = 0.5,
+        min_tracking: float = 0.5,
+        db: AsyncSession = Depends(get_db)
 ):
-
     """Endpoint to start face recognition for an interview."""
     try:
         existing = await db.execute(
-            select(InterviewReport).where( InterviewReport.interview_id == interview_id )
+            select(InterviewReport).where(InterviewReport.interview_id == interview_id)
         )
         if existing.scalars().first():
             raise HTTPException(
@@ -278,7 +277,8 @@ async def start_face_recognition(
             "stop_event": stop_event,
             "report_path": None,
             "thread": None,
-            "completed": False
+            "completed": False,
+            "error": None
         }
 
         def run_face_recognition_process(
@@ -290,7 +290,7 @@ async def start_face_recognition(
                 min_track: float
         ):
             try:
-                report_path = face_recognition(
+                report_path = run(
                     candidate_photos=photos,
                     stop_event=stop_event,
                     emotion_library=emotion_lib,
@@ -298,24 +298,21 @@ async def start_face_recognition(
                     min_face_presence_confidence=min_presence,
                     min_tracking_confidence=min_track
                 )
-                process["report_path"] = report_path
-                process["completed"] = True
 
-                # Proper async handling in thread
+                if not os.path.exists(report_path):
+                    raise Exception(f"Report file not found at {report_path}")
+
+                # Create new event loop for async database operations
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
-                loop.run_until_complete(update_db_with_report(interview_id, report_path, db))
+                loop.run_until_complete(update_db_with_report(interview_id, report_path))
                 loop.close()
-                main_loop = asyncio.get_event_loop()
-                future = asyncio.run_coroutine_threadsafe(
-                    update_db_with_report(interview_id, report_path, db),
-                    main_loop
-                )
-                future.result()
 
+                process["report_path"] = report_path
+                process["completed"] = True
             except Exception as e:
-                print(f"Face recognition error: {str(e)}")
                 process["error"] = str(e)
+                print(f"Face recognition process error: {str(e)}")
 
         thread = threading.Thread(
             target=run_face_recognition_process,
@@ -332,7 +329,10 @@ async def start_face_recognition(
 
         active_processes[interview_id] = {
             "thread": thread,
-            "stop_event": stop_event
+            "stop_event": stop_event,
+            "report_path": None,
+            "completed": False,
+            "error": None
         }
         thread.start()
 
@@ -354,6 +354,7 @@ async def start_face_recognition(
             detail=f"Error starting face recognition: {str(e)}"
         )
 
+
 async def face_recognition_task(photos, stop_event):
     """
     Dedicated async task for face recognition.
@@ -365,24 +366,26 @@ async def face_recognition_task(photos, stop_event):
     )
 
 
-async def update_db_with_report(interview_id: int, report_path: str, db: AsyncSession):
+async def update_db_with_report(interview_id: int, report_path: str):
+    """Update database with generated report using independent session."""
     try:
-        async with db.begin():
-            # Use async session properly
-            result = await db.execute(
-                select(InterviewReport)
-                .where(InterviewReport.interview_id == interview_id)
-                .with_for_update()
-            )
-            report = result.scalars().first()
-            if report:
-                with open(report_path, "r") as f:
-                    report.report = f.read()
-                report.csv_file_path = report_path
-                await db.commit()
+        async with async_session_maker() as db:
+            async with db.begin():
+                result = await db.execute(
+                    select(InterviewReport)
+                    .where(InterviewReport.interview_id == interview_id)
+                    .with_for_update()
+                )
+                report = result.scalars().first()
+                if report:
+                    with open(report_path, "r", encoding="utf-8") as f:
+                        report.report = f.read()
+                    report.csv_file_path = report_path
+                    await db.commit()
+                    print(f"Successfully updated report for interview {interview_id}")
     except Exception as e:
-        print(f"Database error: {str(e)}")
-        await db.rollback()
+        print(f"Database update error: {str(e)}")
+        raise
 
 @app.get("/monitoring/report/{interview_id}")
 async def get_report(interview_id: int, db: AsyncSession = Depends(get_db)):
@@ -409,11 +412,25 @@ async def get_status(interview_id: int, db: AsyncSession = Depends(get_db)):
     """Get the status of an ongoing face recognition process."""
     process = active_processes.get(interview_id)
     if process:
-        return {
-            "status": "running" if process["thread"].is_alive() else "completed",
-            "report_ready": process["report_path"] is not None and os.path.exists(process["report_path"]),
-            "completed": process.get("completed", False)
-        }
+        if process["thread"].is_alive():
+            return {"status": "running", "report_ready": False}
+        else:
+            # Double-check database if thread completed but status not updated
+            result = await db.execute(
+                select(InterviewReport).where(InterviewReport.interview_id == interview_id)
+            )
+            report = result.scalars().first()
+            if report and report.csv_file_path and os.path.exists(report.csv_file_path):
+                return {
+                    "status": "completed",
+                    "report_ready": True,
+                    "completed": True
+                }
+            return {
+                "status": "error" if process.get("error") else "completed",
+                "report_ready": False,
+                "error": process.get("error")
+            }
     result = await db.execute(
         select(InterviewReport).where(InterviewReport.interview_id == interview_id)
     )

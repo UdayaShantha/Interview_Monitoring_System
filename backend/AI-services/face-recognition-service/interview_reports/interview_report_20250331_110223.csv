@@ -1,0 +1,43 @@
+Metric,Value
+Interview Duration,58.93 seconds
+Maximum Simultaneous Faces,1
+Off-Screen Duration,0.00 seconds
+Average Head Rotation,2.70 degrees
+
+Violations,
+Multiple Faces Detected,0
+Face Off-Screen Instances,0
+Excessive Head Rotation Instances,0
+Identity Verification Failed,False
+Identity Mismatch Count,0
+
+MediaPipe Emotion Percentages,
+browInnerUp,11.41%
+jawForward,0.15%
+jawOpen,1.70%
+mouthPucker,2.62%
+
+DeepFace Analysis,
+Emotion,Percentage
+angry,1.48%
+disgust,0.00%
+fear,0.35%
+happy,56.31%
+sad,0.75%
+surprise,1.07%
+neutral,40.04%
+Gender,Percentage
+Man,0.00%
+Woman,0.00%
+Race,Percentage
+asian,0.00%
+indian,0.00%
+black,0.00%
+white,0.00%
+middle eastern,0.00%
+latino hispanic,0.00%
+Average Age,0.00
+Average Face Confidence,0.00
+Face Detection Rate,90.07%
+Analyzed Frames,141
+Valid Face Detections,127
