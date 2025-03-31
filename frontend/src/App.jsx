@@ -11,11 +11,9 @@ import TechnicalDashboard from './pages/TechnicalDashboard';
 import CandidatesPage from './pages/CandidatesPage'; 
 import InterviewPage from './pages/InterviewPage';
 import CandidateForm from "./pages/CandidateForm";
-import QuestionPage from './pages/QuestionPage'; 
-import ProtectedRoute from './components/ProtectedRoute';
+import QuestionPage from './pages/QuestionPage';
 import AddQuestionPage from "./pages/AddQuestionPage";
 import EditQuestionPage from './pages/EditQuestionPage'; 
-
 import './pages/App.css';
 
 function App() {
@@ -29,17 +27,15 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/instructions" element={<InstructionPage />} />
         <Route path="/about-us" element={<AboutUs />} />
-
-        <Route path="/user-profile" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
-        <Route path="/hr-dashboard" element={<ProtectedRoute><HRDashboard /></ProtectedRoute>} />
-        <Route path="/technical-dashboard" element={<ProtectedRoute><TechnicalDashboard /></ProtectedRoute>} />
-        <Route path="/candidates" element={<ProtectedRoute><CandidatesPage /></ProtectedRoute>} /> 
-        <Route path="/interviews" element={<ProtectedRoute><InterviewPage /></ProtectedRoute>} />
-        <Route path="/candidate-form" element={<ProtectedRoute><CandidateForm /></ProtectedRoute>} />
-        <Route path="/questions" element={<ProtectedRoute><QuestionPage /></ProtectedRoute>} /> 
+        <Route path="/user-profile" element={<UserProfilePage />} />
+        <Route path="/hr-dashboard" element={<HRDashboard />} />
+        <Route path="/technical-dashboard" element={<TechnicalDashboard />} />
+        <Route path="/candidates" element={<CandidatesPage />} /> 
+        <Route path="/interviews" element={<InterviewPage />} />
+        <Route path="/candidate-form" element={<CandidateForm />} />
+        <Route path="/questions" element={<QuestionPage />} /> 
         <Route path="/add-question" element={<AddQuestionPage />} /> 
         <Route path="/edit-question/:id" element={<EditQuestionPage />} /> 
-
         
       </Routes>
     </Router>

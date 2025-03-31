@@ -642,7 +642,94 @@ body, html {
   .navbar-links.open {
     display: block;
   }
+
 }
+
+.candidates-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.candidates-table th,
+.candidates-table td {
+  padding: 12px 16px;
+  text-align: left;
+}
+
+.candidates-table th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
+
+.candidates-table .left-align {
+  text-align: left;
+  padding-left: 20px;
+}
+
+.candidates-table .center-align {
+  text-align: center;
+}
+
+.candidates-table .right-align {
+  text-align: right;
+  padding-right: 20px;
+}
+
+.candidates-table tr {
+  border-bottom: 1px solid #ddd;
+}
+
+.candidates-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+.action-icons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+}
+
+.view-icon,
+.delete-icon {
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.view-icon:hover {
+  color: #007bff;
+}
+
+.delete-icon:hover {
+  color: #dc3545;
+}
+
+.pagination {
+  margin-top: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.pagination button {
+  padding: 8px 12px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pagination button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
 
 
 
@@ -923,7 +1010,7 @@ body, html {
 
 
 
-/* css styles for candidate page*/
+
 
 /* General Page Styling */
 .candidates-page {
@@ -1101,93 +1188,6 @@ body, html {
     gap: 10px;
   }
 }
-
-.candidates-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-  background: #fff;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-.candidates-table th,
-.candidates-table td {
-  padding: 12px 16px;
-  text-align: left;
-}
-
-.candidates-table th {
-  background-color: #f4f4f4;
-  font-weight: bold;
-}
-
-.candidates-table .left-align {
-  text-align: left;
-  padding-left: 20px;
-}
-
-.candidates-table .center-align {
-  text-align: center;
-}
-
-.candidates-table .right-align {
-  text-align: right;
-  padding-right: 20px;
-}
-
-.candidates-table tr {
-  border-bottom: 1px solid #ddd;
-}
-
-.candidates-table tr:hover {
-  background-color: #f9f9f9;
-}
-
-.action-icons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 15px;
-}
-
-.view-icon,
-.delete-icon {
-  cursor: pointer;
-  transition: color 0.3s ease;
-}
-
-.view-icon:hover {
-  color: #007bff;
-}
-
-.delete-icon:hover {
-  color: #dc3545;
-}
-
-.pagination {
-  margin-top: 15px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-}
-
-.pagination button {
-  padding: 8px 12px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.pagination button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-
 
 
 
@@ -1454,4 +1454,384 @@ h3.form-subtitle {
 .toggle-password:hover {
   color: #000;
 }
+
+
+/* View Form Styles */
+/*.view-form-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.view-form-container {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.view-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #4CAF50;
+  padding-bottom: 1rem;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.close-button:hover {
+  color: #333;
+}
+
+.details-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.details-section {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.section-title {
+  color: #4CAF50;
+  margin-bottom: 1.5rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.detail-item label {
+  font-weight: 500;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.detail-item input,
+.detail-item textarea {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #fff;
+  font-size: 1rem;
+  width: 100%;
+}
+
+.detail-item textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Mobile Responsive */
+/*@media (max-width: 768px) {
+  .view-form-container {
+    width: 95%;
+    padding: 1rem;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+}*/
+
+
+
+
+/*candidate view form styles*/
+
+.view-form-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.view-form-container {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.view-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #4CAF50;
+  padding-bottom: 1rem;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.close-button:hover {
+  color: #333;
+}
+
+.details-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.details-section {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.section-title {
+  color: #4CAF50;
+  margin-bottom: 1.5rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.detail-item label {
+  font-weight: 500;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.detail-item input,
+.detail-item textarea {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #fff;
+  font-size: 1rem;
+  width: 100%;
+}
+
+.detail-item textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .view-form-container {
+    width: 95%;
+    padding: 1rem;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+
+
+/* Delete Confirmation Modal Styles */
+
+.delete-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.delete-modal-container {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.delete-modal-container h3 {
+  color: #e74c3c;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.delete-modal-container p {
+  margin-bottom: 2rem;
+  color: #555;
+}
+
+.modal-button-group {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.confirm-btn, .cancel-btn {
+  padding: 0.8rem 2rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.confirm-btn {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.confirm-btn:hover {
+  background-color: #c0392b;
+}
+
+.cancel-btn {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background-color: #45a049;
+}
+
+@media (max-width: 768px) {
+  .delete-modal-container {
+    padding: 1.5rem;
+  }
+  
+  .modal-button-group {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .confirm-btn, .cancel-btn {
+    width: 100%;
+    padding: 0.8rem;
+  }
+}
+
+
+
+
+/*css for cancelled interview page*/ 
+
+.tooltip {
+  position: relative;
+}
+
+.tooltip:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+
+
+
+/* css for vedio meeting page*/
+
+.video-preview {
+  position: relative;
+  overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .video-container {
+    padding: 0;
+  }
+  
+  .video-preview {
+    height: calc(100vh - 120px);
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+
 
