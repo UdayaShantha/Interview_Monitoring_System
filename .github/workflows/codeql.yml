@@ -59,7 +59,7 @@ jobs:
         if: matrix.language == 'python'
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.12'
 
       # Step 3: Setup Node.js for JavaScript/TypeScript analysis
       - name: Setup Node.js

@@ -18,7 +18,7 @@ function EditQuestionPage() {
   useEffect(() => {
     const fetchQuestion = async () => {
       try {
-        const response = await axios.get(`/get/question?questionId=${id}`);
+        const response = await axios.get(`questions/get/question?questionId=${id}`);
         const data = response.data.data;
         
         setFormData({
@@ -40,7 +40,7 @@ function EditQuestionPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`put/update/question/${id}`, {
+      await axios.put(`/questions/update/question?questionId=${id}`, {
         content: formData.question,
         category: formData.category,
         duration: formData.time,

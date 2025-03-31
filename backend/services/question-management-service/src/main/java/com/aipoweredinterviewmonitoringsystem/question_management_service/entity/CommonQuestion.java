@@ -33,18 +33,18 @@ public class CommonQuestion extends Question {
     public void setKeywords(List<String> keywords) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
-            this.keywords = objectMapper.writeValueAsString(keywords); // Serialize list to JSON
+            this.keywords = objectMapper.writeValueAsString(keywords);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to serialize keywords", e);
         }
     }
 
-    public List<String> getKeywords() {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            return this.keywords == null ? new ArrayList<>() : objectMapper.readValue(this.keywords, new TypeReference<List<String>>() {});
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to deserialize keywords", e);
-        }
-    }
+//    public List<String> getKeywords() {
+//        try {
+//            ObjectMapper objectMapper = new ObjectMapper();
+//            return this.keywords == null ? new ArrayList<>() : objectMapper.readValue(this.keywords, new TypeReference<List<String>>() {});
+//        } catch (JsonProcessingException e) {
+//            throw new RuntimeException("Failed to deserialize keywords", e);
+//        }
+//    }
 }

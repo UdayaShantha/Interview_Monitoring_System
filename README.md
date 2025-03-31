@@ -4,44 +4,41 @@
 An innovative AI-driven interview monitoring system that automates the interview process through advanced technologies like facial recognition, emotion detection, and speech analysis.
 Features
 
-Fully automated remote interviews
-Advanced candidate identity verification
-Real-time emotional and behavioral analysis
-Comprehensive performance reporting
+Fully automated remote interviews<br>
+Advanced candidate identity verification<br>
+Real-time emotional and behavioral analysis<br>
+Comprehensive performance reporting<br>
 Bias-free interview assessment
 
 ## System Architecture
 
 Microservices-based architecture
-Scalable and modular design
+and modular design
 AI-powered core features
 
 ## Prerequisites
 
-Docker
-Python 3.9+
-SpringBoot
-React JS
+Python 3.12<br>
+SpringBoot - Java 17<br>
+React JS<br>
 
 ## Local Development Setup
 
-Clone the repository
-Install dependencies
-Configure environment variables
-Run services using Docker Compose
+Clone the repository<br>
+Install dependencies<br>
+Configure environment variables<br>
+Run services using Docker Compose<br>
 
 ## Deployment
 
-Kubernetes, Docker deployment scripts
-CI/CD pipeline with GitHub Actions
+Kubernetes, Docker deployment scripts<br>
+CI/CD pipeline with GitHub Actions<br>
 
 ## Security Considerations
 
-HTTPS protocols
-Data encryption
+HTTPS protocols<br>
+Data encryption<br>
 Secure authentication mechanisms
 
-Contributing
-Please read our contributing guidelines before submitting pull requests.
 
 

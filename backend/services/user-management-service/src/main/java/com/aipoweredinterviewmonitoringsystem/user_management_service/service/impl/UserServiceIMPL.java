@@ -11,6 +11,8 @@ import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.pagina
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.response.CandidatePhotoResponse;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.response.PositionResponse;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Candidate;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.HrTeam;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.TechnicalTeam;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.enums.UserType;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.feign.InterviewFeignClient;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.*;
@@ -25,6 +27,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.MultipartBodyBuilder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -59,12 +62,16 @@ public class UserServiceIMPL implements UserService {
     @Autowired
     private InterviewFeignClient interviewFeignClient;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Override
     @Transactional
     public CandidateSaveDTO saveCandidate(CandidateSaveDTO candidateSaveDTO, CandidatePhotoSaveDTO candidatePhotoSaveDTO) {
         Candidate candidate = modelMapper.map(candidateSaveDTO, Candidate.class);
         candidate.setUserType(UserType.CANDIDATE);
         candidate.setCreatedAt(LocalDateTime.now());
+        candidate.setPassword(passwordEncoder.encode(candidate.getPassword()));
 
         if (candidatePhotoSaveDTO.getPhotos() != null && !candidatePhotoSaveDTO.getPhotos().isEmpty()) {
             try {
@@ -173,23 +180,24 @@ public class UserServiceIMPL implements UserService {
         return photoDTO;
     }
 
+    @Transactional
     @Override
     public String deleteCandidate(Long userId) {
-        if(!candidateRepository.existsById(userId)){
+        if (!candidateRepository.existsById(userId)) {
             throw new CandidateNotFoundException("No such kind of candidate found");
         }
         candidateRepository.deleteById(userId);
 
-        ResponseEntity<StandardResponse> response = interviewFeignClient.getInterviewById(userId);
-
-        if (response.getBody() != null && response.getBody().getData() != null) {
-            Map<String, Object> data = (Map<String, Object>) response.getBody().getData();
-            Long interviewId = (Long)data.get("id");
-            interviewFeignClient.deleteInterview(interviewId);
+        try {
+            ResponseEntity<StandardResponse> response = interviewFeignClient.deleteInterviewByUserId(userId);
+            System.out.println("Feign Response: " + response.getBody());
+        } catch (Exception e) {
+            System.err.println("Feign Client Error: " + e.getMessage());
         }
 
         return "Candidate with id: " + userId + " deleted";
     }
+
 
     @Override
     @Transactional
@@ -197,7 +205,7 @@ public class UserServiceIMPL implements UserService {
         try {
             Candidate candidate = candidateRepository.findById(userId).get();
             candidate.setUsername(candidateUpdateDTO.getUsername());
-            candidate.setPassword(candidateUpdateDTO.getPassword());
+            candidate.setPassword(passwordEncoder.encode(candidateUpdateDTO.getPassword()));
             candidate.setName(candidateUpdateDTO.getName());
             candidate.setNic(candidateUpdateDTO.getNic());
             candidate.setEmail(candidateUpdateDTO.getEmail());
@@ -262,13 +270,37 @@ public class UserServiceIMPL implements UserService {
     @Override
     public String saveCandidateFeedback(long userId, int rate,String comment) {
         if(userRepository.existsById(userId) && candidateRepository.existsById(userId)){
+            Candidate candidate=candidateRepository.findCandidateByUserId(userId);
+            candidate.setRate(rate);
+            candidate.setComment(comment);
             try {
-                candidateRepository.saveRateAndComment(rate,comment);
+                candidateRepository.save(candidate);
                 return "Comment saved";
             } catch (RuntimeException e) {
                 throw new RuntimeException("Feedback not saved", e);
             }
         }
         throw new UserNotFoundException("No such kind of User");
+    }
+
+    @Override
+    public String saveHr(HrSaveDTO hrSaveDTO) {
+        HrTeam hrTeam = modelMapper.map(hrSaveDTO, HrTeam.class);
+        hrTeam.setUserType(UserType.HR);
+        hrTeam.setCreatedAt(LocalDateTime.now());
+        hrTeam.setPassword(passwordEncoder.encode(hrSaveDTO.getPassword()));
+        hrTeamRepository.save(hrTeam);
+        return "HR saved";
+
+    }
+
+    @Override
+    public String saveTechnical(TechnicalSaveDTO technicalSaveDTO) {
+        TechnicalTeam technicalTeam = modelMapper.map(technicalSaveDTO, TechnicalTeam.class);
+        technicalTeam.setUserType(UserType.TECHNICAL);
+        technicalTeam.setCreatedAt(LocalDateTime.now());
+        technicalTeam.setPassword(passwordEncoder.encode(technicalSaveDTO.getPassword()));
+        technicalTeamRepository.save(technicalTeam);
+        return "Technical saved";
     }
 }

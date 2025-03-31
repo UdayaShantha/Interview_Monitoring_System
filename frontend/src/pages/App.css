@@ -1433,7 +1433,27 @@ h3.form-subtitle {
 }
 
 
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
 
+.input-with-icon input {
+  padding-right: 40px; /* Leave space for the toggle icon */
+  width: 100%;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 10px;
+  cursor: pointer;
+  color: #666;
+}
+
+.toggle-password:hover {
+  color: #000;
+}
 
 
 /* View Form Styles */

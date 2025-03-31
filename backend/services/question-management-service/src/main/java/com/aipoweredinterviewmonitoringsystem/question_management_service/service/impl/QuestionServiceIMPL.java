@@ -96,7 +96,7 @@ public class QuestionServiceIMPL implements QuestionService {
                 long duration = (long) data[2];
                 String keywordsString = (String) data[3];
                 List<String> keywords = Arrays.asList(keywordsString.split(","));
-                return new GetQuestionDTO(content, category, duration, keywords);
+                return new GetQuestionDTO(questionId,content, category, duration, keywords);
             }
             if (questionDARepository.existsById(questionId)) {
                 Object result = questionDARepository.getQuestionDAByQuestionId(questionId);
@@ -109,7 +109,7 @@ public class QuestionServiceIMPL implements QuestionService {
                 long duration = (long) data[2];
                 String keywordsString = (String) data[3];
                 List<String> keywords = Arrays.asList(keywordsString.split(","));
-                return new GetQuestionDTO(content, category, duration, keywords);
+                return new GetQuestionDTO(questionId,content, category, duration, keywords);
             }
             if (questionQARepository.existsById(questionId)) {
                 Object result = questionQARepository.getQuestionQAByQuestionId(questionId);
@@ -122,7 +122,7 @@ public class QuestionServiceIMPL implements QuestionService {
                 long duration = (long) data[2];
                 String keywordsString = (String) data[3];
                 List<String> keywords = Arrays.asList(keywordsString.split(","));
-                return new GetQuestionDTO(content, category, duration, keywords);
+                return new GetQuestionDTO(questionId,content, category, duration, keywords);
             }
             if (questionSERepository.existsById(questionId)) {
                 Object result = questionSERepository.getQuestionSEByQuestionId(questionId);
@@ -135,7 +135,7 @@ public class QuestionServiceIMPL implements QuestionService {
                 long duration = (long) data[2];
                 String keywordsString = (String) data[3];
                 List<String> keywords = Arrays.asList(keywordsString.split(","));
-                return new GetQuestionDTO(content, category, duration, keywords);
+                return new GetQuestionDTO(questionId,content, category, duration, keywords);
             }
         }
         return null;
@@ -184,6 +184,7 @@ public class QuestionServiceIMPL implements QuestionService {
                 throw new RuntimeException("Failed to update question with ID: " + questionId);
             }
             return new UpdateResponseDTO(
+                    getQuestionDTO.getId(),
                     getQuestionDTO.getContent(),
                     getQuestionDTO.getCategory(),
                     getQuestionDTO.getDuration()
@@ -310,11 +311,14 @@ public class QuestionServiceIMPL implements QuestionService {
 
     @Override
     public QuestionPaiginatedDTO getQuestionsPaiginated(int page, int size) {
-        //create the list
+        // Create the list
         List<UpdateResponseDTO> questionDTOList = new ArrayList<>();
 
         // Fetch questions based on pagination
         Page<Question> questions = questionRepository.findAll(PageRequest.of(page, size, Sort.by("createdAt").descending()));
+
+        // Get the total number of questions
+        long totalQuestions = questions.getTotalElements();
 
         // Collect all questions
         for (Question question : questions) {
@@ -343,10 +347,15 @@ public class QuestionServiceIMPL implements QuestionService {
                 );
             }
         }
+
+        // Create the response DTO
         QuestionPaiginatedDTO list = new QuestionPaiginatedDTO();
         list.setUpdateResponseDTOS(questionDTOList);
+        list.setTotalQuestions(totalQuestions); // Add total questions
+
         return list;
     }
+
 
 
     @Override
@@ -513,63 +522,63 @@ public class QuestionServiceIMPL implements QuestionService {
     }
 
 //  Question Shuffling algorithm --->
-@Override
-public List<QuestionResponseDTO> getInterviewQuestionsShuffle(String positionType) {
-    if (positionType != null) {
-        List<QuestionResponseDTO> questionResponseDTOList = new ArrayList<>();
-        if (positionType.equalsIgnoreCase("SOFTWARE_ENGINEER")) {
-            int count_c = 5;
-            int count_se = 8;
-            questionResponseDTOList.addAll(
-                    commonQuestionRepository.getCommonQuestionByCount(count_c)
-                            .stream()
-                            .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
-                            .collect(Collectors.toList())
-            );
-            questionResponseDTOList.addAll(
-                    questionSERepository.getQuestionsSEByPoistionAndCount(count_se)
-                            .stream()
-                            .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
-                            .collect(Collectors.toList())
-            );
+    @Override
+    public List<QuestionResponseDTO> getInterviewQuestionsShuffle(String positionType) {
+        if (positionType != null) {
+            List<QuestionResponseDTO> questionResponseDTOList = new ArrayList<>();
+            if (positionType.equalsIgnoreCase("SOFTWARE_ENGINEER")) {
+                int count_c = 5;
+                int count_se = 8;
+                questionResponseDTOList.addAll(
+                        commonQuestionRepository.getCommonQuestionByCount(count_c)
+                                .stream()
+                                .map(q -> new QuestionResponseDTO(q.getQuestionId(), q.getContent(), q.getKeywords()))
+                                .collect(Collectors.toList())
+                );
+                questionResponseDTOList.addAll(
+                        questionSERepository.getQuestionsSEByPoistionAndCount(count_se)
+                                .stream()
+                                .map(q -> new QuestionResponseDTO(q.getQuestionId(), q.getContent(), q.getKeywords()))
+                                .collect(Collectors.toList())
+                );
+            }
+            if (positionType.equalsIgnoreCase("QA")) {
+                int count_c = 5;
+                int count_qa = 7;
+                questionResponseDTOList.addAll(
+                        commonQuestionRepository.getCommonQuestionByCount(count_c)
+                                .stream()
+                                .map(q -> new QuestionResponseDTO(q.getQuestionId(), q.getContent(), q.getKeywords()))
+                                .collect(Collectors.toList())
+                );
+                questionResponseDTOList.addAll(
+                        questionQARepository.getQuestionsQAByPoistionAndCount(count_qa)
+                                .stream()
+                                .map(q -> new QuestionResponseDTO(q.getQuestionId(), q.getContent(), q.getKeywords()))
+                                .collect(Collectors.toList())
+                );
+            }
+            if (positionType.equalsIgnoreCase("DATA_ANALYTICS")) {
+                int count_c = 5;
+                int count_da = 8;
+                questionResponseDTOList.addAll(
+                        commonQuestionRepository.getCommonQuestionByCount(count_c)
+                                .stream()
+                                .map(q -> new QuestionResponseDTO(q.getQuestionId(), q.getContent(), q.getKeywords()))
+                                .collect(Collectors.toList())
+                );
+                questionResponseDTOList.addAll(
+                        questionDARepository.getQuestionsDAByPositionAndCount(count_da)
+                                .stream()
+                                .map(q -> new QuestionResponseDTO(q.getQuestionId(), q.getContent(), q.getKeywords()))
+                                .collect(Collectors.toList())
+                );
+            }
+            fisherYatesShuffle(questionResponseDTOList);
+            return checkTotalDuration(questionResponseDTOList, positionType);
         }
-        if (positionType.equalsIgnoreCase("QA")) {
-            int count_c = 5;
-            int count_qa = 7;
-            questionResponseDTOList.addAll(
-                    commonQuestionRepository.getCommonQuestionByCount(count_c)
-                            .stream()
-                            .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
-                            .collect(Collectors.toList())
-            );
-            questionResponseDTOList.addAll(
-                    questionQARepository.getQuestionsQAByPoistionAndCount(count_qa)
-                            .stream()
-                            .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
-                            .collect(Collectors.toList())
-            );
-        }
-        if (positionType.equalsIgnoreCase("DATA_ANALYTICS")) {
-            int count_c = 5;
-            int count_da = 8;
-            questionResponseDTOList.addAll(
-                    commonQuestionRepository.getCommonQuestionByCount(count_c)
-                            .stream()
-                            .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
-                            .collect(Collectors.toList())
-            );
-            questionResponseDTOList.addAll(
-                    questionDARepository.getQuestionsDAByPositionAndCount(count_da)
-                            .stream()
-                            .map(q -> modelMapper.map(q, QuestionResponseDTO.class))
-                            .collect(Collectors.toList())
-            );
-        }
-        fisherYatesShuffle(questionResponseDTOList);
-        return checkTotalDuration(questionResponseDTOList, positionType);
+        throw new QuestionNotFoundException("Questions not found");
     }
-    throw new QuestionNotFoundException("Questions not found");
-}
 
     private void fisherYatesShuffle(List<QuestionResponseDTO> questionResponseDTOList) {
         Random random = new Random();

@@ -13,6 +13,7 @@ import { Chart as ChartJS, CategoryScale, LinearScale, PointElement,
          LineElement, Title, Tooltip, Legend, ArcElement, BarElement } from 'chart.js';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
+import axios from "../axiosInstance";
 
 ChartJS.register(
   CategoryScale, LinearScale, PointElement, 

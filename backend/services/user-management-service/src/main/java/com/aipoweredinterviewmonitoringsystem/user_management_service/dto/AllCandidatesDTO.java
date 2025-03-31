@@ -13,7 +13,6 @@ public class AllCandidatesDTO {
     private String name;
     private PositionType positionType;
 
-
 }
 
 

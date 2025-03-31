@@ -37,12 +37,12 @@ public class QuestionQA extends Question{
         }
     }
 
-    public List<String> getKeywords() {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            return this.keywords == null ? new ArrayList<>() : objectMapper.readValue(this.keywords, new TypeReference<List<String>>() {});
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to deserialize keywords", e);
-        }
-    }
+//    public List<String> getKeywords() {
+//        try {
+//            ObjectMapper objectMapper = new ObjectMapper();
+//            return this.keywords == null ? new ArrayList<>() : objectMapper.readValue(this.keywords, new TypeReference<List<String>>() {});
+//        } catch (JsonProcessingException e) {
+//            throw new RuntimeException("Failed to deserialize keywords", e);
+//        }
+//    }
 }

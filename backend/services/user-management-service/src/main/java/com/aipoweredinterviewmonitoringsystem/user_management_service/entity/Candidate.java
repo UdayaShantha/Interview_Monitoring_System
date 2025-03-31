@@ -8,9 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -21,7 +19,8 @@ import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name = "candidates")
 public class Candidate extends User{
@@ -51,7 +50,7 @@ public class Candidate extends User{
     @Enumerated(EnumType.STRING)
     @Column(name="position_type",nullable = false)
     private PositionType positionType;
-
+ 
     @Min(1)
     @Max(5)
     @Column(name = "candidate_rating")

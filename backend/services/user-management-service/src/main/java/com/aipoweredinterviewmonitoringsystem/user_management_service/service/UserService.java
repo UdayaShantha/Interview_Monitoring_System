@@ -31,4 +31,8 @@ public interface UserService {
     String getCandidatePositionById(Long userId);
 
     CandidatePhotoResponse getCandidatePhotosById(long userId);
+
+    String saveHr(HrSaveDTO hrSaveDTO);
+
+    String saveTechnical(TechnicalSaveDTO technicalSaveDTO);
 }
