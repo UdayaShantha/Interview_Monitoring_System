@@ -1,11 +1,9 @@
 import React, { useState } from "react";
 import { FaTimes } from "react-icons/fa";
 import DOMPurify from "dompurify";
-import axios from "../axiosInstance"; 
 
 const CandidateForm = ({ onClose }) => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     // Step 1 Data
     name: "",
@@ -24,7 +22,6 @@ const CandidateForm = ({ onClose }) => {
     password: "",
     confirmPassword: ""
   });
-  
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -68,71 +65,12 @@ const CandidateForm = ({ onClose }) => {
     formData.password && 
     formData.password === formData.confirmPassword;
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toISOString().split('T')[0]; // Gets YYYY-MM-DD format
-  };
-  
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    if (!isStep3Valid() || isSubmitting) return;
-  
-    setIsSubmitting(true);
-    try {
-      // Convert dates to ISO format
-      const birthday = formData.dob ? formatDate(formData.dob) : null;
-      const scheduleDate = formData.date ? formatDate(formData.date) : null;
-  
-      // Match EXACT field names from CandidateSaveDTO
-      const candidateData = {
-        username: formData.username,
-        password: formData.password,
-        name: formData.name,
-        nic: formData.nic,
-        email: formData.email,
-        address: formData.address,
-        phone: formData.contactNumber, // Map to 'phone' field
-        birthday: birthday, // Map to 'birthday' field
-        positionType: formData.position, // Ensure this matches enum values
-        scheduleDate: scheduleDate,
-        startTime: formData.startTime
-      };
-  
-      const formDataToSend = new FormData();
-      
-      // Match backend's expected field names
-      formDataToSend.append('candidate', new Blob([JSON.stringify(candidateData)], {
-        type: 'application/json'
-      }));
-  
-      formData.images.forEach((file) => {
-        formDataToSend.append('photos', file);
-      });
-  
-      const response = await axios.post(
-        '/users/hr/candidate/save', 
-        formDataToSend,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
-  
-      console.log('Success:', response.data);
-      onClose();
-    } catch (error) {
-      console.error('Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        config: error.config
-      });
-      alert(`Error: ${error.response?.data?.message || 'Failed to save candidate'}`);
-    } finally {
-      setIsSubmitting(false);
-    }
+    console.log("Form submitted:", formData);
+    onClose();
   };
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white rounded-lg shadow-lg w-full sm:w-3/4 md:w-1/2 lg:w-1/3 p-4 relative max-h-[70vh] overflow-auto">
@@ -277,9 +215,9 @@ const CandidateForm = ({ onClose }) => {
                     className="w-2/3 border p-2 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   >
                     <option value="">Select Position</option>
-                    <option value="SOFTWARE_ENGINEER">Software Engineer</option>
-                    <option value="DATA_ANALYTICS">Data Analyst</option>
-                    <option value="QA">QA</option>
+                    <option value="Software Engineer">Software Engineer</option>
+                    <option value="Data Scientist">Data Scientist</option>
+                    <option value="UX Designer">UX Designer</option>
                   </select>
                 </div>
 
@@ -383,20 +321,10 @@ const CandidateForm = ({ onClose }) => {
                 </button>
                 <button
                   type="submit"
-                  className={`px-5 py-2 bg-green-500 text-white rounded-lg text-xs hover:bg-green-600 focus:outline-none ${
-                    isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
-                  disabled={!isStep3Valid() || isSubmitting}
+                  className="px-5 py-2 bg-green-500 text-white rounded-lg text-xs hover:bg-green-600 focus:outline-none disabled:opacity-50"
+                  disabled={!isStep3Valid()}
                 >
-                  {isSubmitting ? (
-                    <>
-                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Processing...
-                    </>
-                  ) : 'Submit'}
+                  Submit
                 </button>
               </div>
             </form>
