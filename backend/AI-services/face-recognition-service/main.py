@@ -2,6 +2,7 @@ import asyncio
 import base64
 import csv
 import os
+import sys
 import time
 from datetime import datetime
 import httpx
@@ -233,7 +234,15 @@ async def get_candidate_data(interview_id: int):
             )
 
 @app.get("/load/model/face-recognition/{interview_id}")
-async def start_face_recognition(interview_id: int, db: AsyncSession = Depends(get_db)):
+async def start_face_recognition(
+    interview_id: int,
+    emotion_library: str = "deepface",
+    min_face_detection: float = 0.5,
+    min_face_presence: float = 0.5,
+    min_tracking: float = 0.5,
+    db: AsyncSession = Depends(get_db)
+):
+
     """Endpoint to start face recognition for an interview."""
     try:
         existing = await db.execute(
@@ -272,19 +281,22 @@ async def start_face_recognition(interview_id: int, db: AsyncSession = Depends(g
             "completed": False
         }
 
-        def run_face_recognition_process():
-            try:
-                # Get reference to main event loop
-                main_loop = asyncio.get_event_loop()
-            except RuntimeError:
-                main_loop = asyncio.new_event_loop()
+        def run_face_recognition_process(
+                photos: list,
+                stop_event: threading.Event,
+                emotion_lib: str,
+                min_detect: float,
+                min_presence: float,
+                min_track: float
+        ):
             try:
                 report_path = face_recognition(
-                    candidate_photos=candidate_photos,
-                    stop_event=stop_event,  # Pass stop_event
-                    camera_id=0,
-                    width=640,
-                    height=480
+                    candidate_photos=photos,
+                    stop_event=stop_event,
+                    emotion_library=emotion_lib,
+                    min_face_detection_confidence=min_detect,
+                    min_face_presence_confidence=min_presence,
+                    min_tracking_confidence=min_track
                 )
                 process["report_path"] = report_path
                 process["completed"] = True
@@ -294,7 +306,7 @@ async def start_face_recognition(interview_id: int, db: AsyncSession = Depends(g
                 asyncio.set_event_loop(loop)
                 loop.run_until_complete(update_db_with_report(interview_id, report_path, db))
                 loop.close()
-
+                main_loop = asyncio.get_event_loop()
                 future = asyncio.run_coroutine_threadsafe(
                     update_db_with_report(interview_id, report_path, db),
                     main_loop
@@ -305,15 +317,33 @@ async def start_face_recognition(interview_id: int, db: AsyncSession = Depends(g
                 print(f"Face recognition error: {str(e)}")
                 process["error"] = str(e)
 
-        thread = threading.Thread(target=run_face_recognition_process, daemon=True)
-        process["thread"] = thread
-        active_processes[interview_id] = process
+        thread = threading.Thread(
+            target=run_face_recognition_process,
+            daemon=False,
+            kwargs={
+                'photos': candidate_photos,
+                'stop_event': stop_event,
+                'emotion_lib': emotion_library,
+                'min_detect': min_face_detection,
+                'min_presence': min_face_presence,
+                'min_track': min_tracking
+            }
+        )
+
+        active_processes[interview_id] = {
+            "thread": thread,
+            "stop_event": stop_event
+        }
         thread.start()
 
         return {
             "message": "Face recognition started",
             "interview_id": interview_id,
-            "status": "The webcam will open for face verification. Press ESC to end the session."
+            "parameters": {
+                "detection_confidence": min_face_detection,
+                "presence_confidence": min_face_presence,
+                "tracking_confidence": min_tracking
+            }
         }
     except HTTPException as e:
         raise e
@@ -324,14 +354,21 @@ async def start_face_recognition(interview_id: int, db: AsyncSession = Depends(g
             detail=f"Error starting face recognition: {str(e)}"
         )
 
+async def face_recognition_task(photos, stop_event):
+    """
+    Dedicated async task for face recognition.
+    """
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(
+        None,
+        lambda: face_recognition(candidate_photos=photos, stop_event=stop_event)
+    )
 
-async def update_db_with_report(interview_id, report_path, db):
+
+async def update_db_with_report(interview_id: int, report_path: str, db: AsyncSession):
     try:
-        # Read report content safely
-        with open(report_path, "r", encoding="utf-8") as f:
-            csv_content = f.read()
-
         async with db.begin():
+            # Use async session properly
             result = await db.execute(
                 select(InterviewReport)
                 .where(InterviewReport.interview_id == interview_id)
@@ -339,12 +376,12 @@ async def update_db_with_report(interview_id, report_path, db):
             )
             report = result.scalars().first()
             if report:
-                report.report = csv_content
+                with open(report_path, "r") as f:
+                    report.report = f.read()
                 report.csv_file_path = report_path
                 await db.commit()
-                print(f"Successfully updated report for interview {interview_id}")
     except Exception as e:
-        print(f"Database update error: {str(e)}")
+        print(f"Database error: {str(e)}")
         await db.rollback()
 
 @app.get("/monitoring/report/{interview_id}")
