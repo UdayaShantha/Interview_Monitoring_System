@@ -13,10 +13,12 @@ import {
   ArcElement,
 } from "chart.js";
 import Footer from "../components/Footer";
+import axios from "../axiosInstance";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
 function UpcomingInterviewsPage() {
+  const [isLoading, setIsLoading] = useState(true);
   const [upcomingInterviews, setUpcomingInterviews] = useState([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
@@ -27,17 +29,16 @@ function UpcomingInterviewsPage() {
   useEffect(() => {
     const fetchUpcomingInterviews = async () => {
       try {
-        const response = await fetch("http://localhost:8080/api/interviews/upcoming");
-        if (!response.ok) {
-          throw new Error("Failed to fetch upcoming interviews");
-        }
-        const data = await response.json();
-        setUpcomingInterviews(data);
+        setIsLoading(true);
+        const response = await axios.get("/interviews/candidate-interview/UPCOMING");
+        setUpcomingInterviews(response.data.data);
       } catch (error) {
         console.error("Error fetching upcoming interviews:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
-
+  
     fetchUpcomingInterviews();
   }, []);
 
@@ -53,14 +54,9 @@ function UpcomingInterviewsPage() {
 
   const confirmDelete = async () => {
     try {
-      const response = await fetch(`http://localhost:8080/api/interviews/${selectedCandidateToDelete.id}`, {
-        method: 'DELETE'
-      });
-      
-      if (!response.ok) throw new Error('Failed to delete interview');
-      
+      await axios.delete(`/interviews/${selectedCandidateToDelete.userId}`);
       setUpcomingInterviews(prev => 
-        prev.filter(interview => interview.id !== selectedCandidateToDelete.id)
+        prev.filter(interview => interview.userId !== selectedCandidateToDelete.userId)
       );
     } catch (error) {
       console.error("Error deleting interview:", error);
@@ -96,8 +92,8 @@ function UpcomingInterviewsPage() {
               <h3 className="text-lg font-semibold text-green-800">Personal Details</h3>
             </div>
             
+            <DetailItem label="Name" value={candidate.name} />
             <DetailItem label="NIC Number" value={candidate.nic} />
-            <DetailItem label="Address" value={candidate.address} />
             <DetailItem label="Contact Number" value={candidate.contactNumber} />
             <DetailItem label="Email Address" value={candidate.email} />
           </div>
@@ -110,13 +106,13 @@ function UpcomingInterviewsPage() {
               <h3 className="text-lg font-semibold text-green-800">Interview Details</h3>
             </div>
 
-            <DetailItem label="Position" value={candidate.position} />
-            <DetailItem label="Interview Date" value={candidate.date} />
+            <DetailItem label="Position" value={candidate.positionType} />
             <DetailItem 
-              label="Time Duration" 
-              value={`${candidate.startTime} - ${candidate.endTime}`} 
+              label="Interview Date" 
+              value={new Date(candidate.scheduleDate).toLocaleDateString()} 
             />
-            <DetailItem label="Interview Duration" value={candidate.duration} />
+            <DetailItem label="Start Time" value={candidate.startTime} />
+            <DetailItem label="Duration" value={`${candidate.duration} hours`} />
           </div>
         </div>
 
@@ -208,7 +204,6 @@ function UpcomingInterviewsPage() {
                 <Link to="/interviews/completed" className="hover:text-green-200">Completed</Link>
                 <Link to="/interviews/postponed" className="hover:text-green-200">Postponed</Link>
                 <Link to="/interviews/cancelled" className="hover:text-green-200">Cancelled</Link>
-                
               </div>
             </div>
             <button className="md:hidden p-2 text-green-200" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
@@ -251,7 +246,9 @@ function UpcomingInterviewsPage() {
             <h3 className="text-xl font-semibold">Scheduled Interviews</h3>
           </div>
           <div className="overflow-x-auto">
-            {upcomingInterviews.length === 0 ? (
+            {isLoading ? (
+              <div className="p-6 text-center">Loading interviews...</div>
+            ) : upcomingInterviews.length === 0 ? (
               <div className="p-6 text-center">No upcoming interviews scheduled</div>
             ) : (
               <table className="w-full">
@@ -260,15 +257,20 @@ function UpcomingInterviewsPage() {
                     <th className="px-6 py-3 text-left">Candidate</th>
                     <th className="px-6 py-3 text-left">Position</th>
                     <th className="px-6 py-3 text-left">Date & Time</th>
+                    <th className="px-6 py-3 text-left">Duration</th>
                     <th className="px-6 py-3 text-left">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {upcomingInterviews.map((interview) => (
-                    <tr key={interview.id} className="hover:bg-gray-50">
+                    <tr key={interview.userId} className="hover:bg-gray-50">
                       <td className="px-6 py-4">{interview.name}</td>
-                      <td className="px-6 py-4">{interview.position}</td>
-                      <td className="px-6 py-4">{interview.date} ({interview.startTime})</td>
+                      <td className="px-6 py-4">{interview.positionType}</td>
+                      <td className="px-6 py-4">
+                        {new Date(interview.scheduleDate).toLocaleDateString()}
+                        <br />({interview.startTime})
+                      </td>
+                      <td className="px-6 py-4">{interview.duration} hours</td>
                       <td className="px-6 py-4">
                         <button 
                           onClick={() => handleViewCandidate(interview)}
