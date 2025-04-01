@@ -5,7 +5,7 @@ on: [push, pull_request]
 jobs:
   build:
     name: Build React app
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest, windows
     steps:
       - uses: actions/checkout@v3
 
