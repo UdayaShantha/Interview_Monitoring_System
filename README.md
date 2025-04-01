@@ -20,7 +20,7 @@ AI-powered core features
 
 Python 3.12<br>
 SpringBoot - Java 17<br>
-React JS<br>
+React JS<br> - 20
 
 ## Local Development Setup
 
