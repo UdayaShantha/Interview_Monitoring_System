@@ -12,7 +12,7 @@ instance.interceptors.request.use(
   (config) => {
     const accessToken = localStorage.getItem('accessToken');
     if (accessToken) {
-      config.headers.Authorization = Bearer ${accessToken};
+      config.headers.Authorization = `Bearer ${accessToken}`;
     }
     return config;
   },
@@ -33,7 +33,7 @@ instance.interceptors.response.use(
         const { accessToken } = response.data;
 
         localStorage.setItem('accessToken', accessToken);
-        originalRequest.headers.Authorization = Bearer ${accessToken};
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return instance(originalRequest);
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);

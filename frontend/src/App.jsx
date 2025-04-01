@@ -15,7 +15,6 @@ import QuestionPage from './pages/QuestionPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AddQuestionPage from "./pages/AddQuestionPage";
 import EditQuestionPage from './pages/EditQuestionPage'; 
-<<<<<<< HEAD
 import UpcomingInterviewsPage from './pages/UpcomingInterviewsPage';
 import CompletedInterviewsPage from './pages/CompletedInterviewsPage';
 import PostponedInterviewsPage from './pages/PostponedInterviewsPage';
@@ -23,9 +22,6 @@ import CancelledInterviewsPage from './pages/CancelledInterviewsPage';
 import VideoScreen from './pages/VideoScreen';
 import VideoPage from './pages/VideoPage';
 import FeedbackPage from './pages/FeedbackPage';
-=======
->>>>>>> 1d0a6cce8213593cb07725bac36d9d60f7c8792e
-
 import './pages/App.css';
 
 function App() {
@@ -49,7 +45,6 @@ function App() {
         <Route path="/questions" element={<ProtectedRoute><QuestionPage /></ProtectedRoute>} /> 
         <Route path="/add-question" element={<AddQuestionPage />} /> 
         <Route path="/edit-question/:id" element={<EditQuestionPage />} /> 
-<<<<<<< HEAD
         <Route path="/interviews/upcoming" element={<UpcomingInterviewsPage />} />
         <Route path="/interviews/completed" element={<CompletedInterviewsPage />} />
         <Route path="/interviews/postponed" element={<PostponedInterviewsPage />} />
@@ -57,10 +52,6 @@ function App() {
         <Route path="/video-screen" element={<VideoScreen />} />
         <Route path="/video-session" element={<VideoPage />} />
         <Route path="/feedback" element={<FeedbackPage />} />
-=======
->>>>>>> 1d0a6cce8213593cb07725bac36d9d60f7c8792e
-
-        
       </Routes>
     </Router>
 

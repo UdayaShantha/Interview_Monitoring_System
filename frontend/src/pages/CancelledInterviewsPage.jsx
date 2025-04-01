@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
+import axios from "../axiosInstance";
 import { 
   FaCalendarTimes,
   FaTimes,
@@ -43,7 +43,7 @@ function CancelledInterviewsPage() {
   useEffect(() => {
     const fetchCancelledInterviews = async () => {
       try {
-        const response = await axios.get("http://localhost:8080/api/interviews/cancelled");
+        const response = await axios.get("/interviews/cancelled");
         if (response.status === 200) {
           setCancelledInterviews(response.data);
         }
@@ -80,7 +80,7 @@ function CancelledInterviewsPage() {
       };
 
       const response = await axios.put(
-        `http://localhost:8080/api/interviews/${selectedInterviewToReschedule.id}/reschedule`,
+        `/interviews/${selectedInterviewToReschedule.id}/reschedule`,
         formData
       );
 
@@ -97,7 +97,7 @@ function CancelledInterviewsPage() {
 
   const confirmDelete = async () => {
     try {
-      await axios.delete(`http://localhost:8080/api/interviews/${selectedInterviewToDelete.id}`);
+      await axios.delete(`/interviews/${selectedInterviewToDelete.id}`);
       setCancelledInterviews(prev => 
         prev.filter(interview => interview.id !== selectedInterviewToDelete.id)
       );
