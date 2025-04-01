@@ -173,6 +173,18 @@ public class UserServiceIMPL implements UserService {
         return photoDTO;
     }
 
+    // get details for generate the pdf
+    @Override
+    public CandidateUpdateDTO getUserDetailsByUserId(long userId) {
+        if(candidateRepository.existsById(userId)){
+            Candidate candidate=candidateRepository.findCandidateByUserId(userId);
+            return modelMapper.map(candidate, CandidateUpdateDTO.class);
+        }
+        else{
+            throw new UserNotFoundException("No such kind of candidate found");
+        }
+    }
+
     @Override
     public String deleteCandidate(Long userId) {
         if(!candidateRepository.existsById(userId)){

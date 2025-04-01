@@ -3,6 +3,7 @@ package com.aipoweredinterviewmonitoringsystem.interview_management_service.serv
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.advisor.InterviewNotFountException;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.*;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.paginated.PaginatedInterviewGetAllDTO;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.response.GetInterviewDetailsDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.response.QuestionResponseDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Result;
@@ -21,7 +22,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -29,7 +29,6 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -362,6 +361,20 @@ public class InterviewServiceIMPL implements InterviewService {
     public long getCandidateIdByInterviewId(long interviewId) {
         if(interviewRepository.existsById(interviewId)){
             return interviewRepository.findById(interviewId).get().getCandidateId();
+        }
+        throw new InterviewNotFountException("Not found this interview");
+    }
+
+    //Get data to generate the pdf.
+    @Override
+    public GetInterviewDetailsDTO getInterviewDetailsByInterviewId(long interviewId) {
+        if(interviewRepository.existsById(interviewId)){
+            Interview interview = interviewRepository.findById(interviewId).get();
+            GetInterviewDetailsDTO getInterviewDetailsDTO = new GetInterviewDetailsDTO();
+            getInterviewDetailsDTO.setCandidateId(interview.getCandidateId());
+            getInterviewDetailsDTO.setDuration(interview.getDuration());
+            getInterviewDetailsDTO.setScheduleDate(interview.getScheduleDate());
+            return getInterviewDetailsDTO;
         }
         throw new InterviewNotFountException("Not found this interview");
     }

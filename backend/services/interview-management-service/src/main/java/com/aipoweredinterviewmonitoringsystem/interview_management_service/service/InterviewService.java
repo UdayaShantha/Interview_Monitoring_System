@@ -2,6 +2,7 @@ package com.aipoweredinterviewmonitoringsystem.interview_management_service.serv
 
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.*;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.paginated.PaginatedInterviewGetAllDTO;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.response.GetInterviewDetailsDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.response.QuestionResponseDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Result;
@@ -54,5 +55,7 @@ public interface InterviewService {
     LocalTime getInterviewStartTime(long interviewId);
 
     long getCandidateIdByInterviewId(long interviewId);
+
+    GetInterviewDetailsDTO getInterviewDetailsByInterviewId(long interviewId);
 }
 

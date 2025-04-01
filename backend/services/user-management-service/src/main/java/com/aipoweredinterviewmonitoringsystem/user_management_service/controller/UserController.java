@@ -205,4 +205,26 @@ public class UserController {
             );
         }
     }
+
+    //Get User details to generate pdf
+    @GetMapping("/get/user-Details-by-userId")
+    public ResponseEntity<StandardResponse> getUserDetailsByUserId(@RequestParam long userId) {
+        try {
+            CandidateUpdateDTO userDetailsDTO = userService.getUserDetailsByUserId(userId);
+            return new ResponseEntity<>(
+                    new StandardResponse(200, "Success", userDetailsDTO),
+                    HttpStatus.OK
+            );
+        } catch (UserNotFoundException e) {
+            return new ResponseEntity<>(
+                    new StandardResponse(404, "User Not Found", e.getMessage()),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    new StandardResponse(500, "Internal Server Error", e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 }

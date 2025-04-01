@@ -31,4 +31,6 @@ public interface UserService {
     String getCandidatePositionById(Long userId);
 
     CandidatePhotoResponse getCandidatePhotosById(long userId);
+
+    CandidateUpdateDTO getUserDetailsByUserId(long userId);
 }
