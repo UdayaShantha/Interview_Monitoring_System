@@ -259,10 +259,10 @@ function VideoScreen() {
       const avgAmplitude = sum / bufferLength;
       setAudioLevel(avgAmplitude * 5); // Scale for better visualization
 
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.1)';
+      ctx.fillStyle = 'rgba(240, 253, 250, 0.1)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.lineWidth = 2;
-      ctx.strokeStyle = '#22d3ee';
+      ctx.strokeStyle = '#0d9488';
       ctx.beginPath();
 
       const sliceWidth = canvas.width / bufferLength;
@@ -377,13 +377,13 @@ function VideoScreen() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-slate-900 relative flex flex-col overflow-hidden">
+    <div className="min-h-screen w-full bg-gradient-to-br from-emerald-50 to-cyan-50 relative flex flex-col overflow-hidden">
       {/* Notification */}
       {notification.visible && (
-        <div className={`fixed top-6 left-1/2 transform -translate-x-1/2 z-50 px-6 py-4 rounded-xl shadow-lg flex items-center gap-3 transition-all ${
-          notification.type === 'success' ? 'bg-emerald-500/90 text-white' : 
-          notification.type === 'error' ? 'bg-rose-500/90 text-white' : 
-          'bg-blue-500/90 text-white'
+        <div className={`fixed top-6 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-lg shadow-md flex items-center gap-3 transition-all ${
+          notification.type === 'success' ? 'bg-emerald-600 text-white' : 
+          notification.type === 'error' ? 'bg-rose-600 text-white' : 
+          'bg-cyan-600 text-white'
         }`}>
           {notification.type === 'success' ? (
             <CheckCircle className="w-5 h-5" />
@@ -392,14 +392,9 @@ function VideoScreen() {
           ) : (
             <Radio className="w-5 h-5" />
           )}
-          <span>{notification.message}</span>
+          <span className="text-sm font-medium">{notification.message}</span>
         </div>
       )}
-      
-      {/* Background Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 z-0"></div>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.1),transparent_50%)] z-0"></div>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(16,185,129,0.1),transparent_50%)] z-0"></div>
       
       {/* Main Content */}
       <main className="flex-1 z-10 p-6 lg:p-8">
@@ -408,41 +403,41 @@ function VideoScreen() {
           <div className="flex justify-between items-center mb-12">
             <button
               onClick={() => navigate(-1)}
-              className="group flex items-center gap-2 text-slate-300 hover:text-white transition-colors"
+              className="group flex items-center gap-2 text-emerald-600 hover:text-emerald-800 transition-colors"
             >
               <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
               <span className="text-lg font-medium">Back</span>
             </button>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-              Device Setup
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
+              Device Configuration
             </h1>
           </div>
 
           {/* Device Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Camera Section */}
-            <div className="relative bg-slate-800/80 backdrop-blur-sm rounded-3xl p-8 border border-slate-700/50 shadow-2xl">
+            <div className="relative bg-white rounded-2xl p-6 border-2 border-emerald-100 shadow-sm hover:shadow-lg transition-shadow">
               <div className="flex items-center gap-3 mb-6">
-                <Video className="w-8 h-8 text-emerald-400" />
-                <h2 className="text-xl font-semibold text-slate-100">Camera Test</h2>
+                <Video className="w-8 h-8 text-emerald-600" />
+                <h2 className="text-xl font-semibold text-gray-800">Camera Test</h2>
                 {mediaStates.camera.active && mediaStates.camera.success && (
-                  <div className="ml-auto bg-emerald-500/20 px-3 py-1 rounded-full flex items-center gap-2">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                    <span className="text-xs text-emerald-400 font-medium">Live</span>
+                  <div className="ml-auto bg-emerald-100 px-3 py-1 rounded-full flex items-center gap-2">
+                    <div className="w-2 h-2 bg-emerald-600 rounded-full animate-pulse"></div>
+                    <span className="text-xs text-emerald-600 font-medium">Live</span>
                   </div>
                 )}
                 {mediaStates.camera.error && (
-                  <AlertCircle className="ml-auto w-6 h-6 text-rose-400 animate-pulse" />
+                  <AlertCircle className="ml-auto w-6 h-6 text-rose-600 animate-pulse" />
                 )}
               </div>
               
               {deviceOptions.cameras.length > 0 && (
                 <div className="mb-4">
-                  <label className="block text-sm text-slate-400 mb-2">Select Camera</label>
+                  <label className="block text-sm text-gray-600 mb-2">Select Camera</label>
                   <select 
                     value={selectedDevices.camera || ''}
                     onChange={(e) => handleDeviceChange('camera', e.target.value)}
-                    className="w-full bg-slate-700/40 border border-slate-600 rounded-lg px-3 py-2 text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                    className="w-full bg-white border-2 border-emerald-100 rounded-lg px-3 py-2 text-gray-700 focus:outline-none focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
                   >
                     {deviceOptions.cameras.map(camera => (
                       <option key={camera.id} value={camera.id}>
@@ -453,7 +448,7 @@ function VideoScreen() {
                 </div>
               )}
               
-              <div className="aspect-video rounded-2xl overflow-hidden bg-slate-900 border border-slate-700 relative">
+              <div className="aspect-video rounded-xl overflow-hidden bg-gray-100 border-2 border-emerald-50 relative">
                 {mediaStates.camera.active ? (
                   <>
                     <video 
@@ -464,37 +459,29 @@ function VideoScreen() {
                       autoPlay
                     />
                     
-                    {/* Floating success message */}
                     {showSuccess.camera && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-slate-900/70 animate-fadeIn">
-                        <div className="bg-emerald-500/90 rounded-xl p-6 flex items-center gap-4 shadow-lg animate-scaleIn">
-                          <CheckCircle className="w-8 h-8 text-white" />
+                      <div className="absolute inset-0 flex items-center justify-center bg-white/80 animate-fadeIn">
+                        <div className="bg-emerald-600 rounded-lg p-4 flex items-center gap-3 shadow-md">
+                          <CheckCircle className="w-6 h-6 text-white" />
                           <div>
-                            <p className="text-white font-medium">Camera is working properly!</p>
-                            <p className="text-emerald-100 text-sm">Video stream detected</p>
+                            <p className="text-white font-medium text-sm">Camera verified</p>
                           </div>
                         </div>
                       </div>
                     )}
                     
-                    {/* Status indicator */}
-                    <div className="absolute top-4 left-4 px-3 py-1 bg-slate-900/80 backdrop-blur-sm rounded-lg text-xs text-slate-300 flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-emerald-400" />
-                      <span>Camera working properly</span>
+                    <div className="absolute top-3 left-3 px-2 py-1 bg-white/80 backdrop-blur-sm rounded-md text-xs text-emerald-600 flex items-center gap-2 border border-emerald-100">
+                      <CheckCircle className="w-3 h-3" />
+                      <span>Connected</span>
                     </div>
                   </>
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center space-y-4">
-                      <Video className="w-12 h-12 text-slate-500 mx-auto" />
-                      <p className="text-slate-400">
+                      <Video className="w-12 h-12 text-gray-300 mx-auto" />
+                      <p className="text-gray-500 text-sm">
                         {mediaStates.camera.error || "Camera preview will appear here"}
                       </p>
-                      {mediaStates.camera.tested && !mediaStates.camera.success && !mediaStates.camera.error && (
-                        <div className="px-4 py-2 bg-amber-500/20 rounded-lg mt-2">
-                          <p className="text-amber-400 text-sm">Camera test completed but no stream was detected</p>
-                        </div>
-                      )}
                     </div>
                   </div>
                 )}
@@ -504,50 +491,46 @@ function VideoScreen() {
                 {!mediaStates.camera.active ? (
                   <button
                     onClick={() => checkMedia('camera')}
-                    className="px-6 py-3 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/50 rounded-xl text-emerald-400 hover:text-emerald-300 flex items-center gap-2 transition-all"
-                    disabled={mediaStates.camera.error?.includes('Permission')}
+                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg flex items-center gap-2 transition-all shadow-sm hover:shadow-md"
                   >
-                    <Radio className="w-5 h-5" />
-                    <span>Start Camera Test</span>
+                    <Radio className="w-4 h-4" />
+                    <span className="text-sm">Start Test</span>
                   </button>
                  ) : (
-                  !mediaStates.microphone.active && (
                   <button
                     onClick={() => stopMedia('camera')}
-                    className="px-6 py-3 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/50 rounded-xl text-rose-400 hover:text-rose-300 flex items-center gap-2 transition-all"
-                    disabled={mediaStates.microphone.error?.includes('Permission')}
+                    className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg flex items-center gap-2 transition-all shadow-sm hover:shadow-md"
                   >
-                    <XCircle className="w-5 h-5" />
-                    <span>Stop Camera Test</span>
+                    <XCircle className="w-4 h-4" />
+                    <span className="text-sm">Stop Test</span>
                   </button>
-                  )
                 )}
               </div>
             </div>
 
             {/* Microphone Section */}
-            <div className="relative bg-slate-800/80 backdrop-blur-sm rounded-3xl p-8 border border-slate-700/50 shadow-2xl">
+            <div className="relative bg-white rounded-2xl p-6 border-2 border-emerald-100 shadow-sm hover:shadow-lg transition-shadow">
               <div className="flex items-center gap-3 mb-6">
-                <Mic className="w-8 h-8 text-cyan-400" />
-                <h2 className="text-xl font-semibold text-slate-100">Microphone Test</h2>
+                <Mic className="w-8 h-8 text-cyan-600" />
+                <h2 className="text-xl font-semibold text-gray-800">Microphone Test</h2>
                 {mediaStates.microphone.active && mediaStates.microphone.success && (
-                  <div className="ml-auto bg-cyan-500/20 px-3 py-1 rounded-full flex items-center gap-2">
-                    <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
-                    <span className="text-xs text-cyan-400 font-medium">Live</span>
+                  <div className="ml-auto bg-cyan-100 px-3 py-1 rounded-full flex items-center gap-2">
+                    <div className="w-2 h-2 bg-cyan-600 rounded-full animate-pulse"></div>
+                    <span className="text-xs text-cyan-600 font-medium">Live</span>
                   </div>
                 )}
                 {mediaStates.microphone.error && (
-                  <AlertCircle className="ml-auto w-6 h-6 text-rose-400 animate-pulse" />
+                  <AlertCircle className="ml-auto w-6 h-6 text-rose-600 animate-pulse" />
                 )}
               </div>
 
               {deviceOptions.microphones.length > 0 && (
                 <div className="mb-4">
-                  <label className="block text-sm text-slate-400 mb-2">Select Microphone</label>
+                  <label className="block text-sm text-gray-600 mb-2">Select Microphone</label>
                   <select 
                     value={selectedDevices.microphone || ''}
                     onChange={(e) => handleDeviceChange('microphone', e.target.value)}
-                    className="w-full bg-slate-700/40 border border-slate-600 rounded-lg px-3 py-2 text-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                    className="w-full bg-white border-2 border-emerald-100 rounded-lg px-3 py-2 text-gray-700 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-100"
                   >
                     {deviceOptions.microphones.map(mic => (
                       <option key={mic.id} value={mic.id}>
@@ -558,52 +541,44 @@ function VideoScreen() {
                 </div>
               )}
 
-              <div className="aspect-video rounded-2xl overflow-hidden bg-slate-900 border border-slate-700 relative">
+              <div className="aspect-video rounded-xl overflow-hidden bg-gray-100 border-2 border-emerald-50 relative">
                 <canvas ref={canvasRef} className="w-full h-full" />
                 
                 {mediaStates.microphone.active ? (
                   <>
-                    {/* Floating success message */}
                     {showSuccess.microphone && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-slate-900/70 animate-fadeIn">
-                        <div className="bg-cyan-500/90 rounded-xl p-6 flex items-center gap-4 shadow-lg animate-scaleIn">
-                          <CheckCircle className="w-8 h-8 text-white" />
+                      <div className="absolute inset-0 flex items-center justify-center bg-white/80 animate-fadeIn">
+                        <div className="bg-cyan-600 rounded-lg p-4 flex items-center gap-3 shadow-md">
+                          <CheckCircle className="w-6 h-6 text-white" />
                           <div>
-                            <p className="text-white font-medium">Microphone is working properly!</p>
-                            <p className="text-cyan-100 text-sm">Audio input detected</p>
+                            <p className="text-white font-medium text-sm">Microphone verified</p>
                           </div>
                         </div>
                       </div>
                     )}
                     
-                    {/* Status indicator */}
-                    <div className="absolute top-4 left-4 px-3 py-1 bg-slate-900/80 backdrop-blur-sm rounded-lg text-xs text-slate-300 flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-cyan-400" />
-                      <span>Microphone working properly</span>
+                    <div className="absolute top-3 left-3 px-2 py-1 bg-white/80 backdrop-blur-sm rounded-md text-xs text-cyan-600 flex items-center gap-2 border border-cyan-100">
+                      <CheckCircle className="w-3 h-3" />
+                      <span>Connected</span>
                     </div>
                   </>
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center space-y-4">
-                      <Waves className="w-12 h-12 text-slate-500 mx-auto" />
-                      <p className="text-slate-400">
-                        {mediaStates.microphone.error || "Microphone activity will show here"}
+                      <Waves className="w-12 h-12 text-gray-300 mx-auto" />
+                      <p className="text-gray-500 text-sm">
+                        {mediaStates.microphone.error || "Audio visualization will appear here"}
                       </p>
-                      {mediaStates.microphone.tested && !mediaStates.microphone.success && !mediaStates.microphone.error && (
-                        <div className="px-4 py-2 bg-amber-500/20 rounded-lg mt-2">
-                          <p className="text-amber-400 text-sm">Microphone test completed but no audio was detected</p>
-                        </div>
-                      )}
                     </div>
                   </div>
                 )}
                 
                 {mediaStates.microphone.active && (
-                  <div className="absolute bottom-4 left-4 right-4 flex items-center gap-3">
-                    <Volume2 className={`w-5 h-5 ${audioLevel > 0.5 ? 'text-cyan-400' : 'text-slate-400'}`} />
-                    <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                  <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2">
+                    <Volume2 className={`w-4 h-4 ${audioLevel > 0.5 ? 'text-cyan-600' : 'text-gray-400'}`} />
+                    <div className="flex-1 h-1.5 bg-emerald-50 rounded-full overflow-hidden">
                       <div 
-                        className="h-full bg-gradient-to-r from-cyan-400 to-cyan-600 transition-all duration-100"
+                        className="h-full bg-cyan-600 transition-all duration-100"
                         style={{ width: `${Math.min(audioLevel * 100, 100)}%` }}
                       ></div>
                     </div>
@@ -615,19 +590,18 @@ function VideoScreen() {
                 {!mediaStates.microphone.active ? (
                   <button
                     onClick={() => checkMedia('microphone')}
-                    className="px-6 py-3 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/50 rounded-xl text-cyan-400 hover:text-cyan-300 flex items-center gap-2 transition-all"
-                    disabled={mediaStates.microphone.error?.includes('Permission')}
+                    className="px-5 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg flex items-center gap-2 transition-all shadow-sm hover:shadow-md"
                   >
-                    <Radio className="w-5 h-5" />
-                    <span>Start Mic Test</span>
+                    <Radio className="w-4 h-4" />
+                    <span className="text-sm">Start Test</span>
                   </button>
                 ) : (
                   <button
                     onClick={() => stopMedia('microphone')}
-                    className="px-6 py-3 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/50 rounded-xl text-rose-400 hover:text-rose-300 flex items-center gap-2 transition-all"
+                    className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg flex items-center gap-2 transition-all shadow-sm hover:shadow-md"
                   >
-                    <XCircle className="w-5 h-5" />
-                    <span>Stop Mic Test</span>
+                    <XCircle className="w-4 h-4" />
+                    <span className="text-sm">Stop Test</span>
                   </button>
                 )}
               </div>
@@ -635,119 +609,73 @@ function VideoScreen() {
           </div>
 
           {/* System Status */}
-          <div className="mt-12 p-6 bg-slate-800/80 backdrop-blur-sm rounded-2xl border border-slate-700/50">
-            <h3 className="text-lg font-medium text-slate-200 mb-4">Device Status Summary</h3>
+          <div className="mt-8 p-6 bg-white rounded-xl border-2 border-emerald-100 shadow-sm">
+            <h3 className="text-lg font-medium text-gray-800 mb-4">Device Status</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center gap-3 p-4 bg-slate-700/20 rounded-lg">
-                <div className={`p-2 rounded-lg ${
-                  mediaStates.camera.active && mediaStates.camera.success ? 'bg-emerald-500/20' : 
-                  mediaStates.camera.error ? 'bg-rose-500/20' :
-                  mediaStates.camera.tested && mediaStates.camera.success ? 'bg-emerald-500/20' :
-                  'bg-slate-600/20'
+              <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-lg border border-emerald-100">
+                <div className={`p-2 rounded-md ${
+                  mediaStates.camera.success ? 'bg-emerald-600' : 'bg-gray-200'
                 }`}>
-                  {mediaStates.camera.active && mediaStates.camera.success ? (
-                    <CheckCircle className="w-6 h-6 text-emerald-400" />
-                  ) : mediaStates.camera.error ? (
-                    <AlertCircle className="w-6 h-6 text-rose-400" />
-                  ) : mediaStates.camera.tested && mediaStates.camera.success ? (
-                    <CheckCircle className="w-6 h-6 text-emerald-400" />
+                  {mediaStates.camera.success ? (
+                    <CheckCircle className="w-5 h-5 text-white" />
                   ) : (
-                    <Video className="w-6 h-6 text-slate-400" />
+                    <Video className="w-5 h-5 text-gray-500" />
                   )}
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-slate-300">Camera Status</p>
+                  <p className="text-sm text-gray-600">Camera</p>
                   <p className={`text-sm font-medium ${
-                    (mediaStates.camera.active && mediaStates.camera.success) || 
-                    (mediaStates.camera.tested && mediaStates.camera.success) ? 'text-emerald-400' : 
-                    mediaStates.camera.error ? 'text-rose-400' : 'text-slate-400'
+                    mediaStates.camera.success ? 'text-emerald-600' : 'text-gray-500'
                   }`}>
-                    {mediaStates.camera.tested && mediaStates.camera.success ? 
-                      mediaStates.camera.deviceName ? `Tested Successfully: ${mediaStates.camera.deviceName}` : 'Tested Successfully' : 
-                      getStatusText('camera')}
+                    {mediaStates.camera.deviceName || 'Not tested'}
                   </p>
-                  {mediaStates.camera.error && (
-                    <p className="text-xs text-rose-400 mt-1">{mediaStates.camera.error}</p>
-                  )}
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 p-4 bg-slate-700/20 rounded-lg">
-                <div className={`p-2 rounded-lg ${
-                  mediaStates.microphone.active && mediaStates.microphone.success ? 'bg-emerald-500/20' : 
-                  mediaStates.microphone.error ? 'bg-rose-500/20' :
-                  mediaStates.microphone.tested && mediaStates.microphone.success ? 'bg-emerald-500/20' :
-                  'bg-slate-600/20'
+              <div className="flex items-center gap-3 p-4 bg-cyan-50 rounded-lg border border-cyan-100">
+                <div className={`p-2 rounded-md ${
+                  mediaStates.microphone.success ? 'bg-cyan-600' : 'bg-gray-200'
                 }`}>
-                  {mediaStates.microphone.active && mediaStates.microphone.success ? (
-                    <CheckCircle className="w-6 h-6 text-emerald-400" />
-                  ) : mediaStates.microphone.error ? (
-                    <AlertCircle className="w-6 h-6 text-rose-400" />
-                  ) : mediaStates.microphone.tested && mediaStates.microphone.success ? (
-                    <CheckCircle className="w-6 h-6 text-emerald-400" />
+                  {mediaStates.microphone.success ? (
+                    <CheckCircle className="w-5 h-5 text-white" />
                   ) : (
-                    <Video className="w-6 h-6 text-slate-400" />
+                    <Mic className="w-5 h-5 text-gray-500" />
                   )}
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-slate-300">Microphone Status</p>
+                  <p className="text-sm text-gray-600">Microphone</p>
                   <p className={`text-sm font-medium ${
-                    (mediaStates.microphone.active && mediaStates.microphone.success) || 
-                    (mediaStates.microphone.tested && mediaStates.microphone.success) ? 'text-emerald-400' : 
-                    mediaStates.microphone.error ? 'text-rose-400' : 'text-slate-400'
+                    mediaStates.microphone.success ? 'text-cyan-600' : 'text-gray-500'
                   }`}>
-                    {mediaStates.microphone.tested && mediaStates.microphone.success ? 
-                      mediaStates.microphone.deviceName ? `Tested Successfully: ${mediaStates.microphone.deviceName}` : 'Tested Successfully' : 
-                      getStatusText('microphone')}
+                    {mediaStates.microphone.deviceName || 'Not tested'}
                   </p>
-                  {mediaStates.microphone.error && (
-                    <p className="text-xs text-rose-400 mt-1">{mediaStates.microphone.error}</p>
-                  )}
                 </div>
               </div>
             </div>
-            
-            {/* Troubleshooting Tips */}
-            {(mediaStates.camera.error || mediaStates.microphone.error) && (
-              <div className="mt-4 p-4 bg-slate-700/20 rounded-lg border border-slate-600/50">
-                <h4 className="text-sm font-medium text-slate-300 mb-2">Troubleshooting Tips:</h4>
-                <ul className="text-xs text-slate-400 space-y-1 ml-5 list-disc">
-                  {mediaStates.camera.error?.includes('Permission') || mediaStates.microphone.error?.includes('Permission') ? (
-                    <li>Check your browser permissions settings and allow access to camera/microphone</li>
-                  ) : null}
-                  {mediaStates.camera.error?.includes('in use') || mediaStates.microphone.error?.includes('in use') ? (
-                    <li>Close other applications that might be using your camera or microphone</li>
-                  ) : null}
-                  <li>Try refreshing the page and testing again</li>
-                  <li>Make sure your devices are properly connected and not disabled in your system settings</li>
-                  <li>Try using a different browser if problems persist</li>
-                </ul>
-              </div>
-            )}
           </div>
         </div>
       </main>
 
       {/* Start Session Button */}
-      <div className="fixed bottom-8 right-8 z-20">
-      <button 
-    onClick={() => {
-      if (!(mediaStates.camera.tested && mediaStates.camera.success) || 
-          !(mediaStates.microphone.tested && mediaStates.microphone.success)) {
-        showNotification('error', 'Please complete both camera and microphone tests first');
-      } else {
-        navigate('/video-session');
-      }
-    }}
-    className={`px-8 py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-2xl text-white font-semibold flex items-center gap-3 transition-all transform shadow-xl ${
-      (!(mediaStates.camera.tested && mediaStates.camera.success) || 
-       !(mediaStates.microphone.tested && mediaStates.microphone.success)) ?
-      'opacity-50 cursor-not-allowed' :
-      'hover:from-emerald-600 hover:to-cyan-600 hover:scale-105'
-    }`}
-  >
-          <Play className="w-6 h-6" />
-          <span>Start Session</span>
+      <div className="fixed bottom-6 right-6 z-20">
+        <button 
+          onClick={() => {
+            if (!(mediaStates.camera.tested && mediaStates.camera.success) || 
+                !(mediaStates.microphone.tested && mediaStates.microphone.success)) {
+              showNotification('error', 'Please complete both camera and microphone tests first');
+            } else {
+              navigate('/video-session');
+            }
+          }}
+          className={`px-6 py-3 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white rounded-xl shadow-lg flex items-center gap-2 transition-all ${
+            (!(mediaStates.camera.tested && mediaStates.camera.success) || 
+             !(mediaStates.microphone.tested && mediaStates.microphone.success)) ? 
+            'opacity-50 cursor-not-allowed' : 
+            'hover:from-emerald-700 hover:to-cyan-700 hover:shadow-xl hover:scale-105'
+          }`}
+        >
+          <Play className="w-5 h-5" />
+          <span className="font-medium">Start Session</span>
         </button>
       </div>
     </div>
