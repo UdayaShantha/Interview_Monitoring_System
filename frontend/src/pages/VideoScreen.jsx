@@ -1,275 +1,727 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mic, ArrowLeft, Play, CheckCircle, AlertCircle, Video, Home, Clock, Settings, Volume2 } from 'lucide-react';
+import { Mic, ArrowLeft, Play, CheckCircle, AlertCircle, Video, XCircle, Radio, Waves, Volume2 } from 'lucide-react';
 
 function VideoScreen() {
   const navigate = useNavigate();
-  const [showInstructions, setShowInstructions] = useState(false);
-  const [isMicWorking, setIsMicWorking] = useState(null);
-  const [mediaStream, setMediaStream] = useState(null);
-
-  const startSession = () => {
-    setShowInstructions(true);
-  };
-
-  const checkMicrophone = async () => {
-    try {
-      // Stop any existing stream
-      if (mediaStream) {
-        mediaStream.getTracks().forEach(track => track.stop());
-      }
-
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      setMediaStream(stream);
-      setIsMicWorking(true);
-      
-      // Clean up stream after 5 seconds
-      setTimeout(() => {
-        stream.getTracks().forEach(track => track.stop());
-        setMediaStream(null);
-      }, 5000);
-      
-    } catch (error) {
-      console.error('Error accessing microphone:', error);
-      setIsMicWorking(false);
+  const videoRef = useRef(null);
+  const audioAnalyserRef = useRef(null);
+  const canvasRef = useRef(null);
+  const animationFrameRef = useRef(null);
+  
+  const [mediaStates, setMediaStates] = useState({
+    camera: { 
+      active: false, 
+      error: null, 
+      stream: null, 
+      deviceName: null, 
+      success: false, 
+      tested: false 
+    },
+    microphone: { 
+      active: false, 
+      error: null, 
+      stream: null, 
+      deviceName: null, 
+      success: false, 
+      tested: false 
     }
-  };
+  });
+  
+  const [notification, setNotification] = useState({ type: null, message: null, visible: false });
+  const [deviceOptions, setDeviceOptions] = useState({ cameras: [], microphones: [] });
+  const [selectedDevices, setSelectedDevices] = useState({ camera: null, microphone: null });
+  const [audioLevel, setAudioLevel] = useState(0);
+  const [showSuccess, setShowSuccess] = useState({ camera: false, microphone: false });
 
-  const openMicrophoneSettings = async () => {
-    try {
-      // This will trigger the browser's permission dialog again
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach(track => track.stop());
-    } catch (error) {
-      console.log('User denied microphone access');
+  // Video element initialization
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.autoplay = true;
+      videoRef.current.muted = true;
+      videoRef.current.playsInline = true;
+      videoRef.current.setAttribute('playsinline', 'true');
     }
-  };
+    
+    // Enumerate available devices when component mounts
+    enumerateDevices();
+  }, []);
 
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
-      // Clean up any active streams when component unmounts
-      if (mediaStream) {
-        mediaStream.getTracks().forEach(track => track.stop());
+      stopAllMedia();
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [mediaStream]);
+  }, []);
+
+  // Load video stream into video element when available
+  useEffect(() => {
+    if (mediaStates.camera.stream && videoRef.current) {
+      videoRef.current.srcObject = mediaStates.camera.stream;
+      
+      videoRef.current.onloadedmetadata = () => {
+        videoRef.current.play().catch(err => {
+          console.error('Video play error:', err);
+          handleMediaError('camera', err);
+        });
+      };
+    }
+  }, [mediaStates.camera.stream]);
+
+  // Handle success message timeouts
+  useEffect(() => {
+    if (showSuccess.camera) {
+      const timer = setTimeout(() => {
+        setShowSuccess(prev => ({ ...prev, camera: false }));
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccess.camera]);
+
+  useEffect(() => {
+    if (showSuccess.microphone) {
+      const timer = setTimeout(() => {
+        setShowSuccess(prev => ({ ...prev, microphone: false }));
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccess.microphone]);
+
+  const enumerateDevices = async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      
+      const cameras = devices
+        .filter(device => device.kind === 'videoinput')
+        .map(device => ({ id: device.deviceId, label: device.label || `Camera ${deviceOptions.cameras.length + 1}` }));
+      
+      const microphones = devices
+        .filter(device => device.kind === 'audioinput')
+        .map(device => ({ id: device.deviceId, label: device.label || `Microphone ${deviceOptions.microphones.length + 1}` }));
+      
+      setDeviceOptions({ cameras, microphones });
+      
+      // Set defaults
+      if (cameras.length > 0 && !selectedDevices.camera) {
+        setSelectedDevices(prev => ({ ...prev, camera: cameras[0].id }));
+      }
+      
+      if (microphones.length > 0 && !selectedDevices.microphone) {
+        setSelectedDevices(prev => ({ ...prev, microphone: microphones[0].id }));
+      }
+    } catch (error) {
+      console.error('Error enumerating devices:', error);
+      showNotification('error', 'Failed to detect media devices');
+    }
+  };
+
+  const stopAllMedia = () => {
+    Object.values(mediaStates).forEach(state => {
+      if (state.stream) {
+        state.stream.getTracks().forEach(track => track.stop());
+      }
+    });
+  };
+
+  const showNotification = (type, message, duration = 4000) => {
+    setNotification({ type, message, visible: true });
+    setTimeout(() => {
+      setNotification(prev => ({ ...prev, visible: false }));
+    }, duration);
+  };
+
+  const checkMedia = async (type) => {
+    try {
+      const mediaType = type === 'camera' ? 'video' : 'audio';
+      const deviceConstraint = {};
+      
+      if (type === 'camera' && selectedDevices.camera) {
+        deviceConstraint.deviceId = { exact: selectedDevices.camera };
+      } else if (type === 'microphone' && selectedDevices.microphone) {
+        deviceConstraint.deviceId = { exact: selectedDevices.microphone };
+      }
+      
+      const constraints = { 
+        [mediaType]: type === 'camera' 
+          ? { ...deviceConstraint, facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }
+          : deviceConstraint
+      };
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints)
+        .catch(err => {
+          throw new Error(`Failed to access ${type}: ${err.message}`);
+        });
+
+      // Find the device name
+      const tracks = type === 'camera' ? stream.getVideoTracks() : stream.getAudioTracks();
+      const deviceName = tracks.length > 0 ? tracks[0].label : null;
+
+      if (type === 'camera') {
+        if (!stream.getVideoTracks().length) {
+          throw new Error('No video tracks found in camera stream');
+        }
+
+        setMediaStates(prev => ({
+          ...prev,
+          camera: { 
+            active: true, 
+            error: null, 
+            stream, 
+            deviceName, 
+            success: true,
+            tested: true
+          }
+        }));
+        
+        setShowSuccess({ ...showSuccess, camera: true });
+        showNotification('success', `Camera working: ${deviceName || 'Webcam'}`);
+      }
+
+      if (type === 'microphone') {
+        if (!stream.getAudioTracks().length) {
+          throw new Error('No audio tracks found in microphone stream');
+        }
+
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const analyser = audioContext.createAnalyser();
+        const source = audioContext.createMediaStreamSource(stream);
+        source.connect(analyser);
+        audioAnalyserRef.current = analyser;
+        
+        setMediaStates(prev => ({
+          ...prev,
+          microphone: { 
+            active: true, 
+            error: null, 
+            stream, 
+            deviceName, 
+            success: true,
+            tested: true
+          }
+        }));
+        
+        setShowSuccess({ ...showSuccess, microphone: true });
+        visualizeAudio();
+        showNotification('success', `Microphone working: ${deviceName || 'Mic'}`);
+      }
+
+    } catch (error) {
+      handleMediaError(type, error);
+    }
+  };
+
+  const visualizeAudio = () => {
+    const analyser = audioAnalyserRef.current;
+    if (!analyser) return;
+
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    
+    // Set canvas dimensions
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
+    analyser.fftSize = 2048;
+    
+    const drawWaveform = () => {
+      animationFrameRef.current = requestAnimationFrame(drawWaveform);
+      analyser.getByteTimeDomainData(dataArray);
+
+      // Calculate audio level
+      let sum = 0;
+      for (let i = 0; i < bufferLength; i++) {
+        const amplitude = Math.abs(dataArray[i] / 128.0 - 1);
+        sum += amplitude;
+      }
+      const avgAmplitude = sum / bufferLength;
+      setAudioLevel(avgAmplitude * 5); // Scale for better visualization
+
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.1)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#22d3ee';
+      ctx.beginPath();
+
+      const sliceWidth = canvas.width / bufferLength;
+      let x = 0;
+
+      for (let i = 0; i < bufferLength; i++) {
+        const v = dataArray[i] / 128.0;
+        const y = v * canvas.height / 2;
+        
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        x += sliceWidth;
+      }
+
+      ctx.lineTo(canvas.width, canvas.height/2);
+      ctx.stroke();
+    };
+
+    drawWaveform();
+  };
+
+  const handleMediaError = (type, error) => {
+    console.error(`Media error (${type}):`, error);
+    let errorMessage = error.message;
+    
+    if (error.name === 'NotAllowedError') {
+      errorMessage = `Permission denied for ${type}. Please allow access in browser settings.`;
+    } else if (error.name === 'NotFoundError') {
+      errorMessage = `No ${type} device found. Please connect a ${type}.`;
+    } else if (error.name === 'NotReadableError' || error.name === 'AbortError') {
+      errorMessage = `${type} is already in use by another application. Please close other applications and try again.`;
+    } else if (error.name === 'OverconstrainedError') {
+      errorMessage = `The requested ${type} settings are not supported by your device.`;
+    }
+
+    setMediaStates(prev => ({
+      ...prev,
+      [type]: { 
+        ...prev[type], 
+        active: false, 
+        error: errorMessage, 
+        success: false,
+        tested: true 
+      }
+    }));
+    
+    showNotification('error', errorMessage);
+  };
+
+  const stopMedia = (type) => {
+    const stream = mediaStates[type].stream;
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setMediaStates(prev => ({
+        ...prev,
+        [type]: { 
+          ...prev[type], 
+          active: false, 
+          error: null, 
+          stream: null,
+          // Keep tested state
+        }
+      }));
+
+      if (type === 'camera' && videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+
+      if (type === 'microphone') {
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+        }
+        const canvas = canvasRef.current;
+        if (canvas) {
+          const ctx = canvas.getContext('2d');
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        setAudioLevel(0);
+      }
+      
+      showNotification('info', `${type === 'camera' ? 'Camera' : 'Microphone'} test stopped`);
+    }
+  };
+
+  const handleDeviceChange = (type, deviceId) => {
+    setSelectedDevices(prev => ({ ...prev, [type]: deviceId }));
+    
+    // If device is active, restart with new device
+    if (mediaStates[type].active) {
+      stopMedia(type);
+      setTimeout(() => checkMedia(type), 300);
+    }
+  };
+
+  const getStatusText = (type) => {
+    const state = mediaStates[type];
+    if (!state.tested) {
+      return 'Not Tested';
+    }
+    if (state.error) {
+      return 'Test Failed';
+    }
+    if (state.active && state.success) {
+      return 'Active';
+    }
+    if (state.tested && state.success) {
+      return 'Tested Successfully';
+    }
+    return 'Unknown Status';
+  };
 
   return (
-    <div className="h-screen w-full bg-emerald-50 relative flex flex-col">
-      {/* Header */}
-      <header className="w-full bg-white shadow-sm py-4 px-4 md:px-6">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
-          {/* Back Button */}
-          <button 
-            onClick={() => navigate('/user-profile')}
-            className="bg-white text-green-600 px-4 py-2 rounded-xl hover:bg-green-50 transition-colors duration-300 flex items-center gap-2 shadow-md w-full md:w-auto justify-center md:justify-start"
-          >
-            <ArrowLeft size={18} className="text-green-700" />
-            <span className="font-semibold text-sm md:text-base">Back to Profile</span>
-          </button>
-          
-          {/* Start Button */}
-          <button 
-            onClick={startSession} 
-            className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-2.5 rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-md"
-          >
-            <Play size={18} className="fill-current mt-0.5" />
-            <span className="font-bold text-base">Start Session</span>
-          </button>
-        </div>
-      </header>
-
-      {/* Updated Instruction Modal with scroll fixes */}
-      {showInstructions && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 flex items-start justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full border border-emerald-100 my-8">
-            {/* Modal Header with Gradient */}
-            <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 p-6 flex items-center gap-4 relative">
-              <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-emerald-200 to-transparent opacity-30" />
-              <CheckCircle className="text-emerald-600 w-10 h-10 flex-shrink-0" />
-              <div>
-                <h2 className="text-2xl md:text-3xl font-bold text-emerald-900">Interview Ready Checklist</h2>
-                <p className="text-emerald-600 mt-1 text-sm md:text-base">Essential steps for a successful session</p>
-              </div>
-            </div>
-
-            {/* Scrollable Content Area */}
-            <div className="max-h-[70vh] overflow-y-auto">
-              <div className="p-6 space-y-6">
-                <div className="space-y-6">
-                  {/* Step 1 */}
-                  <div className="flex gap-4 items-start">
-                    <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-                      1
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <Video className="text-emerald-600 w-5 h-5" />
-                        <h3 className="font-semibold text-emerald-900 text-lg">Tech Setup</h3>
-                      </div>
-                      <p className="text-gray-600 text-sm pl-8">
-                        Test your camera, microphone, and internet connection. Close unnecessary applications.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Step 2 */}
-                  <div className="flex gap-4 items-start">
-                    <div className="bg-gradient-to-br from-emerald-400 to-emerald-500 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-                      2
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <Home className="text-emerald-600 w-5 h-5" />
-                        <h3 className="font-semibold text-emerald-900 text-lg">Environment</h3>
-                      </div>
-                      <p className="text-gray-600 text-sm pl-8">
-                        Ensure good lighting and a professional background. Eliminate background noise.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Step 3 */}
-                  <div className="flex gap-4 items-start">
-                    <div className="bg-gradient-to-br from-emerald-300 to-emerald-400 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-                      3
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <Clock className="text-emerald-600 w-5 h-5" />
-                        <h3 className="font-semibold text-emerald-900 text-lg">Session Rules</h3>
-                      </div>
-                      <p className="text-gray-600 text-sm pl-8">
-                        Be ready 5 minutes early. The session will auto-end after 45 minutes.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Important Notice */}
-                <div className="bg-amber-50 p-4 rounded-lg flex gap-3 border border-amber-100">
-                  <AlertCircle className="text-amber-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <p className="text-sm text-amber-800 font-medium">
-                      <span className="font-bold block mb-1">Important Note:</span>
-                      Recording will start immediately. By continuing, you consent to being recorded.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Sticky Footer */}
-            <div className="bg-emerald-50 px-6 py-4 flex flex-col sm:flex-row justify-between gap-3 border-t border-emerald-100 sticky bottom-0">
-              <button
-                onClick={() => setShowInstructions(false)}
-                className="px-6 py-2.5 text-emerald-700 hover:bg-emerald-100 rounded-lg font-medium transition-colors text-sm md:text-base"
-              >
-                Cancel
-              </button>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    setShowInstructions(false);
-                    navigate('/video-session');
-                  }}
-                  className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-2.5 rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-md"
-                >
-                  <Play size={18} className="fill-current mt-0.5" />
-                  <span className="font-bold text-base">Start Now</span>
-                </button>
-              </div>
-            </div>
-          </div>
+    <div className="min-h-screen w-full bg-slate-900 relative flex flex-col overflow-hidden">
+      {/* Notification */}
+      {notification.visible && (
+        <div className={`fixed top-6 left-1/2 transform -translate-x-1/2 z-50 px-6 py-4 rounded-xl shadow-lg flex items-center gap-3 transition-all ${
+          notification.type === 'success' ? 'bg-emerald-500/90 text-white' : 
+          notification.type === 'error' ? 'bg-rose-500/90 text-white' : 
+          'bg-blue-500/90 text-white'
+        }`}>
+          {notification.type === 'success' ? (
+            <CheckCircle className="w-5 h-5" />
+          ) : notification.type === 'error' ? (
+            <AlertCircle className="w-5 h-5" />
+          ) : (
+            <Radio className="w-5 h-5" />
+          )}
+          <span>{notification.message}</span>
         </div>
       )}
       
+      {/* Background Gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 z-0"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.1),transparent_50%)] z-0"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(16,185,129,0.1),transparent_50%)] z-0"></div>
+      
       {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full h-full max-w-6xl bg-white rounded-xl shadow-2xl overflow-hidden m-4">
-          {/* Video Preview Area */}
-          <div className="aspect-video bg-gradient-to-br from-emerald-50 to-emerald-100 flex items-center justify-center">
-            <div className="text-center space-y-6 p-6">
-              <p className="text-2xl md:text-3xl font-bold text-emerald-900">
-                Session Ready to Start
-              </p>
-              <div className="flex justify-center">
-                <div className="animate-pulse">
-                  <div className={`h-20 w-20 ${isMicWorking === true ? 'bg-emerald-700' : isMicWorking === false ? 'bg-amber-600' : 'bg-emerald-700'} rounded-full flex items-center justify-center shadow-lg mx-auto border ${isMicWorking === true ? 'border-emerald-800' : isMicWorking === false ? 'border-amber-700' : 'border-emerald-800'}`}>
-                    <Mic size={32} className="text-emerald-50" />
+      <main className="flex-1 z-10 p-6 lg:p-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-12">
+            <button
+              onClick={() => navigate(-1)}
+              className="group flex items-center gap-2 text-slate-300 hover:text-white transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+              <span className="text-lg font-medium">Back</span>
+            </button>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+              Device Setup
+            </h1>
+          </div>
+
+          {/* Device Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Camera Section */}
+            <div className="relative bg-slate-800/80 backdrop-blur-sm rounded-3xl p-8 border border-slate-700/50 shadow-2xl">
+              <div className="flex items-center gap-3 mb-6">
+                <Video className="w-8 h-8 text-emerald-400" />
+                <h2 className="text-xl font-semibold text-slate-100">Camera Test</h2>
+                {mediaStates.camera.active && mediaStates.camera.success && (
+                  <div className="ml-auto bg-emerald-500/20 px-3 py-1 rounded-full flex items-center gap-2">
+                    <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                    <span className="text-xs text-emerald-400 font-medium">Live</span>
                   </div>
-                </div>
+                )}
+                {mediaStates.camera.error && (
+                  <AlertCircle className="ml-auto w-6 h-6 text-rose-400 animate-pulse" />
+                )}
               </div>
-              <div className="space-y-4">
-                <p className="text-emerald-700 text-sm md:text-base max-w-md mx-auto font-medium">
-                  {isMicWorking === null && "Click the microphone test button to verify your audio"}
-                  {isMicWorking === true && "Microphone is working properly!"}
-                  {isMicWorking === false && "Microphone not detected. Please check your settings."}
-                </p>
-                
-                {isMicWorking === false && (
-                  <button
-                    onClick={openMicrophoneSettings}
-                    className="bg-amber-100 text-amber-800 px-4 py-2 rounded-lg hover:bg-amber-200 transition-colors flex items-center gap-2 mx-auto"
+              
+              {deviceOptions.cameras.length > 0 && (
+                <div className="mb-4">
+                  <label className="block text-sm text-slate-400 mb-2">Select Camera</label>
+                  <select 
+                    value={selectedDevices.camera || ''}
+                    onChange={(e) => handleDeviceChange('camera', e.target.value)}
+                    className="w-full bg-slate-700/40 border border-slate-600 rounded-lg px-3 py-2 text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                   >
-                    <Settings size={16} />
-                    <span>Fix Microphone Settings</span>
+                    {deviceOptions.cameras.map(camera => (
+                      <option key={camera.id} value={camera.id}>
+                        {camera.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              
+              <div className="aspect-video rounded-2xl overflow-hidden bg-slate-900 border border-slate-700 relative">
+                {mediaStates.camera.active ? (
+                  <>
+                    <video 
+                      ref={videoRef}
+                      className="w-full h-full object-cover"
+                      muted
+                      playsInline
+                      autoPlay
+                    />
+                    
+                    {/* Floating success message */}
+                    {showSuccess.camera && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-slate-900/70 animate-fadeIn">
+                        <div className="bg-emerald-500/90 rounded-xl p-6 flex items-center gap-4 shadow-lg animate-scaleIn">
+                          <CheckCircle className="w-8 h-8 text-white" />
+                          <div>
+                            <p className="text-white font-medium">Camera is working properly!</p>
+                            <p className="text-emerald-100 text-sm">Video stream detected</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Status indicator */}
+                    <div className="absolute top-4 left-4 px-3 py-1 bg-slate-900/80 backdrop-blur-sm rounded-lg text-xs text-slate-300 flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-emerald-400" />
+                      <span>Camera working properly</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center space-y-4">
+                      <Video className="w-12 h-12 text-slate-500 mx-auto" />
+                      <p className="text-slate-400">
+                        {mediaStates.camera.error || "Camera preview will appear here"}
+                      </p>
+                      {mediaStates.camera.tested && !mediaStates.camera.success && !mediaStates.camera.error && (
+                        <div className="px-4 py-2 bg-amber-500/20 rounded-lg mt-2">
+                          <p className="text-amber-400 text-sm">Camera test completed but no stream was detected</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-6 flex justify-center gap-4">
+                {!mediaStates.camera.active ? (
+                  <button
+                    onClick={() => checkMedia('camera')}
+                    className="px-6 py-3 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/50 rounded-xl text-emerald-400 hover:text-emerald-300 flex items-center gap-2 transition-all"
+                    disabled={mediaStates.camera.error?.includes('Permission')}
+                  >
+                    <Radio className="w-5 h-5" />
+                    <span>Start Camera Test</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => stopMedia('camera')}
+                    className="px-6 py-3 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/50 rounded-xl text-rose-400 hover:text-rose-300 flex items-center gap-2 transition-all"
+                  >
+                    <XCircle className="w-5 h-5" />
+                    <span>Stop Camera Test</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Microphone Section */}
+            <div className="relative bg-slate-800/80 backdrop-blur-sm rounded-3xl p-8 border border-slate-700/50 shadow-2xl">
+              <div className="flex items-center gap-3 mb-6">
+                <Mic className="w-8 h-8 text-cyan-400" />
+                <h2 className="text-xl font-semibold text-slate-100">Microphone Test</h2>
+                {mediaStates.microphone.active && mediaStates.microphone.success && (
+                  <div className="ml-auto bg-cyan-500/20 px-3 py-1 rounded-full flex items-center gap-2">
+                    <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
+                    <span className="text-xs text-cyan-400 font-medium">Live</span>
+                  </div>
+                )}
+                {mediaStates.microphone.error && (
+                  <AlertCircle className="ml-auto w-6 h-6 text-rose-400 animate-pulse" />
+                )}
+              </div>
+
+              {deviceOptions.microphones.length > 0 && (
+                <div className="mb-4">
+                  <label className="block text-sm text-slate-400 mb-2">Select Microphone</label>
+                  <select 
+                    value={selectedDevices.microphone || ''}
+                    onChange={(e) => handleDeviceChange('microphone', e.target.value)}
+                    className="w-full bg-slate-700/40 border border-slate-600 rounded-lg px-3 py-2 text-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                  >
+                    {deviceOptions.microphones.map(mic => (
+                      <option key={mic.id} value={mic.id}>
+                        {mic.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="aspect-video rounded-2xl overflow-hidden bg-slate-900 border border-slate-700 relative">
+                <canvas ref={canvasRef} className="w-full h-full" />
+                
+                {mediaStates.microphone.active ? (
+                  <>
+                    {/* Floating success message */}
+                    {showSuccess.microphone && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-slate-900/70 animate-fadeIn">
+                        <div className="bg-cyan-500/90 rounded-xl p-6 flex items-center gap-4 shadow-lg animate-scaleIn">
+                          <CheckCircle className="w-8 h-8 text-white" />
+                          <div>
+                            <p className="text-white font-medium">Microphone is working properly!</p>
+                            <p className="text-cyan-100 text-sm">Audio input detected</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Status indicator */}
+                    <div className="absolute top-4 left-4 px-3 py-1 bg-slate-900/80 backdrop-blur-sm rounded-lg text-xs text-slate-300 flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-cyan-400" />
+                      <span>Microphone working properly</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center space-y-4">
+                      <Waves className="w-12 h-12 text-slate-500 mx-auto" />
+                      <p className="text-slate-400">
+                        {mediaStates.microphone.error || "Microphone activity will show here"}
+                      </p>
+                      {mediaStates.microphone.tested && !mediaStates.microphone.success && !mediaStates.microphone.error && (
+                        <div className="px-4 py-2 bg-amber-500/20 rounded-lg mt-2">
+                          <p className="text-amber-400 text-sm">Microphone test completed but no audio was detected</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                {mediaStates.microphone.active && (
+                  <div className="absolute bottom-4 left-4 right-4 flex items-center gap-3">
+                    <Volume2 className={`w-5 h-5 ${audioLevel > 0.5 ? 'text-cyan-400' : 'text-slate-400'}`} />
+                    <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-cyan-400 to-cyan-600 transition-all duration-100"
+                        style={{ width: `${Math.min(audioLevel * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-6 flex justify-center gap-4">
+                {!mediaStates.microphone.active ? (
+                  <button
+                    onClick={() => checkMedia('microphone')}
+                    className="px-6 py-3 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/50 rounded-xl text-cyan-400 hover:text-cyan-300 flex items-center gap-2 transition-all"
+                    disabled={mediaStates.microphone.error?.includes('Permission')}
+                  >
+                    <Radio className="w-5 h-5" />
+                    <span>Start Mic Test</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => stopMedia('microphone')}
+                    className="px-6 py-3 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/50 rounded-xl text-rose-400 hover:text-rose-300 flex items-center gap-2 transition-all"
+                  >
+                    <XCircle className="w-5 h-5" />
+                    <span>Stop Mic Test</span>
                   </button>
                 )}
               </div>
             </div>
           </div>
+
+          {/* System Status */}
+          <div className="mt-12 p-6 bg-slate-800/80 backdrop-blur-sm rounded-2xl border border-slate-700/50">
+            <h3 className="text-lg font-medium text-slate-200 mb-4">Device Status Summary</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center gap-3 p-4 bg-slate-700/20 rounded-lg">
+                <div className={`p-2 rounded-lg ${
+                  mediaStates.camera.active && mediaStates.camera.success ? 'bg-emerald-500/20' : 
+                  mediaStates.camera.error ? 'bg-rose-500/20' :
+                  mediaStates.camera.tested && mediaStates.camera.success ? 'bg-emerald-500/20' :
+                  'bg-slate-600/20'
+                }`}>
+                  {mediaStates.camera.active && mediaStates.camera.success ? (
+                    <CheckCircle className="w-6 h-6 text-emerald-400" />
+                  ) : mediaStates.camera.error ? (
+                    <AlertCircle className="w-6 h-6 text-rose-400" />
+                  ) : mediaStates.camera.tested && mediaStates.camera.success ? (
+                    <CheckCircle className="w-6 h-6 text-emerald-400" />
+                  ) : (
+                    <Video className="w-6 h-6 text-slate-400" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-slate-300">Camera Status</p>
+                  <p className={`text-sm font-medium ${
+                    (mediaStates.camera.active && mediaStates.camera.success) || 
+                    (mediaStates.camera.tested && mediaStates.camera.success) ? 'text-emerald-400' : 
+                    mediaStates.camera.error ? 'text-rose-400' : 'text-slate-400'
+                  }`}>
+                    {getStatusText('camera')}
+                    {mediaStates.camera.deviceName && (mediaStates.camera.active || mediaStates.camera.success) ? 
+                      `: ${mediaStates.camera.deviceName}` : ''}
+                  </p>
+                  {mediaStates.camera.error && (
+                    <p className="text-xs text-rose-400 mt-1">{mediaStates.camera.error}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 p-4 bg-slate-700/20 rounded-lg">
+                <div className={`p-2 rounded-lg ${
+                  mediaStates.microphone.active && mediaStates.microphone.success ? 'bg-cyan-500/20' : 
+                  mediaStates.microphone.error ? 'bg-rose-500/20' : 'bg-slate-600/20'
+                }`}>
+                  {mediaStates.microphone.active && mediaStates.microphone.success ? (
+                    <CheckCircle className="w-6 h-6 text-cyan-400" />
+                  ) : mediaStates.microphone.error ? (
+                    <AlertCircle className="w-6 h-6 text-rose-400" />
+                  ) : (
+                    <Mic className="w-6 h-6 text-slate-400" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-slate-300">Microphone Status</p>
+                  <p className={`text-sm font-medium ${
+                    mediaStates.microphone.active && mediaStates.microphone.success ? 'text-cyan-400' : 
+                    mediaStates.microphone.error ? 'text-rose-400' : 'text-slate-400'
+                  }`}>
+                    {mediaStates.microphone.active && mediaStates.microphone.success 
+                      ? `Active${mediaStates.microphone.deviceName ? `: ${mediaStates.microphone.deviceName}` : ''}` 
+                      : mediaStates.microphone.error ? 'Error' : 'Not Tested'}
+                  </p>
+                  {mediaStates.microphone.error && (
+                    <p className="text-xs text-rose-400 mt-1">{mediaStates.microphone.error}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            {/* Troubleshooting Tips */}
+            {(mediaStates.camera.error || mediaStates.microphone.error) && (
+              <div className="mt-4 p-4 bg-slate-700/20 rounded-lg border border-slate-600/50">
+                <h4 className="text-sm font-medium text-slate-300 mb-2">Troubleshooting Tips:</h4>
+                <ul className="text-xs text-slate-400 space-y-1 ml-5 list-disc">
+                  {mediaStates.camera.error?.includes('Permission') || mediaStates.microphone.error?.includes('Permission') ? (
+                    <li>Check your browser permissions settings and allow access to camera/microphone</li>
+                  ) : null}
+                  {mediaStates.camera.error?.includes('in use') || mediaStates.microphone.error?.includes('in use') ? (
+                    <li>Close other applications that might be using your camera or microphone</li>
+                  ) : null}
+                  <li>Try refreshing the page and testing again</li>
+                  <li>Make sure your devices are properly connected and not disabled in your system settings</li>
+                  <li>Try using a different browser if problems persist</li>
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
       </main>
 
-      {/* Footer Controls */}
-      <footer className="w-full bg-white shadow-sm py-4">
-        <div className="max-w-6xl mx-auto flex flex-col items-center gap-4">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={checkMicrophone}
-              className="h-14 w-14 md:h-16 md:w-16 bg-emerald-700 rounded-full flex items-center justify-center hover:bg-emerald-800 transition-all duration-300 shadow-lg hover:shadow-emerald-100/50 relative group border border-emerald-800"
-            >
-              <Volume2 size={24} className="text-emerald-50" />
-              <span className="absolute -bottom-8 text-xs md:text-sm font-semibold text-gray-800 opacity-0 group-hover:opacity-100 transition-opacity bg-white px-2 py-1 rounded-md shadow-sm">
-                Test Microphone
-              </span>
-            </button>
-
-            <button 
-              onClick={openMicrophoneSettings}
-              className="h-14 w-14 md:h-16 md:w-16 bg-emerald-700 rounded-full flex items-center justify-center hover:bg-emerald-800 transition-all duration-300 shadow-lg hover:shadow-emerald-100/50 relative group border border-emerald-800"
-            >
-              <Settings size={24} className="text-emerald-50" />
-              <span className="absolute -bottom-8 text-xs md:text-sm font-semibold text-gray-800 opacity-0 group-hover:opacity-100 transition-opacity bg-white px-2 py-1 rounded-md shadow-sm">
-                Audio Settings
-              </span>
-            </button>
-
-            <button className="h-14 w-14 md:h-16 md:w-16 bg-emerald-700 rounded-full flex items-center justify-center hover:bg-emerald-800 transition-all duration-300 shadow-lg hover:shadow-emerald-100/50 relative group border border-emerald-800">
-              <Video size={24} className="text-emerald-50" />
-              <span className="absolute -bottom-8 text-xs md:text-sm font-semibold text-gray-800 opacity-0 group-hover:opacity-100 transition-opacity bg-white px-2 py-1 rounded-md shadow-sm">
-                Video Settings
-              </span>
-            </button>
-          </div>
-
-          <div className="text-sm text-emerald-700 flex items-center gap-2">
-            {isMicWorking === true && (
-              <>
-                <CheckCircle size={16} className="text-emerald-600" />
-                <span>Microphone is ready</span>
-              </>
-            )}
-            {isMicWorking === false && (
-              <>
-                <AlertCircle size={16} className="text-amber-600" />
-                <span className="text-amber-700">Microphone issues detected</span>
-              </>
-            )}
-          </div>
-        </div>
-      </footer>
+      {/* Start Session Button */}
+      <div className="fixed bottom-8 right-8 z-20">
+        <button 
+          onClick={() => {
+            if (!mediaStates.camera.active || !mediaStates.microphone.active) {
+              showNotification('error', 'Please complete both camera and microphone tests first');
+            } else {
+              navigate('/video-session');
+            }
+          }}
+          className={`px-8 py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-2xl text-white font-semibold flex items-center gap-3 transition-all transform shadow-xl ${
+            (!mediaStates.camera.active || !mediaStates.microphone.active) ?
+            'opacity-50 cursor-not-allowed' :
+            'hover:from-emerald-600 hover:to-cyan-600 hover:scale-105'
+          }`}
+        >
+          <Play className="w-6 h-6" />
+          <span>Start Session</span>
+        </button>
+      </div>
     </div>
   );
 }
