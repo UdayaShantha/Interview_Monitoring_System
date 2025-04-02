@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mic, ArrowLeft, Play, CheckCircle, AlertCircle, Video, XCircle, Radio, Waves, Volume2 } from 'lucide-react';
@@ -93,15 +92,31 @@ function VideoScreen() {
 
   const enumerateDevices = async () => {
     try {
+      // Request permission to access media devices which helps get proper labels
+      await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+        .then(stream => {
+          // Stop all tracks immediately after getting labels
+          stream.getTracks().forEach(track => track.stop());
+        })
+        .catch(err => {
+          console.warn("Initial permission request failed, continuing with enumeration", err);
+        });
+
       const devices = await navigator.mediaDevices.enumerateDevices();
       
       const cameras = devices
         .filter(device => device.kind === 'videoinput')
-        .map(device => ({ id: device.deviceId, label: device.label || `Camera ${deviceOptions.cameras.length + 1}` }));
+        .map((device, index) => ({ 
+          id: device.deviceId, 
+          label: device.label || `Camera ${index + 1}` 
+        }));
       
       const microphones = devices
         .filter(device => device.kind === 'audioinput')
-        .map(device => ({ id: device.deviceId, label: device.label || `Microphone ${deviceOptions.microphones.length + 1}` }));
+        .map((device, index) => ({ 
+          id: device.deviceId, 
+          label: device.label || `Microphone ${index + 1}` 
+        }));
       
       setDeviceOptions({ cameras, microphones });
       
@@ -307,14 +322,17 @@ function VideoScreen() {
           active: false, 
           error: null, 
           stream: null,
-          // Keep tested state
+          // Keep tested state, success state and deviceName
+          tested: prev[type].tested,
+          success: prev[type].success,
+          deviceName: prev[type].deviceName
         }
       }));
-
+  
       if (type === 'camera' && videoRef.current) {
         videoRef.current.srcObject = null;
       }
-
+  
       if (type === 'microphone') {
         if (animationFrameRef.current) {
           cancelAnimationFrame(animationFrameRef.current);
@@ -330,7 +348,7 @@ function VideoScreen() {
       showNotification('info', `${type === 'camera' ? 'Camera' : 'Microphone'} test stopped`);
     }
   };
-
+  
   const handleDeviceChange = (type, deviceId) => {
     setSelectedDevices(prev => ({ ...prev, [type]: deviceId }));
     
@@ -353,7 +371,7 @@ function VideoScreen() {
       return 'Active';
     }
     if (state.tested && state.success) {
-      return 'Tested Successfully';
+      return '';
     }
     return 'Unknown Status';
   };
@@ -492,14 +510,17 @@ function VideoScreen() {
                     <Radio className="w-5 h-5" />
                     <span>Start Camera Test</span>
                   </button>
-                ) : (
+                 ) : (
+                  !mediaStates.microphone.active && (
                   <button
                     onClick={() => stopMedia('camera')}
                     className="px-6 py-3 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/50 rounded-xl text-rose-400 hover:text-rose-300 flex items-center gap-2 transition-all"
+                    disabled={mediaStates.microphone.error?.includes('Permission')}
                   >
                     <XCircle className="w-5 h-5" />
                     <span>Stop Camera Test</span>
                   </button>
+                  )
                 )}
               </div>
             </div>
@@ -641,9 +662,9 @@ function VideoScreen() {
                     (mediaStates.camera.tested && mediaStates.camera.success) ? 'text-emerald-400' : 
                     mediaStates.camera.error ? 'text-rose-400' : 'text-slate-400'
                   }`}>
-                    {getStatusText('camera')}
-                    {mediaStates.camera.deviceName && (mediaStates.camera.active || mediaStates.camera.success) ? 
-                      `: ${mediaStates.camera.deviceName}` : ''}
+                    {mediaStates.camera.tested && mediaStates.camera.success ? 
+                      mediaStates.camera.deviceName ? `Tested Successfully: ${mediaStates.camera.deviceName}` : 'Tested Successfully' : 
+                      getStatusText('camera')}
                   </p>
                   {mediaStates.camera.error && (
                     <p className="text-xs text-rose-400 mt-1">{mediaStates.camera.error}</p>
@@ -653,26 +674,31 @@ function VideoScreen() {
 
               <div className="flex items-center gap-3 p-4 bg-slate-700/20 rounded-lg">
                 <div className={`p-2 rounded-lg ${
-                  mediaStates.microphone.active && mediaStates.microphone.success ? 'bg-cyan-500/20' : 
-                  mediaStates.microphone.error ? 'bg-rose-500/20' : 'bg-slate-600/20'
+                  mediaStates.microphone.active && mediaStates.microphone.success ? 'bg-emerald-500/20' : 
+                  mediaStates.microphone.error ? 'bg-rose-500/20' :
+                  mediaStates.microphone.tested && mediaStates.microphone.success ? 'bg-emerald-500/20' :
+                  'bg-slate-600/20'
                 }`}>
                   {mediaStates.microphone.active && mediaStates.microphone.success ? (
-                    <CheckCircle className="w-6 h-6 text-cyan-400" />
+                    <CheckCircle className="w-6 h-6 text-emerald-400" />
                   ) : mediaStates.microphone.error ? (
                     <AlertCircle className="w-6 h-6 text-rose-400" />
+                  ) : mediaStates.microphone.tested && mediaStates.microphone.success ? (
+                    <CheckCircle className="w-6 h-6 text-emerald-400" />
                   ) : (
-                    <Mic className="w-6 h-6 text-slate-400" />
+                    <Video className="w-6 h-6 text-slate-400" />
                   )}
                 </div>
                 <div className="flex-1">
                   <p className="text-sm text-slate-300">Microphone Status</p>
                   <p className={`text-sm font-medium ${
-                    mediaStates.microphone.active && mediaStates.microphone.success ? 'text-cyan-400' : 
+                    (mediaStates.microphone.active && mediaStates.microphone.success) || 
+                    (mediaStates.microphone.tested && mediaStates.microphone.success) ? 'text-emerald-400' : 
                     mediaStates.microphone.error ? 'text-rose-400' : 'text-slate-400'
                   }`}>
-                    {mediaStates.microphone.active && mediaStates.microphone.success 
-                      ? `Active${mediaStates.microphone.deviceName ? `: ${mediaStates.microphone.deviceName}` : ''}` 
-                      : mediaStates.microphone.error ? 'Error' : 'Not Tested'}
+                    {mediaStates.microphone.tested && mediaStates.microphone.success ? 
+                      mediaStates.microphone.deviceName ? `Tested Successfully: ${mediaStates.microphone.deviceName}` : 'Tested Successfully' : 
+                      getStatusText('microphone')}
                   </p>
                   {mediaStates.microphone.error && (
                     <p className="text-xs text-rose-400 mt-1">{mediaStates.microphone.error}</p>
@@ -704,20 +730,22 @@ function VideoScreen() {
 
       {/* Start Session Button */}
       <div className="fixed bottom-8 right-8 z-20">
-        <button 
-          onClick={() => {
-            if (!mediaStates.camera.active || !mediaStates.microphone.active) {
-              showNotification('error', 'Please complete both camera and microphone tests first');
-            } else {
-              navigate('/video-session');
-            }
-          }}
-          className={`px-8 py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-2xl text-white font-semibold flex items-center gap-3 transition-all transform shadow-xl ${
-            (!mediaStates.camera.active || !mediaStates.microphone.active) ?
-            'opacity-50 cursor-not-allowed' :
-            'hover:from-emerald-600 hover:to-cyan-600 hover:scale-105'
-          }`}
-        >
+      <button 
+    onClick={() => {
+      if (!(mediaStates.camera.tested && mediaStates.camera.success) || 
+          !(mediaStates.microphone.tested && mediaStates.microphone.success)) {
+        showNotification('error', 'Please complete both camera and microphone tests first');
+      } else {
+        navigate('/video-session');
+      }
+    }}
+    className={`px-8 py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-2xl text-white font-semibold flex items-center gap-3 transition-all transform shadow-xl ${
+      (!(mediaStates.camera.tested && mediaStates.camera.success) || 
+       !(mediaStates.microphone.tested && mediaStates.microphone.success)) ?
+      'opacity-50 cursor-not-allowed' :
+      'hover:from-emerald-600 hover:to-cyan-600 hover:scale-105'
+    }`}
+  >
           <Play className="w-6 h-6" />
           <span>Start Session</span>
         </button>
