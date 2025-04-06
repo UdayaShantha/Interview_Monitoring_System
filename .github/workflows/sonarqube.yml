@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "development", "master", "developer_*" ]
   pull_request:
-    branches: [ "master","master" ]
+    branches: [ "master","development" ]
     types: [opened, synchronize, reopened]
   workflow_dispatch:
 
@@ -14,7 +14,7 @@ permissions:
 jobs:
   build:
     name: Build and analyze
-    runs-on: ubuntu-latest, windows
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
