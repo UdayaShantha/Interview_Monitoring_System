@@ -16,6 +16,9 @@ public interface InterviewFeignClient {
     @GetMapping("/api/v1/interviews/{id}")
     ResponseEntity<StandardResponse> getInterviewById(@PathVariable(value = "id") Long interviewId);
 
+    @GetMapping("/api/v1/interviews/user/{userId}")
+    ResponseEntity<StandardResponse> getInterviewByUserId(@PathVariable(value = "userId") Long userId);
+
     @DeleteMapping("/api/v1/interviews/delete/user/{userId}")
     ResponseEntity<StandardResponse> deleteInterviewByUserId(@PathVariable(value = "userId") Long userId);
 

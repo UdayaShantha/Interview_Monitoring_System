@@ -56,5 +56,7 @@ public interface InterviewService {
     long getCandidateIdByInterviewId(long interviewId);
 
     String deleteInterviewByUserId(Long userId);
+
+    GetInterviewDTO getInterviewByUserId(Long userId);
 }
 

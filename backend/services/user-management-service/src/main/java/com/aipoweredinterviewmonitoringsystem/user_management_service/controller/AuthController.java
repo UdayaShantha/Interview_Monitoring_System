@@ -1,6 +1,5 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.controller;
 
-import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.JwtResponse;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.LoginRequest;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.RefreshTokenRequest;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Client;
@@ -10,7 +9,6 @@ import com.aipoweredinterviewmonitoringsystem.user_management_service.repository
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.CustomUserDetails;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.CustomUserDetailsService;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.util.JwtTokenUtil;
-import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -25,100 +23,110 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("api/v1/auth")
+@RequestMapping("/api/v1/auth")
 public class AuthController {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
+    private final JwtTokenUtil jwtTokenUtil;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final CustomUserDetailsService customUserDetailsService;
+    private final ClientRepository clientRepository;
 
     @Autowired
-    private JwtTokenUtil jwtTokenUtil;
-
-    @Autowired
-    private RefreshTokenRepository refreshTokenRepository;
-
-    @Autowired
-    private CustomUserDetailsService customUserDetailsService; // Use your existing service
-
-    @Autowired
-    private ClientRepository clientRepository;
+    public AuthController(AuthenticationManager authenticationManager,
+                          JwtTokenUtil jwtTokenUtil,
+                          RefreshTokenRepository refreshTokenRepository,
+                          CustomUserDetailsService customUserDetailsService,
+                          ClientRepository clientRepository) {
+        this.authenticationManager = authenticationManager;
+        this.jwtTokenUtil = jwtTokenUtil;
+        this.refreshTokenRepository = refreshTokenRepository;
+        this.customUserDetailsService = customUserDetailsService;
+        this.clientRepository = clientRepository;
+    }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
-        );
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getUsername(),
+                            loginRequest.getPassword()
+                    )
+            );
 
-        Long userId = null;
-        if (authentication.getPrincipal() instanceof CustomUserDetails) {
-            userId = ((CustomUserDetails) authentication.getPrincipal()).getUserId();
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            Long userId = 0L;
+            if (authentication.getPrincipal() instanceof CustomUserDetails) {
+                userId = ((CustomUserDetails) authentication.getPrincipal()).getUserId();
+            }
+
+            String accessToken = jwtTokenUtil.generateAccessToken(authentication);
+            String refreshToken = jwtTokenUtil.generateRefreshToken(authentication.getName());
+
+            // Store refresh token
+            RefreshToken refreshTokenEntity = new RefreshToken();
+            refreshTokenEntity.setToken(refreshToken);
+            refreshTokenEntity.setUsername(authentication.getName());
+            refreshTokenEntity.setExpiryDate(new Date(System.currentTimeMillis() + 604800000)); // 7 days
+            refreshTokenRepository.save(refreshTokenEntity);
+
+            Map<String, String> response = new HashMap<>();
+            response.put("accessToken", accessToken);
+            response.put("refreshToken", refreshToken);
+            response.put("userId", userId.toString());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Invalid username or password");
+            return ResponseEntity.status(401).body(errorResponse);
         }
-
-        // Generate tokens
-        String accessToken = jwtTokenUtil.generateAccessToken(authentication);
-        String username = authentication.getName();
-        String refreshToken = jwtTokenUtil.generateRefreshToken(username);
-
-        // Store refresh token
-        RefreshToken refreshTokenEntity = new RefreshToken(
-                refreshToken, username, new Date(System.currentTimeMillis() + 604800000) // 7 days
-        );
-        refreshTokenRepository.save(refreshTokenEntity);
-
-        // Return both tokens
-        Map<String, String> tokens = new HashMap<>();
-        tokens.put("accessToken", accessToken);
-        tokens.put("refreshToken", refreshToken);
-        return ResponseEntity.ok(tokens);
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequest request) {
-        String oldRefreshToken = request.getRefreshToken();
-        RefreshToken storedToken = refreshTokenRepository.findByToken(oldRefreshToken);
-
-        // Validate the old refresh token
-        if (storedToken == null || storedToken.getExpiryDate().before(new Date())) {
-            return ResponseEntity.status(401).body("Invalid or expired refresh token");
-        }
-
         try {
-            // Validate token with JWT utility (assuming JWT-based tokens)
-            Claims claims = jwtTokenUtil.validateToken(oldRefreshToken);
-            if (jwtTokenUtil.isTokenExpired(claims)) {
-                return ResponseEntity.status(401).body("Refresh token has expired");
+            String oldRefreshToken = request.getRefreshToken();
+            RefreshToken storedToken = refreshTokenRepository.findByToken(oldRefreshToken);
+
+            if (storedToken == null) {
+                return ResponseEntity.status(401).body(Map.of("error", "Invalid refresh token"));
             }
 
-            // Get user details
-            String username = storedToken.getUsername();
-            UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
-            Authentication authentication = new UsernamePasswordAuthenticationToken(
-                    username, null, userDetails.getAuthorities()
-            );
+            if (storedToken.getExpiryDate().before(new Date())) {
+                refreshTokenRepository.delete(storedToken);
+                return ResponseEntity.status(401).body(Map.of("error", "Refresh token expired"));
+            }
 
             // Generate new tokens
-            String newAccessToken = jwtTokenUtil.generateAccessToken(authentication);
+            String username = storedToken.getUsername();
+            UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
+
+            String newAccessToken = jwtTokenUtil.generateAccessToken(
+                    new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities()
+                    )
+            );
             String newRefreshToken = jwtTokenUtil.generateRefreshToken(username);
 
-            // Delete the old refresh token
-            refreshTokenRepository.deleteByToken(oldRefreshToken);
+            // Delete old and store new refresh token
+            refreshTokenRepository.delete(storedToken);
 
-            // Store the new refresh token
-            RefreshToken newRefreshTokenEntity = new RefreshToken(
-                    newRefreshToken,
-                    username,
-                    new Date(System.currentTimeMillis() + 604800000) // 7 days expiry
-            );
+            RefreshToken newRefreshTokenEntity = new RefreshToken();
+            newRefreshTokenEntity.setToken(newRefreshToken);
+            newRefreshTokenEntity.setUsername(username);
+            newRefreshTokenEntity.setExpiryDate(new Date(System.currentTimeMillis() + 604800000));
             refreshTokenRepository.save(newRefreshTokenEntity);
 
-            // Prepare response
             Map<String, String> response = new HashMap<>();
             response.put("accessToken", newAccessToken);
             response.put("refreshToken", newRefreshToken);
+
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.status(401).body("Invalid refresh token");
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid refresh token"));
         }
     }
 
@@ -128,11 +136,10 @@ public class AuthController {
         RefreshToken storedToken = refreshTokenRepository.findByToken(refreshToken);
 
         if (storedToken != null) {
-            refreshTokenRepository.deleteByToken(refreshToken);
-            return ResponseEntity.ok("Logged out successfully");
-        } else {
-            return ResponseEntity.status(400).body("Invalid refresh token");
+            refreshTokenRepository.delete(storedToken);
+            return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
         }
+        return ResponseEntity.badRequest().body(Map.of("error", "Invalid refresh token"));
     }
 
     @PostMapping("/client-token")
@@ -142,12 +149,10 @@ public class AuthController {
 
         Client client = clientRepository.findByClientId(clientId);
         if (client == null || !client.getClientSecret().equals(clientSecret)) {
-            return ResponseEntity.status(401).body("Invalid client credentials");
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid client credentials"));
         }
 
         String accessToken = jwtTokenUtil.generateClientToken(client);
-        Map<String, String> response = new HashMap<>();
-        response.put("accessToken", accessToken);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(Map.of("accessToken", accessToken));
     }
 }

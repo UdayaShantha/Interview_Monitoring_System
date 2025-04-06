@@ -18,36 +18,42 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private final JwtTokenUtil jwtTokenUtil;
+
     @Autowired
-    private JwtTokenUtil jwtTokenUtil;
+    public SecurityConfig(JwtTokenUtil jwtTokenUtil) {
+        this.jwtTokenUtil = jwtTokenUtil;
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf-> csrf.disable()) // Enable CSRF protection
-                .cors(cors -> cors.disable()) // Disable CORS protection
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.disable())
                 .authorizeHttpRequests(authorize -> authorize
-                        // Allow unauthenticated access to auth endpoints
-                        .requestMatchers("/api/v1/auth/**","api/v1/auth/client-token").permitAll()
-                        .requestMatchers("/api/v1/users/hr/hr/save",
+                        .requestMatchers(
+                                "/api/v1/auth/**",
+                                "/api/v1/users/hr/hr/save",
                                 "/api/v1/users/technical/technical/save",
-                                "/api/v1/users/hr/candidate/save")
-                        .permitAll()
-                        // Allow Swagger endpoints
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        // Require authentication for user endpoints
-                        .requestMatchers("/api/v1/users/**").authenticated() // Or .hasRole("ADMIN") if needed
+                                "/api/v1/users/hr/candidate/save",
+                                "/api/v1/interviews/get/user/{userId}",
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
+                        .requestMatchers("/api/v1/users/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless for JWT
-                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenUtil), UsernamePasswordAuthenticationFilter.class); // Add JWT filter
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenUtil), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+            throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 

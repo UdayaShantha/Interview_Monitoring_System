@@ -5,12 +5,15 @@ import Footer from "../components/Footer";
 import bobImage from '../assets/bob.jpg';
 import './App.css';
 import { jwtDecode } from 'jwt-decode';
+import axiosInstance from '../axiosInstance';
 
 function UserProfilePage() {
   const navigate = useNavigate();
   const location = useLocation(); 
   const [timeLeft, setTimeLeft] = useState('00D 00H 00M 00S');
   const [username, setUsername] = useState('');
+  const [position, setPosition] = useState('Loading...');
+  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken');
@@ -18,12 +21,35 @@ function UserProfilePage() {
       try {
         const decodedToken = jwtDecode(accessToken);
         setUsername(decodedToken.sub || 'User');
+        // Extract user ID from token if available
+        if (decodedToken.userId) {
+          setUserId(decodedToken.userId);
+        }
       } catch (error) {
         console.error('Error decoding token:', error);
         setUsername('User');
       }
     }
   }, []);
+
+  // Fetch position from backend
+  useEffect(() => {
+    const fetchPosition = async () => {
+      if (!userId) return;
+      
+      try {
+        const response = await axiosInstance.get(`users/hr/candidate/position/${userId}`);
+        if (response.data && response.data.data) {
+          setPosition(response.data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching position:', error);
+        setPosition('Position not available');
+      }
+    };
+
+    fetchPosition();
+  }, [userId]);
 
   useEffect(() => {
     const interviewStartTime = new Date('2025-02-10T10:00:00').getTime();
@@ -79,7 +105,7 @@ function UserProfilePage() {
 
       <main className="profile-section p-6 md:p-12 grid grid-cols-1 md:grid-cols-2 gap-8 bg-green-50">
         <div className="profile-card bg-white p-6 rounded-lg shadow-xl transition-all duration-300 hover:shadow-2xl hover:scale-105">
-          <h2 className="profile-title text-2xl font-semibold text-green-700 mb-4">Software Engineer Interview</h2>
+          <h2 className="profile-title text-2xl font-semibold text-green-700 mb-4">{position} Interview</h2>
           <p className="profile-description text-gray-700 mb-6">
             Experience AI-driven hiring with real-time facial and emotion analysis.
           </p>
