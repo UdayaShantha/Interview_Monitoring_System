@@ -21,7 +21,7 @@ jobs:
     name: Analyze (${{ matrix.language }})
     
     # Use Ubuntu for most languages, macOS for Swift
-    runs-on: ubuntu-latest, windows
+    runs-on: ubuntu-latest
     
     # Define required permissions
     permissions:
@@ -91,7 +91,7 @@ jobs:
       - name: Build Project
         if: matrix.language == 'javascript'
         run: |
-          npm run build
+          npm run dev
 
       # Step 7: Perform CodeQL Analysis
       - name: Perform CodeQL Analysis
