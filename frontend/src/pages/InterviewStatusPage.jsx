@@ -30,6 +30,13 @@ function InterviewStatusPage({ status }) {
     CANCELLED: 'bg-red-100 text-red-800'
   };
 
+  // Result color mapping
+  const resultColors = {
+    PENDING: 'bg-yellow-100 text-yellow-800',
+    SELECTED: 'bg-green-100 text-green-800',
+    REJECTED: 'bg-red-100 text-red-800'
+  };
+
   useEffect(() => {
     const fetchInterviews = async () => {
       try {
@@ -58,17 +65,22 @@ function InterviewStatusPage({ status }) {
   };
 
   const confirmDelete = async () => {
-    if (!selectedInterview?.id) return;
+    if (!selectedInterview?.interviewId) {
+      console.log('No interview selected for deletion');
+      return;
+    }
     
     try {
-      await axios.delete(`/interviews/${selectedInterview.id}`);
+      console.log('Attempting to delete interview:', selectedInterview.interviewId);
+      const response = await axios.delete(`users/hr/candidate/${selectedInterview.candidateId}`);
+      console.log('Delete response:', response);
       setInterviews(prev => 
-        prev.filter(i => i.id !== selectedInterview.id)
+        prev.filter(i => i.interviewId !== selectedInterview.interviewId)
       );
       toast.success('Interview deleted successfully');
     } catch (error) {
+      console.error('Error deleting interview:', error.response || error);
       toast.error('Failed to delete interview');
-      console.error('Error deleting interview:', error);
     } finally {
       setShowDeleteModal(false);
       setSelectedInterview(null);
@@ -189,6 +201,9 @@ function InterviewStatusPage({ status }) {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration (minutes)</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    {status === 'COMPLETED' && (
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Result</th>
+                    )}
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
@@ -212,6 +227,15 @@ function InterviewStatusPage({ status }) {
                           {interview.status}
                         </span>
                       </td>
+                      {status === 'COMPLETED' && (
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {interview.result ? (
+                            <span className={`px-2 py-1 rounded-full text-xs ${resultColors[interview.result.toUpperCase()] || 'bg-gray-100 text-gray-800'}`}>
+                              {interview.result}
+                            </span>
+                          ) : 'N/A'}
+                        </td>
+                      )}
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button 
                           onClick={() => handleViewInterview(interview)}
@@ -315,14 +339,17 @@ function InterviewStatusPage({ status }) {
           <div className="bg-white rounded-xl shadow-lg w-full max-w-md mx-auto p-6">
             <div className="text-center">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                Confirm deletion of this interview?
+                Are you sure you want to delete this interview?
               </h3>
+              <p className="text-red-600 font-medium mb-4">
+                Warning: This will also delete the user account associated with this interview.
+              </p>
               <div className="flex justify-center space-x-4">
                 <button
                   onClick={confirmDelete}
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                 >
-                  Confirm
+                  Delete
                 </button>
                 <button
                   onClick={() => setShowDeleteModal(false)}

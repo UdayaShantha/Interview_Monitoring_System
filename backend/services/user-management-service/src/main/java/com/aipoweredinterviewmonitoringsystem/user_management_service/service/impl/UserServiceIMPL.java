@@ -117,6 +117,7 @@ public class UserServiceIMPL implements UserService {
                     candidateAndInterviewDTO.setDuration(Double.parseDouble(data.get("duration").toString()));
                     candidateAndInterviewDTO.setScheduleDate(LocalDate.parse(data.get("scheduleDate").toString()));
                     candidateAndInterviewDTO.setStartTime(LocalTime.parse(data.get("startTime").toString()));
+                    candidateAndInterviewDTO.setInterviewId(Long.parseLong(data.get("interviewId").toString()));
                 }
             }
             return candidateAndInterviewDTO;

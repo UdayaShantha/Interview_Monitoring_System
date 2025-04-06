@@ -8,15 +8,17 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 
-class CustomUserDetails implements UserDetails {
+public class CustomUserDetails implements UserDetails {
     private final String username;
     private final String password;
     private final List<GrantedAuthority> authorities;
+    private final Long userId;
 
     public CustomUserDetails(User user) {
         this.username = user.getUsername();
         this.password = user.getPassword();
         this.authorities = AuthorityUtils.createAuthorityList("ROLE_" + user.getUserType().name());
+        this.userId = user.getUserId();
     }
 
     @Override
@@ -32,6 +34,11 @@ class CustomUserDetails implements UserDetails {
     @Override
     public String getUsername() {
         return username;
+    }
+
+
+    public Long getUserId() {
+        return userId;
     }
 
     @Override

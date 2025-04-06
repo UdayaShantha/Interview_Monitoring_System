@@ -37,6 +37,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 if (!jwtTokenUtil.isTokenExpired(claims)) {
                     String username = claims.getSubject();
                     String userType = claims.get("userType", String.class);
+                    Long userId = claims.get("userId", Long.class);
 
                     if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                         // Map userType to a Spring Security authority
@@ -46,6 +47,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 username, null, authorities);
                         auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(auth);
+
                     }
                 }
             }  catch (Exception e) {

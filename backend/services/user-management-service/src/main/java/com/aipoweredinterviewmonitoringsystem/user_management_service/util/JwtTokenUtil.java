@@ -1,6 +1,7 @@
 package com.aipoweredinterviewmonitoringsystem.user_management_service.util;
 
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Client;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.service.CustomUserDetails;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -22,12 +23,18 @@ public class JwtTokenUtil {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String userType = userDetails.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
 
+        Long userId = null;
+        if (userDetails instanceof CustomUserDetails) {
+            userId = ((CustomUserDetails) userDetails).getUserId();
+        }
+
         byte[] keyBytes = SECRET_KEY.getBytes(StandardCharsets.UTF_8);
         var signingKey = Keys.hmacShaKeyFor(keyBytes);
 
         return Jwts.builder()
                 .subject(userDetails.getUsername()) // Replaces .setSubject()
                 .claim("userType", userType)
+                .claim("userId", userId)
                 .issuedAt(new Date()) // Replaces .setIssuedAt()
                 .expiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION)) // Replaces .setExpiration()
                 .signWith(signingKey, Jwts.SIG.HS512) // New signWith syntax
@@ -64,6 +71,11 @@ public class JwtTokenUtil {
     public String getUsernameFromToken(String token) {
         Claims claims = validateToken(token);
         return claims.getSubject();
+    }
+
+    public Long getUserIdFromToken(String token) {
+        Claims claims = validateToken(token);
+        return claims.get("userId", Long.class);
     }
 
     public String generateClientToken(Client client) {

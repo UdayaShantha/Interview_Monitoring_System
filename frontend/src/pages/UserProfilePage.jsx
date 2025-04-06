@@ -4,11 +4,26 @@ import { Facebook, Twitter, Linkedin, Youtube } from 'lucide-react';
 import Footer from "../components/Footer";
 import bobImage from '../assets/bob.jpg';
 import './App.css';
+import { jwtDecode } from 'jwt-decode';
 
 function UserProfilePage() {
   const navigate = useNavigate();
   const location = useLocation(); 
   const [timeLeft, setTimeLeft] = useState('00D 00H 00M 00S');
+  const [username, setUsername] = useState('');
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) {
+      try {
+        const decodedToken = jwtDecode(accessToken);
+        setUsername(decodedToken.sub || 'User');
+      } catch (error) {
+        console.error('Error decoding token:', error);
+        setUsername('User');
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const interviewStartTime = new Date('2025-02-10T10:00:00').getTime();
@@ -59,7 +74,7 @@ function UserProfilePage() {
       </header>
       
       <section className="welcome-banner text-center py-10 bg-green-200">
-        <h2 className="text-3xl font-bold text-white-700 animate__animated animate__fadeIn">Welcome, Bob!</h2>
+        <h2 className="text-3xl font-bold text-white-700 animate__animated animate__fadeIn">Welcome, {username}!</h2>
       </section>
 
       <main className="profile-section p-6 md:p-12 grid grid-cols-1 md:grid-cols-2 gap-8 bg-green-50">

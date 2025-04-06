@@ -7,6 +7,7 @@ import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.Cli
 import com.aipoweredinterviewmonitoringsystem.user_management_service.entity.RefreshToken;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.ClientRepository;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.repository.RefreshTokenRepository;
+import com.aipoweredinterviewmonitoringsystem.user_management_service.service.CustomUserDetails;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.CustomUserDetailsService;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.util.JwtTokenUtil;
 import io.jsonwebtoken.Claims;
@@ -48,6 +49,11 @@ public class AuthController {
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
         );
         SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        Long userId = null;
+        if (authentication.getPrincipal() instanceof CustomUserDetails) {
+            userId = ((CustomUserDetails) authentication.getPrincipal()).getUserId();
+        }
 
         // Generate tokens
         String accessToken = jwtTokenUtil.generateAccessToken(authentication);

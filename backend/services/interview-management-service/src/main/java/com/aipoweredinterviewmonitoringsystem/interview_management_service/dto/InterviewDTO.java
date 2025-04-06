@@ -13,6 +13,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Data
 public class InterviewDTO {
+    private Long interviewId;
     private Long candidateId;
     private LocalDate scheduleDate;
     private Status status;

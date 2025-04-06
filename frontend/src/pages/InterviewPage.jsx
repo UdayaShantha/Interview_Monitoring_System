@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
 import { 
@@ -23,7 +23,23 @@ ChartJS.register(
 function InterviewPage() {
   const [date, setDate] = useState(new Date());
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [successRate, setSuccessRate] = useState(0);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchSuccessRate();
+  }, []);
+
+  const fetchSuccessRate = async () => {
+    try {
+      const response = await axios.get('/interviews/success-rate');
+      if (response.data.code === 200) {
+        setSuccessRate(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching success rate:', error);
+    }
+  };
 
   // Chart Data Configurations
   const completionData = {
@@ -48,10 +64,10 @@ function InterviewPage() {
   };
 
   const statusDistributionData = {
-    labels: ['Completed', 'Upcoming', 'Postponed'],
+    labels: ['Completed', 'Upcoming', 'Postponed', 'Cancelled'],
     datasets: [{
-      data: [45, 35, 20],
-      backgroundColor: ['#2D6A4F', '#40916C', '#95D5B2'],
+      data: [45, 35, 20, 10],
+      backgroundColor: ['#2D6A4F', '#40916C', '#95D5B2', '#D97706'],
       hoverOffset: 4
     }]
   };
@@ -67,7 +83,7 @@ function InterviewPage() {
   const stats = [
     { title: 'Total Interviews', value: '248', icon: <FaUserTie />, color: 'bg-green-100' },
     { title: 'Avg. Duration', value: '45m', icon: <FaRegClock />, color: 'bg-blue-100' },
-    { title: 'Success Rate', value: '78%', icon: <FaChartLine />, color: 'bg-emerald-100' }
+    { title: 'Success Rate', value: `${successRate}%`, icon: <FaChartLine />, color: 'bg-emerald-100' }
   ];
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
@@ -100,7 +116,7 @@ function InterviewPage() {
           </button>
         </div>
 
-        {/* 🟩 DESKTOP NAVIGATION */}
+        {/* �� DESKTOP NAVIGATION */}
         <ul className="hidden md:flex space-x-6 text-lg font-medium">
           <li><Link to="/hr-dashboard" className="hover:text-yellow-300 transition duration-300">Home</Link></li>
           <li><Link to="/interviews/upcoming" className="hover:text-yellow-300 transition duration-300">Upcoming</Link></li>
