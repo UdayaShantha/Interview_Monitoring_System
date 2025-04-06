@@ -6,10 +6,10 @@ name: "CodeQL Security Analysis"
 on:
   # Run on pushes to the development branch
   push:
-    branches: [ "development" ]
+    branches: [ "development" , "master"]
   # Run on pull requests targeting the development branch
   pull_request:
-    branches: [ "development" ]
+    branches: [ "development" , "master"]
   # Run on a schedule (every Wednesday at 1:17 AM)
   schedule:
     - cron: '17 1 * * 3'
@@ -21,7 +21,7 @@ jobs:
     name: Analyze (${{ matrix.language }})
     
     # Use Ubuntu for most languages, macOS for Swift
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest, windows
     
     # Define required permissions
     permissions:
@@ -44,6 +44,8 @@ jobs:
           - 'python'        # For AI services
           - 'javascript'    # For frontend components
           - 'java'          # For backend services
+          - 'html'    
+          - 'css'
         
         # Include specific configurations for different scanning modes
         config:
@@ -66,7 +68,7 @@ jobs:
         if: matrix.language == 'javascript'
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '20'
 
       # Step 4: Initialize CodeQL
       - name: Initialize CodeQL

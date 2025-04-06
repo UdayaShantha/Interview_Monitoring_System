@@ -2,9 +2,9 @@ name: SonarQube analysis
 
 on:
   push:
-    branches: [ "development", "Production", "master", "developer-*" ]
+    branches: [ "development", "master", "developer_*" ]
   pull_request:
-    branches: [ "master","Production" ]
+    branches: [ "master","master" ]
     types: [opened, synchronize, reopened]
   workflow_dispatch:
 
@@ -14,7 +14,7 @@ permissions:
 jobs:
   build:
     name: Build and analyze
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest, windows
     steps:
       - uses: actions/checkout@v3
         with:
@@ -22,7 +22,7 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
-          java-version: 21
+          java-version: 17
           distribution: 'zulu' # Alternative distribution options are available
       - name: Cache SonarCloud packages
         uses: actions/cache@v3
@@ -30,15 +30,15 @@ jobs:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
-      - name: Cache Gradle packages
+      - name: Cache Maven packages
         uses: actions/cache@v3
         with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
-          restore-keys: ${{ runner.os }}-gradle
+          path: ~/.maven/caches
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/*.maven') }}
+          restore-keys: ${{ runner.os }}-maven
       - name: Build and analyze
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: ./gradlew build sonar --info
-        working-directory: ./webApp-backend
+        working-directory: ./backend
