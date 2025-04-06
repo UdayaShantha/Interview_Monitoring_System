@@ -9,22 +9,14 @@ function VideoPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [questions, setQuestions] = useState([]);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(() => {
-    const savedIndex = localStorage.getItem('currentQuestionIndex');
-    return savedIndex ? parseInt(savedIndex) : 0;
-  });
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const [sessionCompleted, setSessionCompleted] = useState(() => {
-    return localStorage.getItem('sessionCompleted') === 'true';
-  });
+  const [sessionCompleted, setSessionCompleted] = useState(false);
   const [timer, setTimer] = useState(() => {
     const savedTimer = localStorage.getItem('interviewTimer');
     return savedTimer ? parseInt(savedTimer) : 0;
   });
-  const [questionTimer, setQuestionTimer] = useState(() => {
-    const savedQuestionTimer = localStorage.getItem('questionTimer');
-    return savedQuestionTimer ? parseInt(savedQuestionTimer) : 0;
-  });
+  const [questionTimer, setQuestionTimer] = useState(0);
   const [loading, setLoading] = useState(true);
   const [positionType, setPositionType] = useState(null);
   const [sessionStartTime, setSessionStartTime] = useState(() => {
@@ -82,12 +74,7 @@ function VideoPage() {
         const response = await axios.get(`/questions/get/interview/questions?positionType=${positionType}`);
         if (response.data.data) {
           setQuestions(response.data.data);
-          // Only set question timer if it's not already set in localStorage
-          if (!localStorage.getItem('questionTimer')) {
-            const initialTimer = response.data.data[0]?.duration * 60 || 0;
-            setQuestionTimer(initialTimer);
-            localStorage.setItem('questionTimer', initialTimer.toString());
-          }
+          setQuestionTimer(response.data.data[0]?.duration * 60 || 0);
         }
       } catch (error) {
         toast.error('Failed to load questions');
@@ -136,13 +123,11 @@ function VideoPage() {
       localStorage.setItem('interviewTimer', elapsedSeconds.toString());
 
       setQuestionTimer((prev) => {
-        const newTimer = prev - 1;
-        localStorage.setItem('questionTimer', newTimer.toString());
-        if (newTimer <= 0) {
+        if (prev <= 0) {
           handleNextQuestion();
           return questions[currentQuestionIndex + 1]?.duration * 60 || 0;
         }
-        return newTimer;
+        return prev - 1;
       });
     }, 1000);
     return () => clearInterval(interval);
@@ -157,19 +142,12 @@ function VideoPage() {
   const handleNextQuestion = () => {
     if (currentQuestionIndex === questions.length - 1) {
       setSessionCompleted(true);
-      localStorage.setItem('sessionCompleted', 'true');
       // Clear timer data when session is completed
       localStorage.removeItem('interviewTimer');
       localStorage.removeItem('interviewStartTime');
-      localStorage.removeItem('questionTimer');
-      localStorage.removeItem('currentQuestionIndex');
     } else {
-      const nextIndex = currentQuestionIndex + 1;
-      setCurrentQuestionIndex(nextIndex);
-      localStorage.setItem('currentQuestionIndex', nextIndex.toString());
-      const nextQuestionTimer = questions[nextIndex]?.duration * 60 || 0;
-      setQuestionTimer(nextQuestionTimer);
-      localStorage.setItem('questionTimer', nextQuestionTimer.toString());
+      setCurrentQuestionIndex((prev) => prev + 1);
+      setQuestionTimer(questions[currentQuestionIndex + 1]?.duration * 60 || 0);
     }
   };
 
@@ -178,9 +156,6 @@ function VideoPage() {
       // Clear timer data when exiting
       localStorage.removeItem('interviewTimer');
       localStorage.removeItem('interviewStartTime');
-      localStorage.removeItem('questionTimer');
-      localStorage.removeItem('currentQuestionIndex');
-      localStorage.removeItem('sessionCompleted');
       navigate('/feedback');
     }
   };

@@ -3,7 +3,7 @@ name: Docker Image CI
 
 on:
   pull_request:
-    branches: [ "master","Production"]
+    branches: [ "master","development"]
     types: [opened, synchronize]
   workflow_dispatch:
 
@@ -35,26 +35,26 @@ jobs:
         distribution: 'temurin'
         
     - 
-      name: Setup Gradle
+      name: Setup Maven
       uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v3.1.0
 
     - 
-      name: Build with Gradle Wrapper
+      name: Build with Maven Wrapper
       run: ./gradlew build
-      working-directory: ./webApp-backend    
+      working-directory: ./backend   
       
     -
       name: push backend
       uses: docker/build-push-action@v6
       with:
-          file: ./webApp-backend/Dockerfile
+          file: ./backend
           push: true
-          context: ./webApp-backend  # Build context includes JAR now
-          tags: sanjayapradeep/bodimabackend:latest
+          context: ./backend  # Build context includes JAR now
+          tags: UdayaShantha/Interview_Monitoring_system
     -
       name: Build and push frontend
       uses: docker/build-push-action@v6
       with:
-          file: ./webapp-frontend/Dockerfile
+          file: ./frontend
           push: true
-          tags: sanjayapradeep/bodimafrontend:latest
+          tags: UdayaShantha/Interview_Monitoring_system

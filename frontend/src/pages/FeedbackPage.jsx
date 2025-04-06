@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, MessageSquare, ArrowLeft, Loader } from 'lucide-react';
 
@@ -7,6 +7,32 @@ function FeedbackPage() {
   const [feedback, setFeedback] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Navigation blocking - Prevent back button usage
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+
+    const handlePopState = (e) => {
+      // Push the current URL back onto the history stack to prevent back navigation
+      window.history.pushState(null, null, window.location.href);
+    };
+
+    // Push current URL to history stack to handle initial back button press
+    window.history.pushState(null, null, window.location.href);
+    
+    // Add event listeners
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      // Clean up event listeners when component unmounts
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -72,7 +98,7 @@ function FeedbackPage() {
                 type="submit"
                 disabled={isLoading}
                 className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-2.5 rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-md"
->
+              >
                 {isLoading ? (
                   <>
                     <Loader className="animate-spin text-white" size={20} />
