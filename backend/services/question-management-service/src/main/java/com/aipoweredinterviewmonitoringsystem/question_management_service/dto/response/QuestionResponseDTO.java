@@ -21,4 +21,5 @@ public class QuestionResponseDTO {
     private long questionId;
     private String content;
     private String keywords;
+    private double duration;
 }
