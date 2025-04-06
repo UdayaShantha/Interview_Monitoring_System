@@ -14,6 +14,8 @@ function VideoPage() {
   const [timer, setTimer] = useState(0);
   const [questionTimer, setQuestionTimer] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [tabSwitches, setTabSwitches] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Fetch questions from backend
   useEffect(() => {
@@ -35,39 +37,113 @@ function VideoPage() {
     fetchQuestions();
   }, [location.state]);
 
-  // Block navigation attempts
+  // Security restrictions and fullscreen handling
+  useEffect(() => {
+    // Completely block Escape key at the document level
+    const blockEscapeKey = (e) => {
+      if (e.key === 'Escape' && !sessionCompleted) {
+        e.preventDefault();
+        e.stopPropagation();
+        toast.error('Exiting fullscreen is not allowed during the interview');
+        return false;
+      }
+    };
+
+    // Add event listener to document to capture Escape key before it triggers fullscreen exit
+    document.addEventListener('keydown', blockEscapeKey, true);
+    
+    const enterFullscreen = async () => {
+      if (!document.fullscreenElement && !sessionCompleted) {
+        try {
+          await document.documentElement.requestFullscreen();
+          setIsFullscreen(true);
+        } catch (error) {
+          console.error('Fullscreen failed:', error);
+          toast.error('Fullscreen mode is required for this interview');
+        }
+      }
+    };
+
+    const handleKeyDown = (e) => {
+      // Block common shortcut keys
+      if ((e.ctrlKey || e.metaKey) && ['t', 'T', 'w', 'W', 'n', 'N'].includes(e.key)) {
+        e.preventDefault();
+        toast.error('Shortcut disabled during interview');
+      }
+      
+      // Block F11 and F12 keys
+      if (['F11', 'F12'].includes(e.key)) {
+        e.preventDefault();
+      }
+    };
+
+    const handleContextMenu = (e) => {
+      e.preventDefault();
+      toast.error('Right click disabled during interview');
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setTabSwitches(prev => prev + 1);
+        toast.error('Please return to interview tab!');
+      }
+    };
+
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+      
+      // If user exited fullscreen and session is not completed, force back to fullscreen
+      if (!document.fullscreenElement && !sessionCompleted) {
+        toast.error('Fullscreen mode is required until the session is completed');
+        // Try to re-enter fullscreen immediately
+        enterFullscreen();
+      }
+    };
+
+    // Initial setup
+    enterFullscreen();
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('keydown', blockEscapeKey, true);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, [sessionCompleted]);
+
+  // Navigation blocking
   useEffect(() => {
     if (sessionCompleted) return;
 
-    const handleBackButton = (e) => {
+    const handleBeforeUnload = (e) => {
       e.preventDefault();
+      e.returnValue = '';
+    };
+
+    const handlePopState = (e) => {
       window.history.pushState(null, null, window.location.href);
     };
 
     window.history.pushState(null, null, window.location.href);
-    window.addEventListener('popstate', handleBackButton);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
 
-    const unloadCallback = (e) => {
-      if (!sessionCompleted) {
-        e.preventDefault();
-        e.returnValue = '';
-        return '';
-      }
-    };
-
-    window.addEventListener('beforeunload', unloadCallback);
-    
     return () => {
-      window.removeEventListener('popstate', handleBackButton);
-      window.removeEventListener('beforeunload', unloadCallback);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
     };
   }, [sessionCompleted]);
 
-  // Timer effects
+  // Timer logic
   useEffect(() => {
     const interval = setInterval(() => {
-      setTimer((prev) => prev + 1);
-      setQuestionTimer((prev) => {
+      setTimer(prev => prev + 1);
+      setQuestionTimer(prev => {
         if (prev <= 0) {
           handleNextQuestion();
           return questions[currentQuestionIndex + 1]?.duration * 60 || 0;
@@ -87,17 +163,28 @@ function VideoPage() {
   const handleNextQuestion = () => {
     if (currentQuestionIndex === questions.length - 1) {
       setSessionCompleted(true);
+      toast.success('You have completed the interview session!');
     } else {
-      setCurrentQuestionIndex((prev) => prev + 1);
+      setCurrentQuestionIndex(prev => prev + 1);
       setQuestionTimer(questions[currentQuestionIndex + 1]?.duration * 60 || 0);
     }
   };
 
   const handleForceExit = () => {
     if (sessionCompleted) {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      }
       navigate('/feedback');
     }
   };
+
+  useEffect(() => {
+    // When session is completed, show a notification that they can now exit fullscreen
+    if (sessionCompleted) {
+      toast.info('You may now exit fullscreen mode and end the session.');
+    }
+  }, [sessionCompleted]);
 
   if (loading) {
     return (
@@ -117,6 +204,27 @@ function VideoPage() {
 
   return (
     <div className="h-screen w-full bg-emerald-50 flex flex-col">
+      {/* Fullscreen Warning */}
+      {!isFullscreen && !sessionCompleted && (
+        <div className="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <div className="flex flex-col items-center text-center space-y-4">
+              <AlertCircle className="w-12 h-12 text-red-600" />
+              <h2 className="text-2xl font-bold text-gray-900">Fullscreen Required</h2>
+              <p className="text-gray-600">
+                This interview session requires fullscreen mode. Please click the button below to continue.
+              </p>
+              <button
+                onClick={() => document.documentElement.requestFullscreen()}
+                className="px-6 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors"
+              >
+                Enter Fullscreen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Exit Confirmation Modal */}
       {showExitConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -129,6 +237,11 @@ function VideoPage() {
                   ? "You've completed all questions. You can now safely end the session."
                   : "Completing all questions is required before ending the session!"}
               </p>
+              {tabSwitches > 0 && (
+                <div className="text-red-600 text-sm">
+                  Warning: You switched tabs {tabSwitches} times
+                </div>
+              )}
               <div className="flex gap-4 w-full mt-4">
                 <button
                   onClick={() => setShowExitConfirm(false)}
@@ -205,10 +318,10 @@ function VideoPage() {
                     {formatTime(questionTimer)}
                   </span>
                 </div>
-                <p className="text-gray-800 font-medium">
-                  {questions[currentQuestionIndex]?.content}
-                </p>
               </div>
+              <p className="text-gray-800 font-medium mt-2">
+                {questions[currentQuestionIndex]?.content}
+              </p>
             </div>
             
             <button
