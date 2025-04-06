@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Footer from "../components/Footer";
-import { FaTrash, FaPlus, FaEye, FaBars, FaSearch, FaFilter, FaTimes, FaUser } from "react-icons/fa";
+import { FaTrash, FaPlus, FaEye, FaBars, FaSearch, FaFilter } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import CandidateForm from "./CandidateForm";
 import axios from "../axiosInstance";
@@ -17,10 +17,6 @@ const CandidatesPage = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [refreshTrigger, setRefreshTrigger] = useState(false);
-  const [showViewModal, setShowViewModal] = useState(false);
-  const [selectedCandidate, setSelectedCandidate] = useState(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [candidateToDelete, setCandidateToDelete] = useState(null);
 
   const toggleNavbar = () => setIsNavbarOpen(!isNavbarOpen);
 
@@ -51,42 +47,6 @@ const CandidatesPage = () => {
     setRefreshTrigger(prev => !prev);
     setShowForm(false);
   };
-
-  const handleViewCandidate = (candidate) => {
-    setSelectedCandidate(candidate);
-    setShowViewModal(true);
-  };
-
-  const handleDeleteClick = (candidate) => {
-    setCandidateToDelete(candidate);
-    setShowDeleteModal(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    try {
-      await axios.delete(`/users/hr/candidate/${candidateToDelete.userId}`);
-      setCandidates(prev => prev.filter(c => c.userId !== candidateToDelete.userId));
-      setShowDeleteModal(false);
-      setCandidateToDelete(null);
-    } catch (error) {
-      console.error("Error deleting candidate:", error);
-      alert("Failed to delete candidate");
-    }
-  };
-
-  const handleDeleteCancel = () => {
-    setShowDeleteModal(false);
-    setCandidateToDelete(null);
-  };
-
-  const DetailItem = ({ label, value }) => (
-    <div className="space-y-1">
-      <label className="text-sm font-medium text-gray-600">{label}</label>
-      <div className="p-3 bg-green-50 rounded-lg border border-green-100">
-        <p className="text-gray-800">{value || 'N/A'}</p>
-      </div>
-    </div>
-  );
 
   const filteredCandidates = candidates.filter(candidate =>
     candidate.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -224,16 +184,10 @@ const CandidatesPage = () => {
                           {candidate.phone}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button 
-                            onClick={() => handleViewCandidate(candidate)}
-                            className="text-green-600 hover:text-green-900 mr-3"
-                          >
+                          <button className="text-green-600 hover:text-green-900 mr-3">
                             <FaEye />
                           </button>
-                          <button 
-                            onClick={() => handleDeleteClick(candidate)}
-                            className="text-red-600 hover:text-red-900"
-                          >
+                          <button className="text-red-600 hover:text-red-900">
                             <FaTrash />
                           </button>
                         </td>
@@ -324,90 +278,6 @@ const CandidatesPage = () => {
               </div>
               <div className="p-4">
                 <CandidateForm onClose={() => setShowForm(false)} onSuccess={handleCandidateAdded} />
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-
-        {showViewModal && selectedCandidate && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          >
-            <motion.div
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 50, opacity: 0 }}
-              className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 overflow-hidden"
-            >
-              <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-                <h3 className="text-lg font-medium text-gray-900 flex items-center">
-                  <FaUser className="mr-2" /> Candidate Details
-                </h3>
-                <button 
-                  onClick={() => setShowViewModal(false)}
-                  className="text-gray-400 hover:text-gray-500 focus:outline-none"
-                >
-                  <FaTimes />
-                </button>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h4 className="text-lg font-semibold text-green-800">Personal Information</h4>
-                    <DetailItem label="Name" value={selectedCandidate.name} />
-                    <DetailItem label="Email" value={selectedCandidate.email} />
-                    <DetailItem label="Phone" value={selectedCandidate.phone} />
-                    <DetailItem label="NIC" value={selectedCandidate.nic} />
-                  </div>
-                  <div className="space-y-4">
-                    <h4 className="text-lg font-semibold text-green-800">Professional Information</h4>
-                    <DetailItem label="Position" value={selectedCandidate.positionType} />
-                    <DetailItem label="Address" value={selectedCandidate.address} />
-                    <DetailItem label="Birthday" value={selectedCandidate.birthday ? new Date(selectedCandidate.birthday).toLocaleDateString() : 'N/A'} />
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-
-        {showDeleteModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          >
-            <motion.div
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 50, opacity: 0 }}
-              className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 overflow-hidden"
-            >
-              <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900">Confirm Delete</h3>
-              </div>
-              <div className="p-6">
-                <p className="text-gray-600 mb-4">
-                  Are you sure you want to delete {candidateToDelete?.name}? This action cannot be undone.
-                </p>
-                <div className="flex justify-end space-x-4">
-                  <button
-                    onClick={handleDeleteCancel}
-                    className="px-4 py-2 text-gray-600 hover:text-gray-800"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleDeleteConfirm}
-                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                  >
-                    Delete
-                  </button>
-                </div>
               </div>
             </motion.div>
           </motion.div>
