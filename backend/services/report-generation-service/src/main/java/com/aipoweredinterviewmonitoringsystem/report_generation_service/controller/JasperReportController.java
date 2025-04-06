@@ -7,12 +7,11 @@ import com.aipoweredinterviewmonitoringsystem.report_generation_service.dto.Emot
 import com.aipoweredinterviewmonitoringsystem.report_generation_service.dto.ReportDownloadDTO;
 import com.aipoweredinterviewmonitoringsystem.report_generation_service.dto.request.CandidateDetailsDTO;
 import com.aipoweredinterviewmonitoringsystem.report_generation_service.dto.request.GetInterviewDetailsDTO;
-import com.aipoweredinterviewmonitoringsystem.report_generation_service.entity.enums.PositionType;
+import com.aipoweredinterviewmonitoringsystem.report_generation_service.dto.respond.AccuracyData;
+import com.aipoweredinterviewmonitoringsystem.report_generation_service.dto.respond.AccuracyRequest;
 import com.aipoweredinterviewmonitoringsystem.report_generation_service.service.JasperReportService;
 import com.aipoweredinterviewmonitoringsystem.report_generation_service.service.ReportService;
 import com.aipoweredinterviewmonitoringsystem.report_generation_service.util.StandardResponse;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.validation.constraints.Null;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ContentDisposition;
@@ -46,11 +45,14 @@ public class JasperReportController {
         this.userServiceClient = userServiceClient;
     }
 
-    @PostMapping(path = "/generate" , params = {"interviewId"})
+    @PostMapping(path = "/generate" )
     public ResponseEntity<StandardResponse> generateReport(
-            @RequestParam(value = "interviewId") Long interviewId
-    ) {
+            @RequestBody AccuracyRequest getAccuracyRequestDTO
+            ) {
         try {
+            Long interviewId = getAccuracyRequestDTO.getInterviewId();
+            
+
             // Get interview details from interview management service
             ResponseEntity<StandardResponse> interviewDetails = interviewServiceClient
                     .getInterviewDetailsByInterviewId(interviewId);
@@ -112,7 +114,7 @@ public class JasperReportController {
 
 
             //Add parameters to the report----------------------------------------------------
-            
+
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("Name", candidateDetailsDTO.getName());
             parameters.put("NIC", candidateDetailsDTO.getNic());
@@ -139,14 +141,17 @@ public class JasperReportController {
 
             //Answer Accuracy Data
             List<AnswerAccuracyDTO> answerAccuracyDataList = new ArrayList<>();
-            answerAccuracyDataList.add(new AnswerAccuracyDTO(1L, 70));
-            answerAccuracyDataList.add(new AnswerAccuracyDTO(2L, 80));
-            answerAccuracyDataList.add(new AnswerAccuracyDTO(3L, 90));
-            answerAccuracyDataList.add(new AnswerAccuracyDTO(4L, 75));
-            answerAccuracyDataList.add(new AnswerAccuracyDTO(5L, 55));
-            answerAccuracyDataList.add(new AnswerAccuracyDTO(6L, 85));
-            answerAccuracyDataList.add(new AnswerAccuracyDTO(7L, 35));
-            answerAccuracyDataList.add(new AnswerAccuracyDTO(8L, 65));
+            for(AccuracyData data : getAccuracyRequestDTO.getAccuracyData()){
+                answerAccuracyDataList.add(new AnswerAccuracyDTO(data.getQuestion_id(), (int) Math.round(data.getAccuracy())));
+            }
+//            answerAccuracyDataList.add(new AnswerAccuracyDTO(1L, 70));
+//            answerAccuracyDataList.add(new AnswerAccuracyDTO(2L, 80));
+//            answerAccuracyDataList.add(new AnswerAccuracyDTO(3L, 90));
+//            answerAccuracyDataList.add(new AnswerAccuracyDTO(4L, 75));
+//            answerAccuracyDataList.add(new AnswerAccuracyDTO(5L, 55));
+//            answerAccuracyDataList.add(new AnswerAccuracyDTO(6L, 85));
+//            answerAccuracyDataList.add(new AnswerAccuracyDTO(7L, 35));
+//            answerAccuracyDataList.add(new AnswerAccuracyDTO(8L, 65));
 
             // Convert to JRBeanCollectionDataSource
             JRBeanCollectionDataSource accuracyDataSource = new JRBeanCollectionDataSource(answerAccuracyDataList);
