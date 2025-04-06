@@ -39,15 +39,6 @@ public class InterviewController {
 
     private static final Logger logger = LoggerFactory.getLogger(InterviewController.class);
 
-    @GetMapping("/list")
-    public String listInterviews(HttpServletRequest request) {
-        logger.info("Authorization: {}", request.getHeader("Authorization"));
-        logger.info("X-User-Name: {}", request.getHeader("X-User-Name"));
-        logger.info("X-User-Type: {}", request.getHeader("X-User-Type"));
-        return "Interview list";
-    }
-
-
     @PostMapping
     public ResponseEntity<StandardResponse> saveInterview(@RequestBody InterviewSaveDTO interviewSaveDTO) {
         InterviewSaveDTO savedInterviewDTO = interviewService.saveInterview(interviewSaveDTO);
