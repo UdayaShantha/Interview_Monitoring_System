@@ -11,6 +11,8 @@ import lombok.NoArgsConstructor;
 public class AllCandidatesDTO {
     private Long userId;
     private String name;
+    private String email;
+    private String phone;
     private PositionType positionType;
 
 }

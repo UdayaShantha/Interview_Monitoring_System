@@ -15,10 +15,7 @@ import QuestionPage from './pages/QuestionPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AddQuestionPage from "./pages/AddQuestionPage";
 import EditQuestionPage from './pages/EditQuestionPage'; 
-import UpcomingInterviewsPage from './pages/UpcomingInterviewsPage';
-import CompletedInterviewsPage from './pages/CompletedInterviewsPage';
-import PostponedInterviewsPage from './pages/PostponedInterviewsPage';
-import CancelledInterviewsPage from './pages/CancelledInterviewsPage';
+import InterviewStatusPage from './pages/InterviewStatusPage'; // Consolidated component
 import VideoScreen from './pages/VideoScreen';
 import VideoPage from './pages/VideoPage';
 import FeedbackPage from './pages/FeedbackPage';
@@ -27,34 +24,38 @@ import './pages/App.css';
 function App() {
   return (
     <Router>
-        <ToastContainer position="bottom-right" />
+      <ToastContainer position="bottom-right" />
       <Routes>
-
         <Route path="/" element={<Navigate to="/login" />} />
-
         <Route path="/login" element={<LoginPage />} />
         <Route path="/instructions" element={<InstructionPage />} />
         <Route path="/about-us" element={<AboutUs />} />
 
+        {/* Protected Routes */}
         <Route path="/user-profile" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
         <Route path="/hr-dashboard" element={<ProtectedRoute><HRDashboard /></ProtectedRoute>} />
         <Route path="/technical-dashboard" element={<ProtectedRoute><TechnicalDashboard /></ProtectedRoute>} />
-        <Route path="/candidates" element={<ProtectedRoute><CandidatesPage /></ProtectedRoute>} /> 
+        <Route path="/candidates" element={<ProtectedRoute><CandidatesPage /></ProtectedRoute>} />
         <Route path="/interviews" element={<ProtectedRoute><InterviewPage /></ProtectedRoute>} />
         <Route path="/candidate-form" element={<ProtectedRoute><CandidateForm /></ProtectedRoute>} />
-        <Route path="/questions" element={<ProtectedRoute><QuestionPage /></ProtectedRoute>} /> 
-        <Route path="/add-question" element={<AddQuestionPage />} /> 
-        <Route path="/edit-question/:id" element={<EditQuestionPage />} /> 
-        <Route path="/interviews/upcoming" element={<UpcomingInterviewsPage />} />
-        <Route path="/interviews/completed" element={<CompletedInterviewsPage />} />
-        <Route path="/interviews/postponed" element={<PostponedInterviewsPage />} />
-        <Route path="/interviews/cancelled" element={<CancelledInterviewsPage />} />
-        <Route path="/video-screen" element={<VideoScreen />} />
-        <Route path="/video-session" element={<VideoPage />} />
-        <Route path="/feedback" element={<FeedbackPage />} />
+        <Route path="/questions" element={<ProtectedRoute><QuestionPage /></ProtectedRoute>} />
+        <Route path="/add-question" element={<ProtectedRoute><AddQuestionPage /></ProtectedRoute>} />
+        <Route path="/edit-question/:id" element={<ProtectedRoute><EditQuestionPage /></ProtectedRoute>} />
+        
+        {/* Consolidated Interview Status Routes */}
+        <Route path="/interviews/upcoming" element={<ProtectedRoute><InterviewStatusPage status="UPCOMING" /></ProtectedRoute>} />
+        <Route path="/interviews/completed" element={<ProtectedRoute><InterviewStatusPage status="COMPLETED" /></ProtectedRoute>} />
+        <Route path="/interviews/postponed" element={<ProtectedRoute><InterviewStatusPage status="POSTPONED" /></ProtectedRoute>} />
+        <Route path="/interviews/cancelled" element={<ProtectedRoute><InterviewStatusPage status="CANCELLED" /></ProtectedRoute>} />
+        
+        <Route path="/video-screen" element={<ProtectedRoute><VideoScreen /></ProtectedRoute>} />
+        <Route path="/video-session" element={<ProtectedRoute><VideoPage /></ProtectedRoute>} />
+        <Route path="/feedback" element={<ProtectedRoute><FeedbackPage /></ProtectedRoute>} />
+
+        {/* Fallback route */}
+        <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </Router>
-
   );
 }
 

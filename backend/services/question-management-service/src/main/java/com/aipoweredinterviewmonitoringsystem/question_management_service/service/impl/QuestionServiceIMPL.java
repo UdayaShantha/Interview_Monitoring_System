@@ -532,13 +532,13 @@ public class QuestionServiceIMPL implements QuestionService {
                 questionResponseDTOList.addAll(
                         commonQuestionRepository.getCommonQuestionByCount(count_c)
                                 .stream()
-                                .map(q -> new QuestionResponseDTO(q.getQuestionId(), q.getContent(), q.getKeywords()))
+                                .map(q -> new QuestionResponseDTO(q.getQuestionId(), q.getContent(), q.getKeywords(), q.getDuration()))
                                 .collect(Collectors.toList())
                 );
                 questionResponseDTOList.addAll(
                         questionSERepository.getQuestionsSEByPoistionAndCount(count_se)
                                 .stream()
-                                .map(q -> new QuestionResponseDTO(q.getQuestionId(), q.getContent(), q.getKeywords()))
+                                .map(q -> new QuestionResponseDTO(q.getQuestionId(), q.getContent(), q.getKeywords(), q.getDuration()))
                                 .collect(Collectors.toList())
                 );
             }
@@ -548,13 +548,13 @@ public class QuestionServiceIMPL implements QuestionService {
                 questionResponseDTOList.addAll(
                         commonQuestionRepository.getCommonQuestionByCount(count_c)
                                 .stream()
-                                .map(q -> new QuestionResponseDTO(q.getQuestionId(), q.getContent(), q.getKeywords()))
+                                .map(q -> new QuestionResponseDTO(q.getQuestionId(), q.getContent(), q.getKeywords(), q.getDuration()))
                                 .collect(Collectors.toList())
                 );
                 questionResponseDTOList.addAll(
                         questionQARepository.getQuestionsQAByPoistionAndCount(count_qa)
                                 .stream()
-                                .map(q -> new QuestionResponseDTO(q.getQuestionId(), q.getContent(), q.getKeywords()))
+                                .map(q -> new QuestionResponseDTO(q.getQuestionId(), q.getContent(), q.getKeywords(), q.getDuration()))
                                 .collect(Collectors.toList())
                 );
             }
@@ -564,13 +564,13 @@ public class QuestionServiceIMPL implements QuestionService {
                 questionResponseDTOList.addAll(
                         commonQuestionRepository.getCommonQuestionByCount(count_c)
                                 .stream()
-                                .map(q -> new QuestionResponseDTO(q.getQuestionId(), q.getContent(), q.getKeywords()))
+                                .map(q -> new QuestionResponseDTO(q.getQuestionId(), q.getContent(), q.getKeywords(), q.getDuration()))
                                 .collect(Collectors.toList())
                 );
                 questionResponseDTOList.addAll(
                         questionDARepository.getQuestionsDAByPositionAndCount(count_da)
                                 .stream()
-                                .map(q -> new QuestionResponseDTO(q.getQuestionId(), q.getContent(), q.getKeywords()))
+                                .map(q -> new QuestionResponseDTO(q.getQuestionId(), q.getContent(), q.getKeywords(), q.getDuration()))
                                 .collect(Collectors.toList())
                 );
             }

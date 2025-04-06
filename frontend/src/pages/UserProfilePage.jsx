@@ -33,6 +33,16 @@ function UserProfilePage() {
     return () => clearInterval(timer);
   }, []);
 
+  function handleLogout() {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    navigate('/login');
+  }
+
+  function handleStartInterview() {
+    navigate('/video-screen');
+  }
+
   return (
     <div className="user-container flex flex-col min-h-screen bg-white text-green-700 font-sans">
       {/* Header */}

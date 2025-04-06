@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
 import { 
   FaChartLine, 
   FaCalendarAlt, 
   FaUserTie, 
   FaRegClock,
-  
+  FaSignOutAlt
 } from "react-icons/fa";
 import { Line, Bar, Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, 
@@ -23,6 +23,7 @@ ChartJS.register(
 function InterviewPage() {
   const [date, setDate] = useState(new Date());
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   // Chart Data Configurations
   const completionData = {
@@ -71,6 +72,12 @@ function InterviewPage() {
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
+  const handleLogout = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    navigate('/login');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
       {/* 🟩 UPDATED NAVBAR */}
@@ -100,6 +107,15 @@ function InterviewPage() {
           <li><Link to="/interviews/completed" className="hover:text-yellow-300 transition duration-300">Completed</Link></li>
           <li><Link to="/interviews/postponed" className="hover:text-yellow-300 transition duration-300">Postponed</Link></li>
           <li><Link to="/interviews/cancelled" className="hover:text-yellow-300 transition duration-300">Cancelled</Link></li>
+          <li>
+            <button 
+              onClick={handleLogout}
+              className="flex items-center hover:text-yellow-300 transition duration-300"
+            >
+              <FaSignOutAlt className="mr-1" />
+              Logout
+            </button>
+          </li>
         </ul>
       </nav>
 
@@ -112,6 +128,15 @@ function InterviewPage() {
             <li><Link to="/interviews/completed" className="hover:text-yellow-300 transition duration-300">Completed</Link></li>
             <li><Link to="/interviews/postponed" className="hover:text-yellow-300 transition duration-300">Postponed</Link></li>
             <li><Link to="/interviews/cancelled" className="hover:text-yellow-300 transition duration-300">Cancelled</Link></li>
+            <li>
+              <button 
+                onClick={handleLogout}
+                className="flex items-center hover:text-yellow-300 transition duration-300 w-full text-left"
+              >
+                <FaSignOutAlt className="mr-1" />
+                Logout
+              </button>
+            </li>
           </ul>
         </div>
       )}

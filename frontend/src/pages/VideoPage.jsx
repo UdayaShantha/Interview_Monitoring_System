@@ -1,14 +1,39 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Mic, Video, Clock, ChevronRight, AlertCircle } from 'lucide-react';
+import axios from '../axiosInstance';
+import { toast } from 'react-toastify';
 
 function VideoPage() {
   const navigate = useNavigate();
-  const [currentQuestion, setCurrentQuestion] = useState(1);
+  const location = useLocation();
+  const [questions, setQuestions] = useState([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [sessionCompleted, setSessionCompleted] = useState(false);
-  const totalQuestions = 5;
   const [timer, setTimer] = useState(0);
+  const [questionTimer, setQuestionTimer] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch questions from backend
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const positionType = location.state?.positionType || 'SOFTWARE_ENGINEER';
+        const response = await axios.get(`/questions/get/interview/questions?positionType=${positionType}`);
+        if (response.data.data) {
+          setQuestions(response.data.data);
+          setQuestionTimer(response.data.data[0]?.duration * 60 || 0);
+        }
+      } catch (error) {
+        toast.error('Failed to load questions');
+        console.error('Error fetching questions:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchQuestions();
+  }, [location.state]);
 
   // Block navigation attempts
   useEffect(() => {
@@ -38,22 +63,20 @@ function VideoPage() {
     };
   }, [sessionCompleted]);
 
-  // Sample questions
-  const questions = [
-    "Tell me about yourself and your experience.",
-    "What's your greatest professional achievement?",
-    "How do you handle pressure or stressful situations?",
-    "Describe a time you disagreed with a team decision.",
-    "Where do you see yourself in 5 years?"
-  ];
-
-  // Timer effect
+  // Timer effects
   useEffect(() => {
     const interval = setInterval(() => {
       setTimer((prev) => prev + 1);
+      setQuestionTimer((prev) => {
+        if (prev <= 0) {
+          handleNextQuestion();
+          return questions[currentQuestionIndex + 1]?.duration * 60 || 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [currentQuestionIndex, questions]);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -62,19 +85,35 @@ function VideoPage() {
   };
 
   const handleNextQuestion = () => {
-    if (currentQuestion === totalQuestions) {
+    if (currentQuestionIndex === questions.length - 1) {
       setSessionCompleted(true);
     } else {
-      setCurrentQuestion((prev) => prev + 1);
+      setCurrentQuestionIndex((prev) => prev + 1);
+      setQuestionTimer(questions[currentQuestionIndex + 1]?.duration * 60 || 0);
     }
   };
 
   const handleForceExit = () => {
     if (sessionCompleted) {
-        navigate('/feedback'); 
-      }
+      navigate('/feedback');
     }
-  
+  };
+
+  if (loading) {
+    return (
+      <div className="h-screen w-full bg-emerald-50 flex items-center justify-center">
+        <div className="text-2xl text-emerald-600">Loading questions...</div>
+      </div>
+    );
+  }
+
+  if (questions.length === 0) {
+    return (
+      <div className="h-screen w-full bg-emerald-50 flex items-center justify-center">
+        <div className="text-2xl text-red-600">No questions available</div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen w-full bg-emerald-50 flex flex-col">
@@ -158,10 +197,16 @@ function VideoPage() {
             <div className="flex-1 text-center md:text-left">
               <div className="flex items-center gap-3 justify-center md:justify-start">
                 <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm font-medium">
-                  Question {currentQuestion}/{totalQuestions}
+                  Question {currentQuestionIndex + 1}/{questions.length}
                 </span>
+                <div className="flex items-center gap-2">
+                  <Clock size={16} className="text-emerald-600" />
+                  <span className="text-emerald-600 font-medium">
+                    {formatTime(questionTimer)}
+                  </span>
+                </div>
                 <p className="text-gray-800 font-medium">
-                  {questions[currentQuestion - 1]}
+                  {questions[currentQuestionIndex]?.content}
                 </p>
               </div>
             </div>
@@ -170,7 +215,7 @@ function VideoPage() {
               onClick={handleNextQuestion}
               className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-2.5 rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-md"
             >
-              {currentQuestion === totalQuestions ? "Complete Session" : "Next Question"}
+              {currentQuestionIndex === questions.length - 1 ? "Complete Session" : "Next Question"}
               <ChevronRight size={20} className="text-white" />
             </button>
           </div>
