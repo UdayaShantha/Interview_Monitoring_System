@@ -16,7 +16,7 @@ env:
 # Define the sequence of jobs to run
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest, windows
+    runs-on: ubuntu-latest
     
     steps:
     # Check out the repository code
@@ -67,7 +67,7 @@ jobs:
   # Security scanning job
   security-scan:
     needs: build-and-test
-    runs-on: ubuntu-latest, windows
+    runs-on: ubuntu-latest
     
     steps:
     - uses: actions/checkout@v2
