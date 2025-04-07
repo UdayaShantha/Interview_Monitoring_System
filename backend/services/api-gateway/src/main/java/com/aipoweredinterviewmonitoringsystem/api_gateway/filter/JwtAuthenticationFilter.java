@@ -25,7 +25,10 @@ public class JwtAuthenticationFilter implements GlobalFilter {
         logger.info("Processing request for path: {}", path);
 
         // Allow unauthenticated access to /auth endpoints
-        if (path.contains("/auth/")) {
+        if (path.startsWith("/api/v1/auth/") ||
+                path.startsWith("/api/v1/interviews/get/interview/questions") ||
+                path.startsWith("/v3/api-docs") ||
+                path.startsWith("/swagger-ui")) {
             logger.info("Allowing unauthenticated access to /auth endpoint");
             return chain.filter(exchange);
         }
