@@ -103,6 +103,10 @@ public class JwtAuthenticationFilter implements GlobalFilter {
             if (path.startsWith("/api/v1/users/hr/get/candidate/photos") && scopes.contains("read:interviews")) {
                 return true;
             }
+            if (path.startsWith("/api/v1/interviews/get/interview/questions") && scopes.contains("read:questions")) {
+                return true;
+            }
+
             // Add more scope-based rules as needed
             return false;
         } else {

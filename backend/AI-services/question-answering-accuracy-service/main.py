@@ -1,5 +1,7 @@
 import httpx
 import uvicorn
+import time
+import threading
 from fastapi import FastAPI, Depends, HTTPException
 from database import create_tables, get_db
 from sqlalchemy.orm import Session
@@ -7,6 +9,35 @@ from accuracy import final_accuracy
 from models import AnsweringAccuracy
 
 app = FastAPI(title="Question Answering Accuracy Service")
+
+# Token configuration for JWT authentication
+CLIENT_ID = "answer-accuracy-service"
+CLIENT_SECRET = "super-secret-key"
+TOKEN_URL = "http://localhost:8081/api/v1/auth/client-token"
+
+# Token cache
+token = None
+expiration_time = 0
+
+async def get_token():
+    """Fetch and cache a JWT token from the User Management Service."""
+    global token, expiration_time
+    if time.time() < expiration_time:
+        return token
+
+    async with httpx.AsyncClient() as client:
+        payload = {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET}
+        response = await client.post(TOKEN_URL, json=payload)
+        response.raise_for_status()
+        token_data = response.json()
+        token = token_data["accessToken"]
+        expiration_time = time.time() + 86400  # 24 hours
+        return token
+
+report_process = None
+stop_event = threading.Event()
+active_processes = {}
+
 
 @app.on_event("startup")
 async def startup_event():
