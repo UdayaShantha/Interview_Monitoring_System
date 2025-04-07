@@ -165,7 +165,7 @@ public class UserController {
         }
     }
 
-    @GetMapping(path={"/hr/candidate/position"},params={"user_id"})
+    @GetMapping(path={"/candidate/position"},params={"user_id"})
     public ResponseEntity<StandardResponse> getCandidatePosition(@RequestParam(value = "user_id") long user_id){
         PositionResponse positionResponse =userService.getCandidatePosition(user_id);
         try {

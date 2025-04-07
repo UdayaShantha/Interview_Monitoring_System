@@ -170,6 +170,15 @@ public class InterviewController {
         );
     }
 
+    @GetMapping("/success-rate/posistion/{positionType}")
+    public ResponseEntity<StandardResponse> getSuccessRateByPositionType(@PathVariable String positionType) {
+        double successRate = interviewService.calculateSuccessRateByPositionType(positionType);
+        return new ResponseEntity<>(
+                new StandardResponse(200, "Success", successRate),
+                HttpStatus.OK
+        );
+    }
+
 
     @GetMapping("/projection/today")
     public ResponseEntity<StandardResponse> getTodayInterviewProjection() {
