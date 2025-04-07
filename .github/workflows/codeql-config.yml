@@ -1,0 +1,4 @@
+name: "CodeQL Config"
+queries:
+  - security-extended
+  - security-and-quality

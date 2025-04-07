@@ -1,0 +1,18 @@
+name: React App Build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: Build React app
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: npm install
+        working-directory:  ./frontend
+
+      - name: Build
+        run: npm run dev
+        working-directory:  ./frontend

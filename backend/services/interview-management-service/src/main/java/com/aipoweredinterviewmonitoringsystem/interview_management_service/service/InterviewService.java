@@ -21,7 +21,7 @@ public interface InterviewService {
 
     GetInterviewDTO getInterviewById(Long interviewId);
 
-    String deleteInterview(Long interviewId);
+//    String deleteInterview(Long interviewId);
 
     InterviewUpdateDTO updateInterview(Long interviewId, InterviewUpdateDTO interviewUpdateDTO);
 
@@ -56,6 +56,14 @@ public interface InterviewService {
 
     long getCandidateIdByInterviewId(long interviewId);
 
+
     GetInterviewDetailsDTO getInterviewDetailsByInterviewId(long interviewId);
+
+    String deleteInterviewByUserId(Long userId);
+
+    GetInterviewDTO getInterviewByUserId(Long userId);
+
+    double calculateSuccessRateByPositionType(String positionType);
+
 }
 

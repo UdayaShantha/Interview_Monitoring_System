@@ -10,14 +10,16 @@ import org.springframework.web.bind.annotation.*;
 
 @FeignClient(name = "INTERVIEW-MANAGEMENT-SERVICE",url = "http://localhost:8082")
 public interface InterviewFeignClient {
-    @PostMapping("api/v1/interviews")
+    @PostMapping("/api/v1/interviews")
     ResponseEntity<StandardResponse> saveInterview(@RequestBody InterviewSaveDTO interviewSaveDTO);
 
-    @GetMapping("api/v1/interviews/{id}")
+    @GetMapping("/api/v1/interviews/{id}")
     ResponseEntity<StandardResponse> getInterviewById(@PathVariable(value = "id") Long interviewId);
 
-    @DeleteMapping("api/v1/interviews/{id}")
-    ResponseEntity<StandardResponse> deleteInterview(@PathVariable(value = "id") Long InterviewId);
+    @GetMapping("/api/v1/interviews/user/{userId}")
+    ResponseEntity<StandardResponse> getInterviewByUserId(@PathVariable(value = "userId") Long userId);
 
+    @DeleteMapping("/api/v1/interviews/delete/user/{userId}")
+    ResponseEntity<StandardResponse> deleteInterviewByUserId(@PathVariable(value = "userId") Long userId);
 
 }

@@ -11,5 +11,5 @@ import java.util.List;
 @Getter
 public class QuestionPaiginatedDTO {
     List<UpdateResponseDTO> updateResponseDTOS;
-//    private long totalQuestions;
+    private long totalQuestions;
 }

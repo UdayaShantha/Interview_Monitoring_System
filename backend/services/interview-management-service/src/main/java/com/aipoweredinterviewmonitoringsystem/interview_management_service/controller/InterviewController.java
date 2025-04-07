@@ -1,7 +1,5 @@
 package com.aipoweredinterviewmonitoringsystem.interview_management_service.controller;
 
-
-
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.advisor.QuestionNotFoundException;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.GetInterviewDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.InterviewDTO;
@@ -18,6 +16,9 @@ import com.aipoweredinterviewmonitoringsystem.interview_management_service.entit
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.service.InterviewService;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.util.StandardResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -30,12 +31,14 @@ import java.time.LocalTime;
 import java.util.List;
 
 @RestController
-@CrossOrigin
 @RequestMapping("/api/v1/interviews")
 public class InterviewController {
 
     @Autowired
     private InterviewService interviewService;
+
+
+    private static final Logger logger = LoggerFactory.getLogger(InterviewController.class);
 
     @PostMapping
     public ResponseEntity<StandardResponse> saveInterview(@RequestBody InterviewSaveDTO interviewSaveDTO) {
@@ -77,9 +80,26 @@ public class InterviewController {
         );
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<StandardResponse> deleteInterview(@PathVariable(value = "id") Long interviewId) {
-        String message = interviewService.deleteInterview(interviewId);
+//    @DeleteMapping("/delete/{id}")
+//    public ResponseEntity<StandardResponse> deleteInterview(@PathVariable(value = "id") Long interviewId) {
+//        String message = interviewService.deleteInterview(interviewId);
+//        return new ResponseEntity<StandardResponse>(
+//                new StandardResponse(200,"Success",message),
+//                HttpStatus.OK
+//        );
+//    }
+    @GetMapping("/user/{userId}")
+    ResponseEntity<StandardResponse> getInterviewByUserId(@PathVariable(value = "userId") Long userId){
+        GetInterviewDTO getInterviewDTO = interviewService.getInterviewByUserId(userId);
+        return new ResponseEntity<StandardResponse>(
+                new StandardResponse(200,"Success",getInterviewDTO),
+                HttpStatus.OK
+        );
+    }
+
+    @DeleteMapping("/delete/user/{userId}")
+    public ResponseEntity<StandardResponse> deleteInterviewByUserId(@PathVariable(value = "userId") Long userId) {
+        String message = interviewService.deleteInterviewByUserId(userId);
         return new ResponseEntity<StandardResponse>(
                 new StandardResponse(200,"Success",message),
                 HttpStatus.OK
@@ -120,7 +140,6 @@ public class InterviewController {
 
     }
 
-
     @GetMapping(value={"/get/interview/questions"},params = {"interviewId"})
     public ResponseEntity<StandardResponse> getInterviewQuestions(@RequestParam(value = "interviewId") long interviewId) {
         try {
@@ -141,12 +160,20 @@ public class InterviewController {
                 new StandardResponse(200, "Success", percentage),
                 HttpStatus.OK
         );
-
-
     }
+
     @GetMapping("/success-rate")
     public ResponseEntity<StandardResponse> getSuccessRate() {
         double successRate = interviewService.calculateSuccessRate();
+        return new ResponseEntity<>(
+                new StandardResponse(200, "Success", successRate),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/success-rate/posistion/{positionType}")
+    public ResponseEntity<StandardResponse> getSuccessRateByPositionType(@PathVariable String positionType) {
+        double successRate = interviewService.calculateSuccessRateByPositionType(positionType);
         return new ResponseEntity<>(
                 new StandardResponse(200, "Success", successRate),
                 HttpStatus.OK

@@ -1,5 +1,6 @@
 package com.aipoweredinterviewmonitoringsystem.interview_management_service.dto;
 
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Result;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,8 +13,12 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Data
 public class InterviewDTO {
+    private Long interviewId;
+    private Long candidateId;
     private LocalDate scheduleDate;
     private Status status;
     private String startTime;
     private Timestamp createdAt;
+    private double duration;
+    private Result result;
 }

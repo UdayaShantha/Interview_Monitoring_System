@@ -1,43 +1,132 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
-import { FaEye, FaTrashAlt } from "react-icons/fa";
-import { Line } from "react-chartjs-2";
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+import { 
+  FaChartLine, 
+  FaCalendarAlt, 
+  FaUserTie, 
+  FaRegClock,
+  FaSignOutAlt
+} from "react-icons/fa";
+import { Line, Bar, Doughnut } from "react-chartjs-2";
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, 
+         LineElement, Title, Tooltip, Legend, ArcElement, BarElement } from 'chart.js';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
+import axios from "../axiosInstance";
+import { jwtDecode } from 'jwt-decode';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+ChartJS.register(
+  CategoryScale, LinearScale, PointElement, 
+  LineElement, Title, Tooltip, Legend, ArcElement, BarElement
+);
 
 function InterviewPage() {
   const [date, setDate] = useState(new Date());
-  const [isMenuOpen, setIsMenuOpen] = useState(false); 
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [successRate, setSuccessRate] = useState(0);
+  const navigate = useNavigate();
 
-  const data = {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    datasets: [
-      {
-        label: 'Completed Interviews',
-        data: [12, 19, 3, 5, 2, 3, 7],
-        borderColor: '#2D6A4F',
-        backgroundColor: 'rgba(45, 106, 79, 0.2)',
-        tension: 0.3,
-      },
-    ],
+  const handleHomeClick = (e) => {
+    e.preventDefault();
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) {
+      try {
+        const decodedToken = jwtDecode(accessToken);
+        const userType = decodedToken.userType;
+        
+        if (userType === 'HR') {
+          navigate('/hr-dashboard');
+        } else if (userType === 'TECHNICAL') {
+          navigate('/technical-dashboard');
+        }
+      } catch (error) {
+        console.error('Error decoding token:', error);
+        navigate('/login');
+      }
+    } else {
+      navigate('/login');
+    }
   };
 
-  
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
+  useEffect(() => {
+    fetchSuccessRate();
+  }, []);
+
+  const fetchSuccessRate = async () => {
+    try {
+      const response = await axios.get('/interviews/success-rate');
+      if (response.data.code === 200) {
+        setSuccessRate(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching success rate:', error);
+    }
+  };
+
+  // Chart Data Configurations
+  const completionData = {
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    datasets: [{
+      label: 'Completed Interviews',
+      data: [12, 19, 8, 15, 12, 17],
+      borderColor: '#2D6A4F',
+      backgroundColor: 'rgba(45, 106, 79, 0.2)',
+      tension: 0.4,
+    }]
+  };
+
+  const successRateData = {
+    labels: ['Software Engineer', 'QA Engineer', 'Data Analyst'],
+    datasets: [{
+      label: 'Success Rate %',
+      data: [78, 82, 65],
+      backgroundColor: ['#2D6A4F', '#40916C', '#52B788'],
+      borderWidth: 0,
+    }]
+  };
+
+  const statusDistributionData = {
+    labels: ['Completed', 'Upcoming', 'Postponed', 'Cancelled'],
+    datasets: [{
+      data: [45, 35, 20, 10],
+      backgroundColor: ['#2D6A4F', '#40916C', '#95D5B2', '#D97706'],
+      hoverOffset: 4
+    }]
+  };
+
+  // Mock recent interviews data
+  const recentInterviews = [
+    { id: 1, position: 'Senior Developer', date: '2024-03-15', status: 'Completed' },
+    { id: 2, position: 'Product Manager', date: '2024-03-18', status: 'Upcoming' },
+    { id: 3, position: 'UX Designer', date: '2024-03-20', status: 'Postponed' }
+  ];
+
+  // Statistics Cards Data
+  const stats = [
+    { title: 'Total Interviews', value: '248', icon: <FaUserTie />, color: 'bg-green-100' },
+    { title: 'Avg. Duration', value: '45m', icon: <FaRegClock />, color: 'bg-blue-100' },
+    { title: 'Success Rate', value: `${successRate}%`, icon: <FaChartLine />, color: 'bg-emerald-100' }
+  ];
+
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
+  const handleLogout = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    navigate('/login');
   };
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
-      {/* Navbar */}
-      <nav className="bg-gradient-to-r from-green-900 to-green-600 text-white p-4 md:p-6 flex justify-between items-center shadow-md">
-        <h1 className="text-xl md:text-3xl font-extrabold tracking-wide">Interview Management</h1>
+      {/* 🟩 UPDATED NAVBAR */}
+      <nav className="bg-gradient-to-r from-green-900 to-green-600 text-white p-4 md:p-6 flex justify-between items-center shadow-lg">
+        <h1 className="text-xl md:text-3xl font-bold tracking-tight">
+          <span className="bg-white text-green-800 px-3 py-1 rounded-md mr-2">AI</span>
+          Interview Management
+        </h1>
         
-        {/* Mobile Navbar Toggle Button */}
+        {/* 🟩 MOBILE MENU TOGGLE */}
         <div className="md:hidden">
           <button 
             className="text-white" 
@@ -50,95 +139,129 @@ function InterviewPage() {
           </button>
         </div>
 
-        {/* Desktop Navbar Links */}
+        {/* 🟩 DESKTOP NAVIGATION */}
         <ul className="hidden md:flex space-x-6 text-lg font-medium">
-          <li><Link to="/hr-dashboard" className="hover:text-yellow-300 transition duration-300">Home</Link></li>
+          <li><Link to="#" onClick={handleHomeClick} className="hover:text-yellow-300 transition duration-300">Home</Link></li>
           <li><Link to="/interviews/upcoming" className="hover:text-yellow-300 transition duration-300">Upcoming</Link></li>
           <li><Link to="/interviews/completed" className="hover:text-yellow-300 transition duration-300">Completed</Link></li>
           <li><Link to="/interviews/postponed" className="hover:text-yellow-300 transition duration-300">Postponed</Link></li>
+          <li><Link to="/interviews/cancelled" className="hover:text-yellow-300 transition duration-300">Cancelled</Link></li>
+          <li>
+            <button 
+              onClick={handleLogout}
+              className="flex items-center hover:text-yellow-300 transition duration-300"
+            >
+              <FaSignOutAlt className="mr-1" />
+              Logout
+            </button>
+          </li>
         </ul>
       </nav>
 
-      {/* Mobile Navbar Menu */}
+      {/* 🟩 MOBILE NAVIGATION */}
       {isMenuOpen && (
         <div className="md:hidden bg-gradient-to-r from-green-900 to-green-600 text-white p-4 absolute top-16 left-0 w-full shadow-lg">
           <ul className="space-y-4 text-lg font-medium">
-            <li><Link to="/hr-dashboard" className="hover:text-yellow-300 transition duration-300">Home</Link></li>
+            <li><Link to="#" onClick={handleHomeClick} className="hover:text-yellow-300 transition duration-300">Home</Link></li>
             <li><Link to="/interviews/upcoming" className="hover:text-yellow-300 transition duration-300">Upcoming</Link></li>
             <li><Link to="/interviews/completed" className="hover:text-yellow-300 transition duration-300">Completed</Link></li>
             <li><Link to="/interviews/postponed" className="hover:text-yellow-300 transition duration-300">Postponed</Link></li>
+            <li><Link to="/interviews/cancelled" className="hover:text-yellow-300 transition duration-300">Cancelled</Link></li>
+            <li>
+              <button 
+                onClick={handleLogout}
+                className="flex items-center hover:text-yellow-300 transition duration-300 w-full text-left"
+              >
+                <FaSignOutAlt className="mr-1" />
+                Logout
+              </button>
+            </li>
           </ul>
         </div>
       )}
 
-      {/* Main Content Container */}
-      <div className="p-4 md:p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-
-        {/* Calendar Section */}
-        <div className="bg-white p-6 shadow-lg rounded-lg transition-all duration-300 hover:shadow-2xl">
-          <h2 className="text-lg md:text-2xl font-semibold text-green-800 mb-4">Interview Schedule</h2>
-          <Calendar
-            onChange={setDate}
-            value={date}
-            className="border-2 border-gray-300 rounded-lg p-4"
-          />
-          <p className="mt-4 text-gray-600 text-center italic">Select a date to view scheduled interviews</p>
+      {/* MAIN CONTENT */}
+      <div className="p-4 md:p-8 space-y-8">
+        {/* Statistics Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {stats.map((stat, index) => (
+            <div key={index} className={`${stat.color} p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-600 text-sm">{stat.title}</p>
+                  <p className="text-3xl font-bold text-gray-800 mt-2">{stat.value}</p>
+                </div>
+                <span className="text-3xl text-green-800">{stat.icon}</span>
+              </div>
+            </div>
+          ))}
         </div>
 
-        {/* Graph 1: Completed Interviews */}
-        <div className="bg-white p-6 shadow-lg rounded-lg transition-all duration-300 hover:shadow-2xl">
-          <h3 className="text-lg md:text-xl font-semibold text-green-800 mb-4">Completed Interviews</h3>
-          <Line data={data} />
+        {/* Charts & Calendar Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Calendar Section */}
+          <div className="bg-white p-6 rounded-xl shadow-sm">
+            <div className="flex items-center mb-4">
+              <FaCalendarAlt className="text-green-800 mr-2 text-xl" />
+              <h2 className="text-xl font-semibold">Interview Calendar</h2>
+            </div>
+            <Calendar
+              onChange={setDate}
+              value={date}
+              className="border-2 border-gray-100 rounded-lg"
+            />
+          </div>
+
+          {/* Line Chart */}
+          <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm">
+            <h3 className="text-xl font-semibold mb-4 flex items-center">
+              <FaChartLine className="mr-2 text-green-800" />
+              Monthly Completion Trends
+            </h3>
+            <Line data={completionData} />
+          </div>
         </div>
 
-        {/* Graph 2: Success Rate */}
-        <div className="bg-white p-6 shadow-lg rounded-lg transition-all duration-300 hover:shadow-2xl">
-          <h3 className="text-lg md:text-xl font-semibold text-green-800 mb-4">Interview Success Rate</h3>
-          <Line data={data} />
+        {/* Bottom Charts Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Bar Chart */}
+          <div className="bg-white p-6 rounded-xl shadow-sm">
+            <h3 className="text-xl font-semibold mb-4">Success Rate by Department</h3>
+            <Bar data={successRateData} />
+          </div>
+
+          {/* Doughnut Chart */}
+          <div className="bg-white p-6 rounded-xl shadow-sm">
+            <h3 className="text-xl font-semibold mb-4">Status Distribution</h3>
+            <div className="max-w-xs mx-auto">
+              <Doughnut data={statusDistributionData} />
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Interviews Section */}
+        <div className="bg-white p-6 rounded-xl shadow-sm">
+          <h3 className="text-xl font-semibold mb-4">Recent Interviews</h3>
+          <div className="space-y-4">
+            {recentInterviews.map(interview => (
+              <div key={interview.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                <div>
+                  <h4 className="font-semibold">{interview.position}</h4>
+                  <p className="text-sm text-gray-600">{new Date(interview.date).toDateString()}</p>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-sm ${
+                  interview.status === 'Completed' ? 'bg-green-100 text-green-800' :
+                  interview.status === 'Upcoming' ? 'bg-blue-100 text-blue-800' :
+                  'bg-red-100 text-red-800'
+                }`}>
+                  {interview.status}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Upcoming Interviews Table */}
-      <div className="mt-8 p-4 md:p-8 bg-white shadow-lg rounded-lg mx-4">
-        <h3 className="text-xl md:text-2xl font-semibold text-green-800 mb-4">Upcoming Interviews</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse rounded-lg overflow-hidden">
-            <thead className="bg-green-800 text-white">
-              <tr>
-                <th className="px-4 py-3 text-left">Position</th>
-                <th className="px-4 py-3 text-left">Date</th>
-                <th className="px-4 py-3 text-left">Start Time</th>
-                <th className="px-4 py-3 text-left">End Time</th>
-                <th className="px-4 py-3 text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="text-gray-700">
-              <tr className="border-t hover:bg-gray-100 transition">
-                <td className="px-4 py-3">Software Engineer</td>
-                <td className="px-4 py-3">March 15, 2025</td>
-                <td className="px-4 py-3">10:00 AM</td>
-                <td className="px-4 py-3">11:00 AM</td>
-                <td className="px-4 py-3 flex space-x-3">
-                  <FaEye className="cursor-pointer text-green-500 hover:text-green-700 transition" />
-                  <FaTrashAlt className="cursor-pointer text-red-500 hover:text-red-700 transition" />
-                </td>
-              </tr>
-              <tr className="border-t hover:bg-gray-100 transition">
-                <td className="px-4 py-3">Product Manager</td>
-                <td className="px-4 py-3">March 18, 2025</td>
-                <td className="px-4 py-3">2:00 PM</td>
-                <td className="px-4 py-3">3:00 PM</td>
-                <td className="px-4 py-3 flex space-x-3">
-                  <FaEye className="cursor-pointer text-green-500 hover:text-green-700 transition" />
-                  <FaTrashAlt className="cursor-pointer text-red-500 hover:text-red-700 transition" />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Footer */}
       <Footer />
     </div>
   );

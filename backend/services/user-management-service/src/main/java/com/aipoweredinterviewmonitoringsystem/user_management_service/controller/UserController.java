@@ -10,41 +10,67 @@ import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.respon
 import com.aipoweredinterviewmonitoringsystem.user_management_service.dto.*;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.service.UserService;
 import com.aipoweredinterviewmonitoringsystem.user_management_service.util.StandardResponse;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
-@CrossOrigin
 @RequestMapping("api/v1/users")
 public class UserController {
 
     @Autowired
     private UserService userService;
 
-    @PostMapping(value = "/candidate/save", consumes = {"multipart/form-data"})
+    @PostMapping(value = "/hr/candidate/save", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StandardResponse> saveCandidate(
-            @RequestPart("candidate") String candidateJson,
+            @RequestPart("candidate") @Valid String candidateJson,
             @RequestPart("photos") List<MultipartFile> photos) {
         try {
+            if (photos == null || photos.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(new StandardResponse(400, "At least one photo is required", null));
+            }
+
             ObjectMapper objectMapper = new ObjectMapper();
             objectMapper.registerModule(new JavaTimeModule());
+            objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true);
+
             CandidateSaveDTO candidateSaveDTO = objectMapper.readValue(candidateJson, CandidateSaveDTO.class);
+
+            // Additional validation
+            if (candidateSaveDTO.getPositionType() == null) {
+                return ResponseEntity.badRequest()
+                        .body(new StandardResponse(400, "Position type is required", null));
+            }
+
             CandidatePhotoSaveDTO candidatePhotoSaveDTO = new CandidatePhotoSaveDTO();
             candidatePhotoSaveDTO.setPhotos(photos);
             CandidateSaveDTO savedCandidate = userService.saveCandidate(candidateSaveDTO, candidatePhotoSaveDTO);
             return new ResponseEntity<>(new StandardResponse(201, "Success", savedCandidate), HttpStatus.CREATED);
-        } catch (Exception e) {
-            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        } catch (JsonParseException e) {
+        return ResponseEntity.badRequest()
+                .body(new StandardResponse(400, "Invalid JSON format", null));
+    } catch (JsonMappingException e) {
+        return ResponseEntity.badRequest()
+                .body(new StandardResponse(400, "Field mismatch: " + e.getMessage(), null));
+    } catch (Exception e) {
+        return ResponseEntity.internalServerError()
+                .body(new StandardResponse(500, "Error: " + e.getMessage(), null));
     }
 
-    @GetMapping("/candidate-interview/{id}")
+    }
+
+    @GetMapping("/hr/candidate-interview/{id}")
     public ResponseEntity<StandardResponse> getCandidateAndInterviewById(@PathVariable(value = "id") Long userId) {
         try {
             CandidateAndInterviewDTO candidateAndInterviewDTO = userService.getCandidateAndInterviewById(userId);
@@ -65,7 +91,7 @@ public class UserController {
         }
     }
 
-    @GetMapping ("/candidate/all/")
+    @GetMapping ("/hr/candidate/all/")
     public ResponseEntity<StandardResponse> getAllCandidates() {
         List<AllCandidatesDTO> allCandidates = userService.getAllCandidates();
         return new ResponseEntity<StandardResponse>(
@@ -75,7 +101,7 @@ public class UserController {
     }
 
     @GetMapping(
-            path = "/candidate/all/paginated",
+            path = "/hr/candidate/all/paginated",
             params = {"page", "size"}
     )
     public ResponseEntity<StandardResponse> getAllCandidates(
@@ -89,7 +115,7 @@ public class UserController {
     }
 
 
-    @DeleteMapping("/candidate/{id}")
+    @DeleteMapping("/hr/candidate/{id}")
     public ResponseEntity<StandardResponse> deleteCandidate(@PathVariable(value = "id") Long userId) {
         String message = userService.deleteCandidate(userId);
         return new ResponseEntity<StandardResponse>(
@@ -98,7 +124,7 @@ public class UserController {
         );
     }
 
-    @PutMapping("/candidate/{id}")
+    @PutMapping("/hr/candidate/{id}")
     public ResponseEntity<StandardResponse> updateCandidate(@PathVariable(value = "id") Long userId, @RequestBody CandidateUpdateDTO candidateUpdateDTO) {
         CandidateUpdateDTO updatedCandidate = userService.updateCandidate(userId, candidateUpdateDTO);
         return new ResponseEntity<StandardResponse>(
@@ -170,7 +196,7 @@ public class UserController {
         }
     }
 
-    @GetMapping("/candidate/position/{id}")
+    @GetMapping("/hr/candidate/position/{id}")
     public ResponseEntity<StandardResponse> getCandidatePositionById(@PathVariable(value = "id") Long userId){
         try {
             String position = userService.getCandidatePositionById(userId);
@@ -185,7 +211,7 @@ public class UserController {
         }
     }
 
-    @GetMapping("/get/candidate/photos")
+    @GetMapping("/hr/get/candidate/photos")
     public ResponseEntity<StandardResponse> getCandidatePhotosById(@RequestParam long userId) {
         try {
             CandidatePhotoResponse photoDTO = userService.getCandidatePhotosById(userId);
@@ -206,6 +232,7 @@ public class UserController {
         }
     }
 
+
     //Get User details to generate pdf
     @GetMapping("/get/user-Details-by-userId")
     public ResponseEntity<StandardResponse> getUserDetailsByUserId(@RequestParam long userId) {
@@ -219,6 +246,31 @@ public class UserController {
             return new ResponseEntity<>(
                     new StandardResponse(404, "User Not Found", e.getMessage()),
                     HttpStatus.NOT_FOUND
+
+    @PostMapping("hr/hr/save")
+    public ResponseEntity<StandardResponse> saveHr(@RequestBody HrSaveDTO hrSaveDTO){
+        try {
+            String savedHr = userService.saveHr(hrSaveDTO);
+            return new ResponseEntity<>(
+                    new StandardResponse(201, "HR Saved", savedHr),
+                    HttpStatus.CREATED
+            );
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    new StandardResponse(500, "Internal Server Error", e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @PostMapping("technical/technical/save")
+    public ResponseEntity<StandardResponse> saveTechnical(@RequestBody TechnicalSaveDTO technicalSaveDTO){
+        try {
+            String savedTechnical = userService.saveTechnical(technicalSaveDTO);
+            return new ResponseEntity<>(
+                    new StandardResponse(201, "Technical Saved", savedTechnical),
+                    HttpStatus.CREATED
+
             );
         } catch (Exception e) {
             return new ResponseEntity<>(

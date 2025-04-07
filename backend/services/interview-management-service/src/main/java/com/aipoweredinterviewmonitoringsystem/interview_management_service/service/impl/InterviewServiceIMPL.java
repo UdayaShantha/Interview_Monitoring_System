@@ -14,6 +14,7 @@ import com.aipoweredinterviewmonitoringsystem.interview_management_service.repos
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.service.InterviewService;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.util.StandardResponse;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -167,11 +168,11 @@ public class InterviewServiceIMPL implements InterviewService {
         }
     }
 
-    @Override
-    public String deleteInterview(Long interviewId) {
-        interviewRepository.deleteById(interviewId);
-        return "Inteview with id: "+interviewId.toString() + " deleted";
-    }
+//    @Override
+//    public String deleteInterview(Long interviewId) {
+//        interviewRepository.deleteById(interviewId);
+//        return "Inteview with id: "+interviewId.toString() + " deleted";
+//    }
 
     @Override
     public InterviewUpdateDTO updateInterview(Long interviewId, InterviewUpdateDTO interviewUpdateDTO) {
@@ -365,6 +366,7 @@ public class InterviewServiceIMPL implements InterviewService {
         throw new InterviewNotFountException("Not found this interview");
     }
 
+
     //Get data to generate the pdf.
     @Override
     public GetInterviewDetailsDTO getInterviewDetailsByInterviewId(long interviewId) {
@@ -378,4 +380,49 @@ public class InterviewServiceIMPL implements InterviewService {
         }
         throw new InterviewNotFountException("Not found this interview");
     }
+
+    @Transactional
+    @Override
+    public String deleteInterviewByUserId(Long userId) {
+        Interview interview = interviewRepository.findByCandidateId(userId);
+
+        if (interview != null) {
+            interviewRepository.deleteById(interview.getInterviewId());
+            return "Interview for candidate ID: " + userId + " deleted";
+        }
+        return "No such interview found";
+    }
+
+    @Override
+    public GetInterviewDTO getInterviewByUserId(Long userId) {
+        Interview interview = interviewRepository.findByCandidateId(userId);
+        if (interview != null) {
+            return modelMapper.map(interview, GetInterviewDTO.class);
+        }
+        throw new EntityNotFoundException("No such interview found");
+    }
+
+    @Override
+    public double calculateSuccessRateByPositionType(String positionType) {
+        List<Interview> completedInterviews = interviewRepository.findAllByStatusEquals(Status.COMPLETED);
+        List<Interview> completedInterviewsByPositionType = completedInterviews.stream()
+                .filter(interview -> {
+                    ResponseEntity<StandardResponse> response = userFeignClient.getCandidatePositionById(interview.getCandidateId());
+                    return response.getBody() != null && response.getBody().getData() != null &&
+                            response.getBody().getData().toString().equalsIgnoreCase(positionType);
+                })
+                .collect(Collectors.toList());
+        int totalCompleted = completedInterviewsByPositionType.size();
+
+        if (totalCompleted == 0) {
+            return 0.0;
+        }
+        long selectedCount = completedInterviewsByPositionType.stream()
+                .filter(interview -> interview.getResult() == Result.SELECTED)
+                .count();
+
+        return (selectedCount / (double) totalCompleted) * 100;
+    }
+
+
 }
