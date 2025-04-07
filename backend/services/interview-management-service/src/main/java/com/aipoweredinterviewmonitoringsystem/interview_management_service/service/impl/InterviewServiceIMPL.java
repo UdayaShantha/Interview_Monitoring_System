@@ -22,6 +22,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDate;
@@ -388,6 +389,8 @@ public class InterviewServiceIMPL implements InterviewService {
         throw new EntityNotFoundException("No such interview found");
     }
 
+
+
     @Override
     public double calculateSuccessRateByPositionType(String positionType) {
         List<Interview> completedInterviews = interviewRepository.findAllByStatusEquals(Status.COMPLETED);
@@ -424,6 +427,28 @@ public class InterviewServiceIMPL implements InterviewService {
             statusPercentages.add(dto);
         }
         return statusPercentages;
+    }
+
+    @Override
+    public InterviewUpdateDTO updateInterviewDuration(long interviewId, int duration) {
+        if(interviewRepository.existsById(interviewId)){
+            Interview interview = interviewRepository.findById(interviewId).get();
+            interview.setDuration(duration);
+            Interview updatedInterview = interviewRepository.save(interview);
+            InterviewUpdateDTO interviewUpdateDTO = modelMapper.map(updatedInterview, InterviewUpdateDTO.class);
+            return interviewUpdateDTO;
+        }
+        else {
+            throw new RuntimeException("No such interview");
+        }
+    }
+
+    @Override
+    public Long getInterviewIdByCandidateId(Long candidateId) {
+        if(interviewRepository.existsByCandidateId(candidateId)){
+            return interviewRepository.findByCandidateId(candidateId).getInterviewId();
+        }
+        throw new InterviewNotFountException("Not found this interview");
     }
 
 }

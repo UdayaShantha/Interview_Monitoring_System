@@ -124,9 +124,14 @@ public class InterviewController {
         );
     }
 
-    @GetMapping("/get/interview/candidateId")
-    Interview getInterviewByCandidateId(@RequestParam long candidateId){
-        return interviewService.getInterviewByCandidateId(candidateId);
+    @GetMapping("/get/interview-id/{candidateId}")
+    public ResponseEntity<StandardResponse> getInterviewIdByCandidateId(@PathVariable(value = "candidateId") Long candidateId) {
+        Long interviewId = interviewService.getInterviewIdByCandidateId(candidateId);
+        return new ResponseEntity<StandardResponse>(
+                new StandardResponse(200,"Success",interviewId),
+                HttpStatus.OK
+        );
+
     }
 
     @PutMapping("/status/{interviewId}")
@@ -284,5 +289,17 @@ public class InterviewController {
         }
     }
 
-    @GetMapping("/get/interview/count/by/")
+    @PutMapping("/update/interview/duration")
+    public ResponseEntity<StandardResponse> updateInterviewDuration(@RequestParam long interviewId, @RequestParam int duration) {
+        try {
+            InterviewUpdateDTO updatedInterview = interviewService.updateInterviewDuration(interviewId, duration);
+            return new ResponseEntity<>(new StandardResponse(200, "Success", updatedInterview), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+
+
 }

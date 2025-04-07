@@ -613,7 +613,9 @@ public class QuestionServiceIMPL implements QuestionService {
         else if(total_duration>45){
             while(total_duration<=45){
                 questionResponseDTOList.remove(questionResponseDTOList.size()-1);
+
             }
+
             return questionResponseDTOList;
         }
 //        if (positionType.equalsIgnoreCase("SOFTWARE_ENGINEER")) {
