@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 
 @FeignClient(name = "USER-MANAGEMENT-SERVICE",url = "http://localhost:8081")
 public interface UserFeignClient {
-    @GetMapping("api/v1/users/candidate/position/{id}")
+    @GetMapping("api/v1/users/hr/candidate/position/{id}")
     ResponseEntity<StandardResponse> getCandidatePositionById(@PathVariable(value = "id") Long userId);
 
 
