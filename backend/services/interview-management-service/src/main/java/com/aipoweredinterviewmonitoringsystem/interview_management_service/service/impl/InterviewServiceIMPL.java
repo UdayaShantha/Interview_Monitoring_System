@@ -451,4 +451,16 @@ public class InterviewServiceIMPL implements InterviewService {
         throw new InterviewNotFountException("Not found this interview");
     }
 
+    @Override
+    public double getInterviewAverageDuration() {
+        List<Interview> interviews = interviewRepository.findAll();
+        if (interviews.isEmpty()) {
+            return 0.0;
+        }
+        double totalDuration = interviews.stream()
+                .mapToDouble(Interview::getDuration)
+                .sum();
+        return totalDuration / interviews.size();
+    }
+
 }

@@ -27,6 +27,7 @@ function InterviewPage() {
   const [successRate, setSuccessRate] = useState(0);
   const [statusPercentages, setStatusPercentages] = useState([]);
   const [interviewCount, setInterviewCount] = useState(0);
+  const [averageDuration, setAverageDuration] = useState(0);
   const navigate = useNavigate();
 
   const handleHomeClick = (e) => {
@@ -55,6 +56,7 @@ function InterviewPage() {
     fetchSuccessRate();
     fetchStatusPercentages();
     fetchInterviewCount();
+    fetchAverageDuration();
   }, []);
 
   const fetchSuccessRate = async () => {
@@ -87,6 +89,17 @@ function InterviewPage() {
       }
     } catch (error) {
       console.error('Error fetching interview count:', error);
+    }
+  };
+
+  const fetchAverageDuration = async () => {
+    try {
+      const response = await axios.get('/interviews/get/interview/average-duration');
+      if (response.data.code === 200) {
+        setAverageDuration(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching average duration:', error);
     }
   };
 
@@ -161,7 +174,7 @@ function InterviewPage() {
   // Statistics Cards Data
   const stats = [
     { title: 'Total Interviews', value: interviewCount.toString(), icon: <FaUserTie />, color: 'bg-green-100' },
-    { title: 'Avg. Duration', value: '45m', icon: <FaRegClock />, color: 'bg-blue-100' },
+    { title: 'Avg. Duration', value: `${averageDuration} minutes`, icon: <FaRegClock />, color: 'bg-blue-100' },
     { title: 'Success Rate', value: `${successRate}%`, icon: <FaChartLine />, color: 'bg-emerald-100' }
   ];
 

@@ -299,7 +299,13 @@ public class InterviewController {
         }
     }
 
-
-
-
+    @GetMapping("/get/interview/average-duration")
+    public ResponseEntity<StandardResponse> getInterviewAverageDuration() {
+        try {
+            double avarageDuration = interviewService.getInterviewAverageDuration();
+            return new ResponseEntity<>(new StandardResponse(200, "Success", avarageDuration), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

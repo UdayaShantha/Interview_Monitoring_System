@@ -66,5 +66,7 @@ public interface InterviewService {
     InterviewUpdateDTO updateInterviewDuration(long interviewId, int duration);
 
     Long getInterviewIdByCandidateId(Long candidateId);
+
+    double getInterviewAverageDuration();
 }
 
