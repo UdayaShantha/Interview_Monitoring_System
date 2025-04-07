@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Footer from "../components/Footer";
-import { FaTrash, FaPlus, FaEye, FaBars, FaSearch, FaFilter, FaTimes, FaUser } from "react-icons/fa";
+import { FaTrash, FaPlus, FaEye, FaBars, FaSearch, FaFilter, FaTimes, FaUser, FaCalendarAlt } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import CandidateForm from "./CandidateForm";
 import axios from "../axiosInstance";
@@ -21,6 +21,7 @@ const CandidatesPage = () => {
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [candidateToDelete, setCandidateToDelete] = useState(null);
+  const [candidatePhoto, setCandidatePhoto] = useState(null);
 
   const toggleNavbar = () => setIsNavbarOpen(!isNavbarOpen);
 
@@ -52,9 +53,17 @@ const CandidatesPage = () => {
     setShowForm(false);
   };
 
-  const handleViewCandidate = (candidate) => {
+  const handleViewCandidate = async (candidate) => {
     setSelectedCandidate(candidate);
     setShowViewModal(true);
+    try {
+      const response = await axios.get(`/users/hr/get/candidate/photos?userId=${candidate.userId}`);
+      if (response.status === 200 && response.data.data && response.data.data.photos && response.data.data.photos.length > 0) {
+        setCandidatePhoto(response.data.data.photos[0]);
+      }
+    } catch (error) {
+      console.error("Error fetching candidate photo:", error);
+    }
   };
 
   const handleDeleteClick = (candidate) => {
@@ -334,41 +343,129 @@ const CandidatesPage = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
           >
             <motion.div
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 50, opacity: 0 }}
-              className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 overflow-hidden"
+              className="bg-white rounded-lg shadow-xl w-full max-w-2xl overflow-hidden"
             >
-              <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-                <h3 className="text-lg font-medium text-gray-900 flex items-center">
-                  <FaUser className="mr-2" /> Candidate Details
-                </h3>
-                <button 
-                  onClick={() => setShowViewModal(false)}
-                  className="text-gray-400 hover:text-gray-500 focus:outline-none"
-                >
-                  <FaTimes />
-                </button>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h4 className="text-lg font-semibold text-green-800">Personal Information</h4>
-                    <DetailItem label="Name" value={selectedCandidate.name} />
-                    <DetailItem label="Email" value={selectedCandidate.email} />
-                    <DetailItem label="Phone" value={selectedCandidate.phone} />
-                    <DetailItem label="NIC" value={selectedCandidate.nic} />
+              {/* Header Section */}
+              <div className="bg-emerald-400 p-4 flex items-center">
+                <div className="flex items-center flex-grow">
+                  <div className="relative">
+                    {candidatePhoto ? (
+                      <img 
+                        src={`data:image/jpeg;base64,${candidatePhoto}`} 
+                        alt="Candidate" 
+                        className="w-16 h-16 rounded-full object-cover border-2 border-white"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center border-2 border-white">
+                        <FaUser className="text-gray-400 text-2xl" />
+                      </div>
+                    )}
                   </div>
-                  <div className="space-y-4">
-                    <h4 className="text-lg font-semibold text-green-800">Professional Information</h4>
-                    <DetailItem label="Position" value={selectedCandidate.positionType} />
-                    <DetailItem label="Address" value={selectedCandidate.address} />
-                    <DetailItem label="Birthday" value={selectedCandidate.birthday ? new Date(selectedCandidate.birthday).toLocaleDateString() : 'N/A'} />
+                  <div className="ml-4 text-white">
+                    <h2 className="text-xl font-semibold">{selectedCandidate.name}</h2>
+                    <p className="text-emerald-50">{selectedCandidate.positionType} Application</p>
                   </div>
                 </div>
+                <button 
+                  onClick={() => setShowViewModal(false)}
+                  className="text-white hover:text-emerald-100"
+                >
+                  <FaTimes className="text-xl" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-6">
+                {/* Personal Details Section */}
+                <div>
+                  <div className="flex items-center mb-4">
+                    <FaUser className="text-emerald-500 mr-2" />
+                    <h3 className="text-lg font-semibold text-gray-800">Personal Details</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600">NIC:</label>
+                        <div className="mt-1 p-2 w-full bg-gray-50 border border-gray-200 rounded-md">
+                          {selectedCandidate.nic}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600">Address:</label>
+                        <div className="mt-1 p-2 w-full bg-gray-50 border border-gray-200 rounded-md">
+                          {selectedCandidate.address}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600">Contact No:</label>
+                        <div className="mt-1 p-2 w-full bg-gray-50 border border-gray-200 rounded-md">
+                          {selectedCandidate.phone}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600">Email:</label>
+                        <div className="mt-1 p-2 w-full bg-gray-50 border border-gray-200 rounded-md">
+                          {selectedCandidate.email}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600">Birthday:</label>
+                        <div className="mt-1 p-2 w-full bg-gray-50 border border-gray-200 rounded-md">
+                          {selectedCandidate.birthday ? new Date(selectedCandidate.birthday).toLocaleDateString() : 'N/A'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Interview Details Section */}
+                <div>
+                  <div className="flex items-center mb-4">
+                    <FaCalendarAlt className="text-emerald-500 mr-2" />
+                    <h3 className="text-lg font-semibold text-gray-800">Interview Details</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600">Position:</label>
+                        <div className="mt-1 p-2 w-full bg-gray-50 border border-gray-200 rounded-md">
+                          {selectedCandidate.positionType}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600">Schedule Date:</label>
+                        <div className="mt-1 p-2 w-full bg-gray-50 border border-gray-200 rounded-md">
+                          {selectedCandidate.scheduleDate ? new Date(selectedCandidate.scheduleDate).toLocaleDateString() : 'N/A'}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600">Start Time:</label>
+                        <div className="mt-1 p-2 w-full bg-gray-50 border border-gray-200 rounded-md">
+                          {selectedCandidate.startTime || 'N/A'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-3 bg-gray-50 flex justify-end">
+                <button
+                  onClick={() => setShowViewModal(false)}
+                  className="px-4 py-2 bg-emerald-500 text-white rounded-md hover:bg-emerald-600 transition-colors"
+                >
+                  Edit
+                </button>
               </div>
             </motion.div>
           </motion.div>
