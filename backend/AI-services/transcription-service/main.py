@@ -1,4 +1,8 @@
 import uvicorn
+import time
+import threading
+import httpx
+
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -14,6 +18,35 @@ from models import Transcription
 
 # Initialize FastAPI
 app = FastAPI(title="Audio Transcription Service")
+
+# Token configuration for JWT authentication
+CLIENT_ID = "audio-service"
+CLIENT_SECRET = "super-secret-key"
+TOKEN_URL = "http://localhost:8081/api/v1/auth/client-token"
+
+# Token cache
+token = None
+expiration_time = 0
+
+async def get_token():
+    """Fetch and cache a JWT token from the User Management Service."""
+    global token, expiration_time
+    if time.time() < expiration_time:
+        return token
+
+    async with httpx.AsyncClient() as client:
+        payload = {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET}
+        response = await client.post(TOKEN_URL, json=payload)
+        response.raise_for_status()
+        token_data = response.json()
+        token = token_data["accessToken"]
+        expiration_time = time.time() + 86400  # 24 hours
+        return token
+
+report_process = None
+stop_event = threading.Event()
+active_processes = {}
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

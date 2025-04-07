@@ -58,5 +58,7 @@ public interface InterviewService {
     String deleteInterviewByUserId(Long userId);
 
     GetInterviewDTO getInterviewByUserId(Long userId);
+
+    double calculateSuccessRateByPositionType(String positionType);
 }
 

@@ -77,11 +77,11 @@ function InterviewPage() {
   };
 
   const successRateData = {
-    labels: ['Tech', 'HR', 'Mgmt', 'Sales'],
+    labels: ['Software Engineer', 'QA Engineer', 'Data Analyst'],
     datasets: [{
       label: 'Success Rate %',
-      data: [78, 82, 65, 73],
-      backgroundColor: ['#2D6A4F', '#40916C', '#52B788', '#95D5B2'],
+      data: [78, 82, 65],
+      backgroundColor: ['#2D6A4F', '#40916C', '#52B788'],
       borderWidth: 0,
     }]
   };

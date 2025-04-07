@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mic, ArrowLeft, Play, CheckCircle, AlertCircle, Video, XCircle, Radio, Waves, Volume2 } from 'lucide-react';
+import { Mic, ArrowLeft, Play, CheckCircle, AlertCircle, Video, XCircle, Radio, Waves, Volume2, Sun, Headphones, User } from 'lucide-react';
 
 function VideoScreen() {
   const navigate = useNavigate();
@@ -33,6 +33,7 @@ function VideoScreen() {
   const [selectedDevices, setSelectedDevices] = useState({ camera: null, microphone: null });
   const [audioLevel, setAudioLevel] = useState(0);
   const [showSuccess, setShowSuccess] = useState({ camera: false, microphone: false });
+  const [showPrepModal, setShowPrepModal] = useState(false);
 
   // Video element initialization
   useEffect(() => {
@@ -664,7 +665,7 @@ function VideoScreen() {
                 !(mediaStates.microphone.tested && mediaStates.microphone.success)) {
               showNotification('error', 'Please complete both camera and microphone tests first');
             } else {
-              navigate('/video-session');
+              setShowPrepModal(true);
             }
           }}
           className={`px-6 py-3 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white rounded-xl shadow-lg flex items-center gap-2 transition-all ${
@@ -678,6 +679,85 @@ function VideoScreen() {
           <span className="font-medium">Start Session</span>
         </button>
       </div>
+
+      {/* Interview Preparation Modal */}
+      {showPrepModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full p-6 border border-emerald-100">
+            <div className="flex flex-col space-y-6">
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Interview Preparation</h2>
+                <p className="text-gray-600">Please ensure you're ready for the interview by following these guidelines:</p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-start gap-4 p-4 bg-emerald-50 rounded-xl">
+                  <div className="p-2 bg-emerald-100 rounded-lg">
+                    <Sun className="w-6 h-6 text-emerald-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-1">Good Lighting</h3>
+                    <p className="text-gray-600">Find a well-lit area with natural or bright artificial lighting. Avoid backlighting and ensure your face is clearly visible.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4 p-4 bg-cyan-50 rounded-xl">
+                  <div className="p-2 bg-cyan-100 rounded-lg">
+                    <Headphones className="w-6 h-6 text-cyan-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-1">Quiet Environment</h3>
+                    <p className="text-gray-600">Choose a quiet location with minimal background noise. Close windows and doors to reduce external sounds.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4 p-4 bg-emerald-50 rounded-xl">
+                  <div className="p-2 bg-emerald-100 rounded-lg">
+                    <User className="w-6 h-6 text-emerald-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-1">Professional Setup</h3>
+                    <p className="text-gray-600">Position yourself in a professional setting. Ensure your background is clean and appropriate for an interview.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4 p-4 bg-rose-50 rounded-xl border border-rose-100">
+                  <div className="p-2 bg-rose-100 rounded-lg">
+                    <AlertCircle className="w-6 h-6 text-rose-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-1">Important: Fullscreen Mode Required</h3>
+                    <p className="text-gray-600">The interview must be conducted in fullscreen mode. If you accidentally exit fullscreen mode:</p>
+                    <ul className="list-disc ml-4 mt-2 text-gray-600 space-y-1">
+                      <li>Your audio and video will not be recorded</li>
+                      <li>You must return to fullscreen mode to continue the interview</li>
+                      <li>Do not attempt to exit fullscreen mode during the interview</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-4 mt-6">
+                <button
+                  onClick={() => setShowPrepModal(false)}
+                  className="flex-1 px-6 py-2.5 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+                >
+                  Go Back
+                </button>
+                <button
+                  onClick={() => {
+                    setShowPrepModal(false);
+                    navigate('/video-session');
+                  }}
+                  className="flex-1 px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white rounded-xl hover:from-emerald-700 hover:to-cyan-700 transition-colors"
+                >
+                  Start Interview
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

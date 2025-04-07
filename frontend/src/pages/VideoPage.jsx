@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Mic, Video, Clock, ChevronRight, AlertCircle } from 'lucide-react';
 import axios from '../axiosInstance';
 import { toast } from 'react-toastify';
+import { jwtDecode } from 'jwt-decode';
 
 function VideoPage() {
   const navigate = useNavigate();
@@ -16,12 +17,47 @@ function VideoPage() {
   const [loading, setLoading] = useState(true);
   const [tabSwitches, setTabSwitches] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [positionType, setPositionType] = useState(null);
+
+  // Get position type from backend using user ID from token
+  useEffect(() => {
+    const fetchPositionType = async () => {
+      try {
+        const accessToken = localStorage.getItem('accessToken');
+        if (!accessToken) {
+          toast.error('No authentication token found');
+          navigate('/login');
+          return;
+        }
+
+        const decodedToken = jwtDecode(accessToken);
+        const userId = decodedToken.userId;
+
+        if (!userId) {
+          toast.error('User ID not found in token');
+          navigate('/login');
+          return;
+        }
+
+        const response = await axios.get(`/users/hr/candidate/position/${userId}`);
+        if (response.data && response.data.data) {
+          setPositionType(response.data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching position type:', error);
+        toast.error('Failed to fetch position type');
+      }
+    };
+
+    fetchPositionType();
+  }, [navigate]);
 
   // Fetch questions from backend
   useEffect(() => {
     const fetchQuestions = async () => {
+      if (!positionType) return;
+
       try {
-        const positionType = location.state?.positionType || 'SOFTWARE_ENGINEER';
         const response = await axios.get(`/questions/get/interview/questions?positionType=${positionType}`);
         if (response.data.data) {
           setQuestions(response.data.data);
@@ -35,7 +71,7 @@ function VideoPage() {
       }
     };
     fetchQuestions();
-  }, [location.state]);
+  }, [positionType]);
 
   // Security restrictions and fullscreen handling
   useEffect(() => {
@@ -297,11 +333,16 @@ function VideoPage() {
 
       {/* Header */}
       <header className="w-full bg-white shadow-sm py-4 px-4 md:px-6">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <div className="px-4 py-2 rounded-xl bg-gray-100 text-gray-500">
-            <span className="font-semibold text-sm md:text-base">
-              {sessionCompleted ? "Session Completed" : "Session in Progress"}
-            </span>
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-4">
+            <h1 className="text-xl md:text-2xl font-semibold text-emerald-800">
+              {positionType ? `${positionType} Interview` : 'Loading...'}
+            </h1>
+            <div className="px-4 py-2 rounded-xl bg-gray-100 text-gray-500">
+              <span className="font-semibold text-sm md:text-base">
+                {sessionCompleted ? "Session Completed" : "Session in Progress"}
+              </span>
+            </div>
           </div>
           
           <div className="flex items-center gap-3 bg-emerald-100 px-4 py-2 rounded-lg">

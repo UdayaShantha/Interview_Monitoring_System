@@ -388,4 +388,26 @@ public class InterviewServiceIMPL implements InterviewService {
         throw new EntityNotFoundException("No such interview found");
     }
 
+    @Override
+    public double calculateSuccessRateByPositionType(String positionType) {
+        List<Interview> completedInterviews = interviewRepository.findAllByStatusEquals(Status.COMPLETED);
+        List<Interview> completedInterviewsByPositionType = completedInterviews.stream()
+                .filter(interview -> {
+                    ResponseEntity<StandardResponse> response = userFeignClient.getCandidatePositionById(interview.getCandidateId());
+                    return response.getBody() != null && response.getBody().getData() != null &&
+                            response.getBody().getData().toString().equalsIgnoreCase(positionType);
+                })
+                .collect(Collectors.toList());
+        int totalCompleted = completedInterviewsByPositionType.size();
+
+        if (totalCompleted == 0) {
+            return 0.0;
+        }
+        long selectedCount = completedInterviewsByPositionType.stream()
+                .filter(interview -> interview.getResult() == Result.SELECTED)
+                .count();
+
+        return (selectedCount / (double) totalCompleted) * 100;
+    }
+
 }
