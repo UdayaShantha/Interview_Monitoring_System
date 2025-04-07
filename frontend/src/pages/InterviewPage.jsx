@@ -14,6 +14,7 @@ import { Chart as ChartJS, CategoryScale, LinearScale, PointElement,
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import axios from "../axiosInstance";
+import { jwtDecode } from 'jwt-decode';
 
 ChartJS.register(
   CategoryScale, LinearScale, PointElement, 
@@ -25,6 +26,28 @@ function InterviewPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [successRate, setSuccessRate] = useState(0);
   const navigate = useNavigate();
+
+  const handleHomeClick = (e) => {
+    e.preventDefault();
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) {
+      try {
+        const decodedToken = jwtDecode(accessToken);
+        const userType = decodedToken.userType;
+        
+        if (userType === 'HR') {
+          navigate('/hr-dashboard');
+        } else if (userType === 'TECHNICAL') {
+          navigate('/technical-dashboard');
+        }
+      } catch (error) {
+        console.error('Error decoding token:', error);
+        navigate('/login');
+      }
+    } else {
+      navigate('/login');
+    }
+  };
 
   useEffect(() => {
     fetchSuccessRate();
@@ -116,9 +139,9 @@ function InterviewPage() {
           </button>
         </div>
 
-        {/* �� DESKTOP NAVIGATION */}
+        {/* 🟩 DESKTOP NAVIGATION */}
         <ul className="hidden md:flex space-x-6 text-lg font-medium">
-          <li><Link to="/hr-dashboard" className="hover:text-yellow-300 transition duration-300">Home</Link></li>
+          <li><Link to="#" onClick={handleHomeClick} className="hover:text-yellow-300 transition duration-300">Home</Link></li>
           <li><Link to="/interviews/upcoming" className="hover:text-yellow-300 transition duration-300">Upcoming</Link></li>
           <li><Link to="/interviews/completed" className="hover:text-yellow-300 transition duration-300">Completed</Link></li>
           <li><Link to="/interviews/postponed" className="hover:text-yellow-300 transition duration-300">Postponed</Link></li>
@@ -139,7 +162,7 @@ function InterviewPage() {
       {isMenuOpen && (
         <div className="md:hidden bg-gradient-to-r from-green-900 to-green-600 text-white p-4 absolute top-16 left-0 w-full shadow-lg">
           <ul className="space-y-4 text-lg font-medium">
-            <li><Link to="/hr-dashboard" className="hover:text-yellow-300 transition duration-300">Home</Link></li>
+            <li><Link to="#" onClick={handleHomeClick} className="hover:text-yellow-300 transition duration-300">Home</Link></li>
             <li><Link to="/interviews/upcoming" className="hover:text-yellow-300 transition duration-300">Upcoming</Link></li>
             <li><Link to="/interviews/completed" className="hover:text-yellow-300 transition duration-300">Completed</Link></li>
             <li><Link to="/interviews/postponed" className="hover:text-yellow-300 transition duration-300">Postponed</Link></li>

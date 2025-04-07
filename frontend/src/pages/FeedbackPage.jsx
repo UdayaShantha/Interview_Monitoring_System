@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle, MessageSquare, ArrowLeft, Loader } from 'lucide-react';
+import { CheckCircle, MessageSquare, ArrowLeft, Loader, Star } from 'lucide-react';
+import axios from '../axiosInstance';
+import { jwtDecode } from 'jwt-decode';
 
 function FeedbackPage() {
   const navigate = useNavigate();
   const [feedback, setFeedback] = useState('');
+  const [rating, setRating] = useState(0);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   // Navigation blocking - Prevent back button usage
   useEffect(() => {
@@ -16,43 +20,69 @@ function FeedbackPage() {
     };
 
     const handlePopState = (e) => {
-      // Push the current URL back onto the history stack to prevent back navigation
       window.history.pushState(null, null, window.location.href);
     };
 
-    // Push current URL to history stack to handle initial back button press
     window.history.pushState(null, null, window.location.href);
-    
-    // Add event listeners
     window.addEventListener('beforeunload', handleBeforeUnload);
     window.addEventListener('popstate', handlePopState);
 
     return () => {
-      // Clean up event listeners when component unmounts
       window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('popstate', handlePopState);
     };
   }, []);
 
+  const getUserIdFromToken = () => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+      if (!accessToken) {
+        throw new Error('No authentication token found');
+      }
+
+      const decodedToken = jwtDecode(accessToken);
+      const userId = decodedToken.userId;
+
+      if (!userId) {
+        throw new Error('User ID not found in token');
+      }
+
+      return userId;
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      throw new Error('Invalid token');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
     
     try {
-      // Simulate API call with 1 second delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const userId = getUserIdFromToken();
       
-      // Here you would typically send the feedback to your backend
-      console.log('Feedback submitted:', feedback);
+      const response = await axios.post('/users/candidate/feedback', null, {
+        params: {
+          user_id: userId,
+          rate: rating,
+          comment: feedback
+        }
+      });
+
+      console.log('Full response:', response);
+      console.log('Response data:', response.data);
+      console.log('Response status:', response.status);
       
-      setIsSubmitted(true);
-      
-      // Redirect to login after 2 seconds
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
+      // Check if the response indicates success
+      if (response.status === 201 || response.status === 200) {
+        setIsSubmitted(true);
+      } else {
+        setError('Failed to submit feedback. Please try again.');
+      }
     } catch (error) {
       console.error('Submission error:', error);
+      setError(error.response?.data?.message || 'Failed to submit feedback. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -81,8 +111,32 @@ function FeedbackPage() {
           {!isSubmitted ? (
             <form onSubmit={handleSubmit} className="mt-8 space-y-6">
               <div className="text-left">
+                <label className="block text-sm font-medium text-emerald-700 mb-2">
+                  Rate your experience
+                </label>
+                <div className="flex gap-2 justify-center">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setRating(star)}
+                      className={`p-1 rounded-full transition-colors ${
+                        star <= rating ? 'text-yellow-400' : 'text-gray-300'
+                      }`}
+                    >
+                      <Star
+                        size={32}
+                        className="hover:scale-110 transition-transform"
+                        fill={star <= rating ? 'currentColor' : 'none'}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="text-left">
                 <label htmlFor="feedback" className="block text-sm font-medium text-emerald-700 mb-2">
-                  Optional Feedback
+                  Additional Comments
                 </label>
                 <textarea
                   id="feedback"
@@ -93,11 +147,15 @@ function FeedbackPage() {
                   placeholder="How was your interview experience? Any suggestions for improvement?"
                 />
               </div>
+
+              {error && (
+                <div className="text-red-500 text-sm">{error}</div>
+              )}
               
               <button
                 type="submit"
-                disabled={isLoading}
-                className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-2.5 rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-md"
+                disabled={isLoading || rating === 0}
+                className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-2.5 rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <>
@@ -114,11 +172,30 @@ function FeedbackPage() {
             </form>
           ) : (
             <div className="animate-fade-in">
-              <div className="bg-emerald-50 p-6 rounded-xl border border-emerald-200 flex items-center gap-3">
-                <CheckCircle className="w-6 h-6 text-emerald-600" />
-                <p className="text-emerald-700 font-medium">
-                  Thank you for your feedback! Redirecting to login...
-                </p>
+              <div className="bg-emerald-50 p-6 rounded-xl border border-emerald-200">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="w-6 h-6 text-emerald-600" />
+                    <p className="text-emerald-700 font-medium">
+                      Thank you for your feedback!
+                    </p>
+                  </div>
+                  <p className="text-gray-600 text-sm text-center">
+                    Your response has been recorded successfully.
+                  </p>
+                  <button
+                    onClick={() => {
+                      // Clear tokens
+                      localStorage.removeItem('accessToken');
+                      localStorage.removeItem('refreshToken');
+                      // Navigate to login
+                      navigate('/login');
+                    }}
+                    className="mt-4 bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-2.5 rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-md"
+                  >
+                    <span className="font-semibold">Exit to Login</span>
+                  </button>
+                </div>
               </div>
             </div>
           )}
