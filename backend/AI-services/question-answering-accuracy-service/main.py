@@ -47,7 +47,7 @@ async def get_question_data(interviewId: int):
     """Get Interview questions with questionId, content, keywords from Spring Boot endpoints and question answer from
     transcription service"""
 
-    url = "http://localhost:9191/api/v1/interviews/get/interview/questions"
+    url = "http://localhost:8082/api/v1/interviews/get/interview/questions"
     async with httpx.AsyncClient(timeout=120.0) as client:
         try:
             response = await client.get(url, params={"interviewId": interviewId})

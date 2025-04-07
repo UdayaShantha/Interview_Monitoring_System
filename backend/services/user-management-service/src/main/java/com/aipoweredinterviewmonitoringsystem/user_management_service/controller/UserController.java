@@ -231,6 +231,22 @@ public class UserController {
             );
         }
     }
+
+
+    //Get User details to generate pdf
+    @GetMapping("/get/user-Details-by-userId")
+    public ResponseEntity<StandardResponse> getUserDetailsByUserId(@RequestParam long userId) {
+        try {
+            CandidateUpdateDTO userDetailsDTO = userService.getUserDetailsByUserId(userId);
+            return new ResponseEntity<>(
+                    new StandardResponse(200, "Success", userDetailsDTO),
+                    HttpStatus.OK
+            );
+        } catch (UserNotFoundException e) {
+            return new ResponseEntity<>(
+                    new StandardResponse(404, "User Not Found", e.getMessage()),
+                    HttpStatus.NOT_FOUND
+
     @PostMapping("hr/hr/save")
     public ResponseEntity<StandardResponse> saveHr(@RequestBody HrSaveDTO hrSaveDTO){
         try {
@@ -254,6 +270,7 @@ public class UserController {
             return new ResponseEntity<>(
                     new StandardResponse(201, "Technical Saved", savedTechnical),
                     HttpStatus.CREATED
+
             );
         } catch (Exception e) {
             return new ResponseEntity<>(

@@ -60,7 +60,5 @@ public interface InterviewService {
     GetInterviewDTO getInterviewByUserId(Long userId);
 
     double calculateSuccessRateByPositionType(String positionType);
-
-    long getInterviewIdByCandidateId(long candidateId);
 }
 

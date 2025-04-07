@@ -37,6 +37,8 @@ public class SecurityConfig {
                                 "/api/v1/users/technical/technical/save",
                                 "/api/v1/users/hr/candidate/save",
                                 "/api/v1/interviews/get/user/{userId}",
+                                "/api/v1/interviews/get/interview/questions",
+                                "/api/v1/users/hr/candidate/position/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"

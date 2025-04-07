@@ -314,7 +314,8 @@ async def start_face_recognition(
                 emotion_lib: str,
                 min_detect: float,
                 min_presence: float,
-                min_track: float
+                min_track: float,
+                interview_id: int  # Add interview_id parameter
         ):
             try:
                 report_path = run(
@@ -326,8 +327,16 @@ async def start_face_recognition(
                     min_tracking_confidence=min_track
                 )
 
-                if not os.path.exists(report_path):
-                    raise Exception(f"Report file not found at {report_path}")
+                if not report_path or not os.path.exists(report_path):
+                    error_msg = f"Report file not found or not generated"
+                    # Create new event loop for async database operations
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    loop.run_until_complete(update_db_with_report(interview_id, error_message=error_msg))
+                    loop.close()
+
+                    active_processes[interview_id]["error"] = error_msg
+                    return
 
                 # Create new event loop for async database operations
                 loop = asyncio.new_event_loop()
@@ -335,12 +344,23 @@ async def start_face_recognition(
                 loop.run_until_complete(update_db_with_report(interview_id, report_path))
                 loop.close()
 
-                process["report_path"] = report_path
-                process["completed"] = True
+                active_processes[interview_id]["report_path"] = report_path
+                active_processes[interview_id]["completed"] = True
             except Exception as e:
-                process["error"] = str(e)
-                print(f"Face recognition process error: {str(e)}")
+                error_msg = str(e)
+                active_processes[interview_id]["error"] = error_msg
+                print(f"Face recognition process error: {error_msg}")
 
+                # Even on exception, update the database with the error
+                try:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    loop.run_until_complete(update_db_with_report(interview_id, error_message=error_msg))
+                    loop.close()
+                except Exception as db_error:
+                    print(f"Failed to update database with error: {str(db_error)}")
+
+        # Updated thread creation in the start_face_recognition function
         thread = threading.Thread(
             target=run_face_recognition_process,
             daemon=False,
@@ -350,7 +370,8 @@ async def start_face_recognition(
                 'emotion_lib': emotion_library,
                 'min_detect': min_face_detection,
                 'min_presence': min_face_presence,
-                'min_track': min_tracking
+                'min_track': min_tracking,
+                'interview_id': interview_id  # Pass the interview_id
             }
         )
 
@@ -393,7 +414,7 @@ async def face_recognition_task(photos, stop_event):
     )
 
 
-async def update_db_with_report(interview_id: int, report_path: str):
+async def update_db_with_report(interview_id: int, report_path: str = None, error_message: str = None):
     """Update database with generated report using independent session."""
     try:
         async with async_session_maker() as db:
@@ -405,9 +426,13 @@ async def update_db_with_report(interview_id: int, report_path: str):
                 )
                 report = result.scalars().first()
                 if report:
-                    with open(report_path, "r", encoding="utf-8") as f:
-                        report.report = f.read()
-                    report.csv_file_path = report_path
+                    if report_path and os.path.exists(report_path):
+                        with open(report_path, "r", encoding="utf-8") as f:
+                            report.report = f.read()
+                        report.csv_file_path = report_path
+                    elif error_message:
+                        report.report = f"Face recognition failed: {error_message}"
+                        report.csv_file_path = ""  # No CSV file when there's an error
                     await db.commit()
                     print(f"Successfully updated report for interview {interview_id}")
     except Exception as e:

@@ -263,14 +263,4 @@ public class InterviewController {
             return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
-    @GetMapping("/get/interviewId/by/candidateId")
-    public ResponseEntity<StandardResponse> getInterviewIdByCandidateId(@RequestParam long candidateId) {
-        try {
-            long interviewId = interviewService.getInterviewIdByCandidateId(candidateId);
-            return new ResponseEntity<>(new StandardResponse(200, "Success", interviewId), HttpStatus.OK);
-        }catch (Exception e) {
-            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
 }
