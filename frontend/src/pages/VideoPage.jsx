@@ -194,20 +194,47 @@ function VideoPage() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleNextQuestion = () => {
-    if (currentQuestionIndex === questions.length - 1) {
-      setSessionCompleted(true);
-      toast.success('You have completed the interview session!');
-    } else {
-      setCurrentQuestionIndex(prev => prev + 1);
-      setQuestionTimer(questions[currentQuestionIndex + 1]?.duration * 60 || 0);
+  const handleNextQuestion = async () => {
+    try {
+      // Get the current question data
+      const currentQuestion = questions[currentQuestionIndex];
+      
+      // Send the current question data to another backend service
+      // Matching the QuestionResponseDTO structure from the backend
+      await axios.post('/api/questions/process', {
+        questionId: currentQuestion.questionId,
+        content: currentQuestion.content,
+        keywords: currentQuestion.keywords,
+        duration: currentQuestion.duration
+      });
+      
+      // Proceed with the original logic
+      if (currentQuestionIndex === questions.length - 1) {
+        setSessionCompleted(true);
+        toast.success('You have completed the interview session!');
+      } else {
+        setCurrentQuestionIndex(prev => prev + 1);
+        setQuestionTimer(questions[currentQuestionIndex + 1]?.duration * 60 || 0);
+      }
+    } catch (error) {
+      console.error('Error sending question data:', error);
+      toast.error('Failed to process question data');
+      
+      // Still proceed with the original logic even if the API call fails
+      if (currentQuestionIndex === questions.length - 1) {
+        setSessionCompleted(true);
+        toast.success('You have completed the interview session!');
+      } else {
+        setCurrentQuestionIndex(prev => prev + 1);
+        setQuestionTimer(questions[currentQuestionIndex + 1]?.duration * 60 || 0);
+      }
     }
   };
 
-  const handleActionButton = () => {
+  const handleActionButton = async () => {
     // Regular next question logic for non-final questions
     if (currentQuestionIndex < questions.length - 1) {
-      handleNextQuestion();
+      await handleNextQuestion();
       return;
     }
     
