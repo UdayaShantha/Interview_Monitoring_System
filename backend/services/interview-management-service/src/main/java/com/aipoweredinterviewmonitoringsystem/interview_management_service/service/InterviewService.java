@@ -60,5 +60,7 @@ public interface InterviewService {
     GetInterviewDTO getInterviewByUserId(Long userId);
 
     double calculateSuccessRateByPositionType(String positionType);
+
+    List<InterviewStatusPresentageDTO> getInterviewStatusPercentages();
 }
 

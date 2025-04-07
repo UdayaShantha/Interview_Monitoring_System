@@ -263,4 +263,26 @@ public class InterviewController {
             return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @GetMapping("/get/precentages/status")
+    public ResponseEntity<StandardResponse> getInterviewStatusPercentages() {
+        try {
+            List<InterviewStatusPresentageDTO> percentages = interviewService.getInterviewStatusPercentages();
+            return new ResponseEntity<>(new StandardResponse(200, "Success", percentages), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/get/interview/count")
+    public ResponseEntity<StandardResponse> getInterviewCount() {
+        try {
+            long count = interviewService.getAllInterviews().size();
+            return new ResponseEntity<>(new StandardResponse(200, "Success", count), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/get/interview/count/by/")
 }

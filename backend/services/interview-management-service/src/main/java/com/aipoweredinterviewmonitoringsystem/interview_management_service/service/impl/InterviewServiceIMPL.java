@@ -410,4 +410,20 @@ public class InterviewServiceIMPL implements InterviewService {
         return (selectedCount / (double) totalCompleted) * 100;
     }
 
+    @Override
+    public List<InterviewStatusPresentageDTO> getInterviewStatusPercentages() {
+        List<Interview> interviews = interviewRepository.findAll();
+        Map<Status, Long> statusCountMap = interviews.stream()
+                .collect(Collectors.groupingBy(Interview::getStatus, Collectors.counting()));
+
+        List<InterviewStatusPresentageDTO> statusPercentages = new ArrayList<>();
+        for (Map.Entry<Status, Long> entry : statusCountMap.entrySet()) {
+            InterviewStatusPresentageDTO dto = new InterviewStatusPresentageDTO();
+            dto.setStatus(entry.getKey());
+            dto.setPercentage((entry.getValue() / (double) interviews.size()) * 100);
+            statusPercentages.add(dto);
+        }
+        return statusPercentages;
+    }
+
 }
