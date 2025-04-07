@@ -9,6 +9,7 @@ import com.aipoweredinterviewmonitoringsystem.report_generation_service.dto.requ
 import com.aipoweredinterviewmonitoringsystem.report_generation_service.dto.request.GetInterviewDetailsDTO;
 import com.aipoweredinterviewmonitoringsystem.report_generation_service.dto.respond.AccuracyData;
 import com.aipoweredinterviewmonitoringsystem.report_generation_service.dto.respond.AccuracyRequest;
+import com.aipoweredinterviewmonitoringsystem.report_generation_service.dto.respond.InterviewMetricsDto;
 import com.aipoweredinterviewmonitoringsystem.report_generation_service.service.JasperReportService;
 import com.aipoweredinterviewmonitoringsystem.report_generation_service.service.ReportService;
 import com.aipoweredinterviewmonitoringsystem.report_generation_service.util.StandardResponse;
@@ -51,7 +52,11 @@ public class JasperReportController {
             ) {
         try {
             Long interviewId = getAccuracyRequestDTO.getInterviewId();
-            
+
+            // Fetch CSV from Python service
+            String csvContent = reportService.fetchCsvFromPythonService(interviewId);
+            InterviewMetricsDto metrics = reportService.parseCsv(csvContent);
+            System.out.println("Metrics: " + metrics);
 
             // Get interview details from interview management service
             ResponseEntity<StandardResponse> interviewDetails = interviewServiceClient
