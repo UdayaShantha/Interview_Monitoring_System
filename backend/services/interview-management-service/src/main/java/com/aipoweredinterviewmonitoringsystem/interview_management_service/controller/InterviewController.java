@@ -87,6 +87,14 @@ public class InterviewController {
 //                HttpStatus.OK
 //        );
 //    }
+    @GetMapping("/user/{userId}")
+    ResponseEntity<StandardResponse> getInterviewByUserId(@PathVariable(value = "userId") Long userId){
+        GetInterviewDTO getInterviewDTO = interviewService.getInterviewByUserId(userId);
+        return new ResponseEntity<StandardResponse>(
+                new StandardResponse(200,"Success",getInterviewDTO),
+                HttpStatus.OK
+        );
+    }
 
     @DeleteMapping("/delete/user/{userId}")
     public ResponseEntity<StandardResponse> deleteInterviewByUserId(@PathVariable(value = "userId") Long userId) {

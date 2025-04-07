@@ -19,6 +19,7 @@ public class CandidateAndInterviewDTO {
     private String phone;
     private PositionType positionType;
 
+    private Long interviewId;
     private LocalDate scheduleDate;
     private LocalTime startTime;
     private double duration;

@@ -379,4 +379,13 @@ public class InterviewServiceIMPL implements InterviewService {
         return "No such interview found";
     }
 
+    @Override
+    public GetInterviewDTO getInterviewByUserId(Long userId) {
+        Interview interview = interviewRepository.findByCandidateId(userId);
+        if (interview != null) {
+            return modelMapper.map(interview, GetInterviewDTO.class);
+        }
+        throw new EntityNotFoundException("No such interview found");
+    }
+
 }

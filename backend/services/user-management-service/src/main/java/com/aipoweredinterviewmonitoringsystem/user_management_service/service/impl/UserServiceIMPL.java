@@ -110,13 +110,14 @@ public class UserServiceIMPL implements UserService {
             Candidate candidate = candidateRepository.findById(userId).get();
             CandidateAndInterviewDTO candidateAndInterviewDTO = modelMapper.map(candidate, CandidateAndInterviewDTO.class);
 
-            ResponseEntity<StandardResponse> response = interviewFeignClient.getInterviewById(candidate.getUserId());
+            ResponseEntity<StandardResponse> response = interviewFeignClient.getInterviewByUserId(candidate.getUserId());
             if (response.getBody() != null && response.getBody().getData() != null) {
                 Map<String, Object> data = (Map<String, Object>) response.getBody().getData();
                 if (data.containsKey("duration") && data.containsKey("scheduleDate") && data.containsKey("startTime")) {
                     candidateAndInterviewDTO.setDuration(Double.parseDouble(data.get("duration").toString()));
                     candidateAndInterviewDTO.setScheduleDate(LocalDate.parse(data.get("scheduleDate").toString()));
                     candidateAndInterviewDTO.setStartTime(LocalTime.parse(data.get("startTime").toString()));
+                    candidateAndInterviewDTO.setInterviewId(Long.parseLong(data.get("interviewId").toString()));
                 }
             }
             return candidateAndInterviewDTO;

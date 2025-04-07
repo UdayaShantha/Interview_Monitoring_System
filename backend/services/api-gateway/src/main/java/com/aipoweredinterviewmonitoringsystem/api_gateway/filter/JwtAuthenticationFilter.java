@@ -108,6 +108,9 @@ public class JwtAuthenticationFilter implements GlobalFilter {
         } else {
             // Existing user-based logic
             if (path.startsWith("/api/v1/users/hr") && !"HR".equals(userType)) {
+                if (path.startsWith("/api/v1/users/hr/candidate/position/") && "CANDIDATE".equals(userType)) {
+                    return true;
+                }
                 return false;
             }
             if (path.startsWith("/api/v1/interviews/") && !("TECHNICAL".equals(userType) || "HR".equals(userType))) {
