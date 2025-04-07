@@ -410,4 +410,12 @@ public class InterviewServiceIMPL implements InterviewService {
         return (selectedCount / (double) totalCompleted) * 100;
     }
 
+    @Override
+    public long getInterviewIdByCandidateId(long candidateId) {
+        if(interviewRepository.existsById(candidateId)){
+            return interviewRepository.findById(candidateId).get().getInterviewId();
+        }
+        throw new InterviewNotFountException("Not found this Candidate");
+    }
+
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Mic, Video, Clock, ChevronRight, AlertCircle } from 'lucide-react';
 import axios from '../axiosInstance';
@@ -18,10 +18,20 @@ function VideoPage() {
   const [tabSwitches, setTabSwitches] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [positionType, setPositionType] = useState(null);
+  const [interviewId, setInterviewId] = useState(null);
+  const [userId, setUserId] = useState(null);
+  const [faceRecognitionStatus, setFaceRecognitionStatus] = useState(null);
+  const [monitoringInterval, setMonitoringInterval] = useState(null);
+  
+  // WebRTC references
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const peerConnectionRef = useRef(null);
 
-  // Get position type from backend using user ID from token
+  // Get user ID and position type from token
   useEffect(() => {
-    const fetchPositionType = async () => {
+    const fetchUserData = async () => {
       try {
         const accessToken = localStorage.getItem('accessToken');
         if (!accessToken) {
@@ -31,25 +41,36 @@ function VideoPage() {
         }
 
         const decodedToken = jwtDecode(accessToken);
-        const userId = decodedToken.userId;
+        const currentUserId = decodedToken.userId;
+        setUserId(currentUserId);
 
-        if (!userId) {
+        if (!currentUserId) {
           toast.error('User ID not found in token');
           navigate('/login');
           return;
         }
 
-        const response = await axios.get(`/users/hr/candidate/position/${userId}`);
-        if (response.data && response.data.data) {
-          setPositionType(response.data.data);
+        // Fetch position type
+        const positionResponse = await axios.get(`/users/hr/candidate/position/${currentUserId}`);
+        if (positionResponse.data && positionResponse.data.data) {
+          setPositionType(positionResponse.data.data);
+        }
+
+        // Fetch or create interview ID
+        const interviewResponse = await axios.post('/interviews/create', {
+          candidateId: currentUserId
+        });
+        
+        if (interviewResponse.data && interviewResponse.data.data) {
+          setInterviewId(interviewResponse.data.data.interviewId);
         }
       } catch (error) {
-        console.error('Error fetching position type:', error);
-        toast.error('Failed to fetch position type');
+        console.error('Error fetching user data:', error);
+        toast.error('Failed to fetch user data');
       }
     };
 
-    fetchPositionType();
+    fetchUserData();
   }, [navigate]);
 
   // Fetch questions from backend
@@ -72,6 +93,143 @@ function VideoPage() {
     };
     fetchQuestions();
   }, [positionType]);
+
+  // Initialize WebRTC
+  useEffect(() => {
+    const initializeWebRTC = async () => {
+      try {
+        // Get user media
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true
+        });
+        
+        streamRef.current = stream;
+        
+        // Display preview
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+        
+        // Start face recognition when we have interviewId
+        if (interviewId) {
+          startFaceRecognition();
+        }
+      } catch (error) {
+        console.error('Error accessing media devices:', error);
+        toast.error('Failed to access camera and microphone. Please check permissions.');
+      }
+    };
+
+    initializeWebRTC();
+
+    // Cleanup function
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+      
+      if (monitoringInterval) {
+        clearInterval(monitoringInterval);
+      }
+      
+      // Stop face recognition monitoring if it's still active
+      if (faceRecognitionStatus === 'running') {
+        stopFaceRecognition();
+      }
+    };
+  }, [interviewId]);
+
+  // Face recognition functions
+  const startFaceRecognition = async () => {
+    if (!interviewId) {
+      toast.error('Interview ID is required for face recognition');
+      return;
+    }
+
+    try {
+      // Call the Python backend endpoint to start face recognition
+      const response = await axios.get(`http://localhost:8001/load/model/face-recognition/${interviewId}`, {
+        params: {
+          emotion_library: "deepface",
+          min_face_detection: 0.6,
+          min_face_presence: 0.6,
+          min_tracking: 0.6
+        }
+      });
+
+      if (response.data) {
+        setFaceRecognitionStatus('running');
+        toast.success('Face recognition started');
+        
+        // Start monitoring the status
+        const interval = setInterval(() => monitorFaceRecognition(), 10000); // Every 10 seconds
+        setMonitoringInterval(interval);
+      }
+    } catch (error) {
+      console.error('Error starting face recognition:', error);
+      toast.error('Failed to start face recognition');
+    }
+  };
+
+  const monitorFaceRecognition = async () => {
+    if (!interviewId) return;
+    
+    try {
+      const response = await axios.get(`http://localhost:8001/monitoring/status/${interviewId}`);
+      
+      if (response.data) {
+        setFaceRecognitionStatus(response.data.status);
+        
+        // If completed, we can stop monitoring
+        if (response.data.status === 'completed' && response.data.report_ready) {
+          clearInterval(monitoringInterval);
+          setMonitoringInterval(null);
+          toast.success('Face recognition completed');
+        }
+      }
+    } catch (error) {
+      console.error('Error monitoring face recognition:', error);
+    }
+  };
+
+  const stopFaceRecognition = async () => {
+    if (!interviewId) return;
+    
+    try {
+      await axios.get(`http://localhost:8001/stop/monitoring/${interviewId}`);
+      toast.info('Face recognition stopped');
+      
+      if (monitoringInterval) {
+        clearInterval(monitoringInterval);
+        setMonitoringInterval(null);
+      }
+    } catch (error) {
+      console.error('Error stopping face recognition:', error);
+    }
+  };
+
+  const getReportAfterCompletion = async () => {
+    if (!interviewId) return;
+    
+    try {
+      const response = await axios.get(`http://localhost:8001/monitoring/report/${interviewId}`, {
+        responseType: 'blob'
+      });
+      
+      // Create a download link for the CSV
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `interview_report_${interviewId}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error('Error getting report:', error);
+      toast.error('Failed to download report');
+    }
+  };
 
   // Security restrictions and fullscreen handling
   useEffect(() => {
@@ -224,14 +382,31 @@ function VideoPage() {
 
   const handleEndSession = async () => {
     try {
+      // Get the final report
+      if (faceRecognitionStatus === 'running') {
+        await stopFaceRecognition();
+      }
+      
       // Automatically exit fullscreen mode
       if (document.fullscreenElement) {
         await document.exitFullscreen();
       }
+      
+      // Stop all media tracks
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+      
       // Navigate to feedback page after exiting fullscreen
-      navigate('/feedback');
+      navigate('/feedback', { 
+        state: { 
+          interviewId, 
+          tabSwitches,
+          totalTime: timer
+        } 
+      });
     } catch (err) {
-      console.error('Error exiting fullscreen:', err);
+      console.error('Error ending session:', err);
       // Navigate anyway if fullscreen exit fails
       navigate('/feedback');
     }
@@ -312,6 +487,11 @@ function VideoPage() {
                   Note: You switched tabs {tabSwitches} times during this session
                 </div>
               )}
+              {faceRecognitionStatus && (
+                <div className={`text-sm ${faceRecognitionStatus === 'completed' ? 'text-green-600' : 'text-blue-600'}`}>
+                  Face Recognition Status: {faceRecognitionStatus}
+                </div>
+              )}
               <div className="flex gap-4 w-full mt-4">
                 <button
                   onClick={() => setShowCompletionAlert(false)}
@@ -343,24 +523,51 @@ function VideoPage() {
                 {sessionCompleted ? "Session Completed" : "Session in Progress"}
               </span>
             </div>
+            {interviewId && (
+              <div className="px-3 py-1 rounded-xl bg-blue-100 text-blue-700 text-sm">
+                ID: {interviewId}
+              </div>
+            )}
           </div>
           
-          <div className="flex items-center gap-3 bg-emerald-100 px-4 py-2 rounded-lg">
-            <Clock size={18} className="text-emerald-700" />
-            <span className="font-medium text-emerald-800">{formatTime(timer)}</span>
+          <div className="flex items-center gap-3">
+            <div className="bg-emerald-100 px-4 py-2 rounded-lg flex items-center gap-2">
+              <Clock size={18} className="text-emerald-700" />
+              <span className="font-medium text-emerald-800">{formatTime(timer)}</span>
+            </div>
+            {faceRecognitionStatus && (
+              <div className={`px-3 py-1 rounded-lg text-sm font-medium ${
+                faceRecognitionStatus === 'running' ? 'bg-blue-100 text-blue-700' :
+                faceRecognitionStatus === 'completed' ? 'bg-green-100 text-green-700' :
+                'bg-gray-100 text-gray-700'
+              }`}>
+                Face Recognition: {faceRecognitionStatus}
+              </div>
+            )}
           </div>
         </div>
       </header>
 
       {/* Main Video Area */}
       <main className="flex-1 relative flex items-center justify-center p-4">
-        <div className="w-64 h-64 md:w-96 md:h-96 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-2xl">
-          <Mic size={64} className="text-white opacity-80" />
+        <div className="w-full max-w-3xl h-full max-h-96 rounded-xl overflow-hidden shadow-xl bg-gray-900 relative">
+          <video 
+            ref={videoRef} 
+            autoPlay 
+            playsInline 
+            muted 
+            className="w-full h-full object-cover"
+          />
+          
+          <div className="absolute bottom-4 right-4 px-3 py-1.5 bg-black bg-opacity-50 rounded-lg text-white text-sm flex items-center gap-2">
+            <Video size={16} className="text-red-500" />
+            <span>Live</span>
+          </div>
         </div>
 
         <div className="absolute bottom-4 left-4 md:bottom-6 md:left-6">
-          <div className="w-20 h-20 md:w-28 md:h-28 rounded-full bg-gray-300 border-4 border-white shadow-xl flex items-center justify-center">
-            <Video size={24} className="text-gray-500" />
+          <div className="w-20 h-20 md:w-28 md:h-28 rounded-full bg-emerald-600 border-4 border-white shadow-xl flex items-center justify-center">
+            <Mic size={24} className="text-white" />
           </div>
         </div>
       </main>

@@ -3,24 +3,34 @@ import base64
 import csv
 import os
 import sys
+import threading
 import time
 from datetime import datetime
 import httpx
 import uvicorn
 import json
-from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
+from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, Request
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from basicDetect import run as basic_detect
 from faceVerify import run as face_verify
 from reportGeneration import run as report_generation
-from faceRecognition import run as face_recognition, run
-import threading
+from faceRecognition import run as face_recognition
 from database import get_db, create_tables, async_session_maker
 from models import InterviewReport
 
 app = FastAPI(title="Face-Recognition")
+
+# Add CORS middleware to allow frontend requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, specify your frontend domain
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Token configuration for JWT authentication
 CLIENT_ID = "python-service"
@@ -30,6 +40,7 @@ TOKEN_URL = "http://localhost:8081/api/v1/auth/client-token"
 # Token cache
 token = None
 expiration_time = 0
+
 
 async def get_token():
     """Fetch and cache a JWT token from the User Management Service."""
@@ -46,16 +57,31 @@ async def get_token():
         expiration_time = time.time() + 86400  # 24 hours
         return token
 
+
 report_process = None
-stop_event = threading.Event()
+stop_event = None
 active_processes = {}
+
 
 @app.on_event("startup")
 async def startup_event():
     await create_tables()
+
+
+@app.get("/")
+async def root():
+    return {"message": "Face Recognition API is running"}
+
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok", "timestamp": datetime.now().isoformat()}
+
+
 @app.get("/load/basic/model/mesh/matrice")
 async def load_basic_model():
     """Starts the face landmark detection process asynchronously when called."""
+
     def start_detection():
         basic_detect(
             model='face_landmarker.task',
@@ -67,6 +93,7 @@ async def load_basic_model():
             width=720,
             height=480
         )
+
     thread = threading.Thread(target=start_detection, daemon=True)
     thread.start()
     return {"message": "Face landmark detection started successfully"}
