@@ -431,12 +431,13 @@ function VideoPage() {
     }
   };
 
-  const handleActionButton = () => {
+  const handleActionButton = async () => {
     if (currentQuestionIndex < questions.length - 1) {
       handleNextQuestion();
       return;
     }
     if (!sessionCompleted) {
+      await stopBackendServices(); // Moved streaming stop to "Complete Session"
       setSessionCompleted(true);
       toast.success('You have completed the interview session!');
     } else {
@@ -446,7 +447,6 @@ function VideoPage() {
 
   const handleEndSession = async () => {
     try {
-      await stopBackendServices();
       if (document.fullscreenElement) {
         await document.exitFullscreen();
       }
@@ -460,11 +460,11 @@ function VideoPage() {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (backendStreamActive && interviewId) {
+      if (backendStreamActive && interviewId && !sessionCompleted) {
         stopBackendServices();
       }
     };
-  }, [backendStreamActive, interviewId]);
+  }, [backendStreamActive, interviewId, sessionCompleted]);
 
   if (loading) {
     return (
