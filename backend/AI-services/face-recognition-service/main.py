@@ -9,6 +9,7 @@ from datetime import datetime
 import httpx
 import uvicorn
 import json
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,7 +18,7 @@ from sqlalchemy.future import select
 from basicDetect import run as basic_detect
 from faceVerify import run as face_verify
 from reportGeneration import run as report_generation
-from faceRecognition import run as face_recognition
+from faceRecognition import run as face_recognition, run
 from database import get_db, create_tables, async_session_maker
 from models import InterviewReport
 
@@ -26,7 +27,7 @@ app = FastAPI(title="Face-Recognition")
 # Add CORS middleware to allow frontend requests
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify your frontend domain
+    allow_origins=["*"],  # In production, replace with your frontend domain
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -438,7 +439,6 @@ async def update_db_with_report(interview_id: int, report_path: str = None, erro
     except Exception as e:
         print(f"Database update error: {str(e)}")
         raise
-
 @app.get("/monitoring/report/{interview_id}")
 async def get_report(interview_id: int, db: AsyncSession = Depends(get_db)):
     """Get the report for a completed interview."""
@@ -495,14 +495,26 @@ async def get_status(interview_id: int, db: AsyncSession = Depends(get_db)):
         }
     return {"status": "not_found"}
 
+
 @app.get("/stop/monitoring/{interview_id}")
 async def stop_monitoring(interview_id: int):
     """Stop an ongoing face recognition process."""
     process = active_processes.get(interview_id)
     if not process:
-        raise HTTPException(status_code=404, detail="Process not found")
+        # Check if interview exists in database before returning error
+        async with async_session_maker() as db:
+            result = await db.execute(
+                select(InterviewReport).where(InterviewReport.interview_id == interview_id)
+            )
+            report = result.scalars().first()
+            if not report:
+                raise HTTPException(status_code=404, detail="Interview not found")
+        # If we found the interview but process is not active
+        return {"message": "No active face recognition process to stop", "status": "completed"}
+
+    # Set the stop event to terminate the process
     process["stop_event"].set()
-    return {"message": "Stopping face recognition process"}
+    return {"message": "Stopping face recognition process", "status": "stopping"}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8001)
