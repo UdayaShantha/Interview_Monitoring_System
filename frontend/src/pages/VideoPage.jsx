@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Mic, Video, Clock, ChevronRight, AlertCircle } from 'lucide-react';
+import { Mic, Clock, ChevronRight, AlertCircle } from 'lucide-react';
 import axios from '../axiosInstance';
 import { toast } from 'react-toastify';
 import { jwtDecode } from 'jwt-decode';
@@ -24,12 +24,12 @@ function VideoPage() {
   const [faceRecognitionError, setFaceRecognitionError] = useState(null);
   const [isServiceReady, setIsServiceReady] = useState(false);
   const [serviceInitializing, setServiceInitializing] = useState(false);
-  const videoRef = useRef(null);
-  const streamRef = useRef(null);
-  const maxRetries = 5;
-  const retryDelay = 3000; // 3 seconds between retries
+  const [backendStreamActive, setBackendStreamActive] = useState(false);
+  const videoFeedRef = useRef(null); // Reference for the video feed img element
+  const maxRetries = 10;
+  const retryDelay = 2000;
 
-  // Create a separate axios instance for the Python service to avoid CORS issues
+  // Axios instance for Python service
   const pythonServiceAxios = axios.create({
     baseURL: 'http://localhost:8001',
     headers: {
@@ -38,7 +38,7 @@ function VideoPage() {
     }
   });
 
-  // Get position type and candidate ID from backend using user ID from token
+  // Fetch user data (position type, candidate ID, interview ID)
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -59,34 +59,34 @@ function VideoPage() {
         }
 
         // Fetch position type
-        const positionResponse = await axios.get(`/users/hr/candidate/position/${userId}`);
-        if (positionResponse.data && positionResponse.data.data) {
-          setPositionType(positionResponse.data.data);
+        try {
+          const positionResponse = await axios.get(`/users/hr/candidate/position/${userId}`);
+          if (positionResponse.data && positionResponse.data.data) {
+            setPositionType(positionResponse.data.data);
+          }
+        } catch (error) {
+          console.error('Error fetching position type:', error);
+          toast.warning('Could not determine position type');
         }
 
-        // Set candidate ID (assuming the decoded token contains it)
         setCandidateId(userId);
         console.log("Candidate ID set:", userId);
-        
-        // Map candidateId to interviewId
+
+        // Fetch or set interview ID
         if (userId) {
           try {
-            // Try to fetch the interview ID from the API
             const interviewResponse = await axios.get(`http://localhost:9191/api/v1/interviews/get/interviewId/by/candidateId?candidateId=${userId}`);
             console.log("Interview ID response:", interviewResponse.data);
-            
-            if (interviewResponse.data && interviewResponse.data.interviewId) {
-              setInterviewId(interviewResponse.data.interviewId);
-              console.log("Interview ID set:", interviewResponse.data.interviewId);
+            if (interviewResponse.data && interviewResponse.data.data) {
+              setInterviewId(interviewResponse.data.data);
+              console.log("Interview ID set:", interviewResponse.data.data);
             } else {
-              // If no interview ID is returned, use the candidate ID
               console.warn("No interview ID received, using candidateId instead");
               setInterviewId(userId);
             }
           } catch (error) {
             console.error('Error fetching interview ID:', error);
             toast.error('Failed to fetch interview ID, using candidate ID instead');
-            // Use the candidateId as the interviewId if API call fails
             setInterviewId(userId);
           }
         }
@@ -99,31 +99,28 @@ function VideoPage() {
     fetchUserData();
   }, [navigate]);
 
-  // Check if the Python service is ready before initializing webcam
+  // Initialize backend services and video stream
   useEffect(() => {
     if (!interviewId || serviceInitializing) return;
 
-    const checkPythonService = async () => {
+    const initializeBackendServices = async () => {
       setServiceInitializing(true);
       let retries = 0;
-      
-      // Show a toast when starting to check service
-      toast.info("Checking if face recognition service is ready...");
-      
+
+      toast.info("Initializing interview session...", {
+        autoClose: false,
+        toastId: "service-init"
+      });
+
       const checkService = async () => {
         try {
           const response = await fetch('http://localhost:8001/health', {
             method: 'GET',
             headers: { 'Accept': 'application/json' },
-            // Set a timeout to prevent hanging
             signal: AbortSignal.timeout(3000)
           });
-          
           if (response.ok) {
             console.log("Python service is ready!");
-            setIsServiceReady(true);
-            toast.success("Face recognition service is ready");
-            initializeWebcam();
             return true;
           } else {
             console.warn(`Service not ready (status: ${response.status})`);
@@ -134,44 +131,126 @@ function VideoPage() {
           return false;
         }
       };
-      
-      // First immediate check
-      const isReady = await checkService();
-      if (isReady) return;
-      
-      // If not ready, start polling
-      toast.info("Waiting for face recognition service to initialize...", {
-        autoClose: false,
-        toastId: "waiting-service"
-      });
-      
+
+      const startBackendStreaming = async () => {
+        try {
+          console.log(`Starting backend streaming for interview ID: ${interviewId}`);
+          const response = await fetch(
+            `http://localhost:8001/load/model/face-recognition/${interviewId}?emotion_library=deepface&min_face_detection=0.5&min_face_presence=0.5&min_tracking=0.5`,
+            {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              }
+            }
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            console.log("Backend stream started successfully:", data);
+            setBackendStreamActive(true);
+            setFaceRecognitionStarted(true);
+            setIsServiceReady(true);
+
+            // Set video feed source
+            if (videoFeedRef.current) {
+              videoFeedRef.current.src = `http://localhost:8001/video_feed/${interviewId}`;
+            }
+
+            toast.success('Interview session ready');
+            toast.dismiss("service-init");
+            return true;
+          } else {
+            const errorData = await response.text();
+            console.error("Backend stream error:", errorData);
+            throw new Error(errorData);
+          }
+        } catch (error) {
+          console.error('Failed to start backend stream:', error);
+          throw error;
+        }
+      };
+
+      const executeFlow = async () => {
+        try {
+          const serviceReady = await checkService();
+          if (!serviceReady) {
+            console.log("Service not ready yet, retrying...");
+            return false;
+          }
+          await startBackendStreaming();
+          return true;
+        } catch (error) {
+          console.error("Error in initialization flow:", error);
+          return false;
+        }
+      };
+
+      try {
+        const success = await executeFlow();
+        if (success) return;
+      } catch (error) {
+        console.error("Initial attempt failed:", error);
+      }
+
       const intervalId = setInterval(async () => {
         if (retries >= maxRetries) {
-          console.error("Max retries reached. Service may not be available.");
-          toast.dismiss("waiting-service");
-          toast.error("Face recognition service could not be reached. Using fallback mode.");
-          setIsServiceReady(true); // Proceed anyway in fallback mode
-          initializeWebcam();
+          console.error("Maximum retries reached. Cannot initialize backend services.");
+          toast.dismiss("service-init");
+          toast.error("Failed to initialize interview session. Please refresh and try again.");
+          setServiceInitializing(false);
           clearInterval(intervalId);
           return;
         }
-        
-        const result = await checkService();
-        if (result) {
-          toast.dismiss("waiting-service");
-          clearInterval(intervalId);
-        } else {
-          retries++;
-          console.log(`Retry attempt ${retries}/${maxRetries}...`);
+
+        retries++;
+        console.log(`Retry attempt ${retries}/${maxRetries}...`);
+
+        try {
+          const success = await executeFlow();
+          if (success) {
+            clearInterval(intervalId);
+          }
+        } catch (error) {
+          console.error(`Retry ${retries} failed:`, error);
         }
       }, retryDelay);
-      
-      // Clean up interval if component unmounts
+
       return () => clearInterval(intervalId);
     };
-    
-    checkPythonService();
+
+    initializeBackendServices();
   }, [interviewId, serviceInitializing]);
+
+  // Heartbeat to check backend service status
+  useEffect(() => {
+    let heartbeatInterval;
+
+    if (backendStreamActive && interviewId) {
+      heartbeatInterval = setInterval(async () => {
+        try {
+          const response = await fetch(`http://localhost:8001/monitoring/status/${interviewId}`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.status === 'error') {
+              setFaceRecognitionError("Face recognition service encountered an error. Session will continue, but data may be limited.");
+            }
+          }
+        } catch (error) {
+          console.warn("Heartbeat check failed:", error.message);
+        }
+      }, 10000); // Check every 10 seconds
+    }
+
+    return () => {
+      if (heartbeatInterval) clearInterval(heartbeatInterval);
+    };
+  }, [backendStreamActive, interviewId]);
 
   // Fetch questions from backend
   useEffect(() => {
@@ -194,175 +273,44 @@ function VideoPage() {
     fetchQuestions();
   }, [positionType]);
 
-  // Initialize webcam and start face recognition
-  const initializeWebcam = async () => {
-    if (faceRecognitionStarted) return;
-    
+  // Stop backend services
+  const stopBackendServices = async () => {
+    if (!interviewId || !backendStreamActive) return;
+
     try {
-      console.log("Initializing webcam...");
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: true, 
-        audio: true 
+      console.log(`Stopping backend services for interview ID: ${interviewId}`);
+      toast.info("Stopping interview session...");
+
+      const response = await fetch(`http://localhost:8001/stop/monitoring/${interviewId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
       });
-      
-      streamRef.current = stream;
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        console.log("Webcam stream connected to video element");
-      }
 
-      console.log("Webcam initialized, now starting face recognition...");
-      // Start face recognition only after webcam is ready
-      startFaceRecognition();
-    } catch (error) {
-      console.error('Error accessing webcam:', error);
-      toast.error('Failed to access webcam. Please ensure you have given camera permissions.');
-    }
-  };
-
-  // Updated startFaceRecognition function with better retry and timeout handling
-  const startFaceRecognition = async () => {
-    if (!interviewId) {
-      console.error("Cannot start face recognition: No interview ID available");
-      setFaceRecognitionError("No interview ID available");
-      return;
-    }
-
-    try {
-      console.log(`Starting face recognition for interview ID: ${interviewId}`);
-      toast.info("Starting face recognition...", { toastId: "starting-face" });
-      
-      // Create an AbortController for the request
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
-      
-      try {
-        const response = await fetch(
-          `http://localhost:8001/load/model/face-recognition/${interviewId}?emotion_library=deepface&min_face_detection=0.5&min_face_presence=0.5&min_tracking=0.5`, 
-          {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            },
-            signal: controller.signal
-          }
-        );
-        
-        clearTimeout(timeoutId);
-        toast.dismiss("starting-face");
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log("Face recognition started successfully:", data);
-          setFaceRecognitionStarted(true);
-          toast.success('Face recognition active');
-        } else {
-          // Try to get error details
-          let errorMessage = "Unknown error";
-          try {
-            const errorData = await response.text();
-            errorMessage = errorData;
-            console.error("Face recognition error response:", errorData);
-          } catch (e) {
-            console.error("Could not read error details:", e);
-          }
-          
-          setFaceRecognitionError(`Face recognition error: ${errorMessage}`);
-          
-          // Although there was an error, we'll still set recognition as started
-          // to allow the interview to continue in "simulated mode"
-          setFaceRecognitionStarted(true);
-          toast.warning("Using simulated face recognition mode due to service error");
-        }
-      } catch (error) {
-        clearTimeout(timeoutId);
-        toast.dismiss("starting-face");
-        
-        console.error('Error connecting to face recognition service:', error);
-        setFaceRecognitionError(`Connection error: ${error.message}`);
-        
-        // Use simulated mode when service is unreachable
-        setFaceRecognitionStarted(true);
-        toast.warning("Using simulated face recognition mode due to connection issues");
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Backend services stopped successfully:", data);
+        toast.success('Interview session ended');
+      } else {
+        const errorText = await response.text();
+        console.warn("Error stopping backend services:", errorText);
+        toast.warning('Backend services may not have stopped properly');
       }
     } catch (error) {
-      console.error('Unexpected error in face recognition setup:', error);
-      setFaceRecognitionError(`Unexpected error: ${error.message}`);
-      setFaceRecognitionStarted(true); // Continue in simulated mode
-    }
-  };
-
-  // Updated stopFaceRecognition function
-  const stopFaceRecognition = async () => {
-    if (!interviewId || !faceRecognitionStarted) return;
-
-    try {
-      console.log(`Stopping face recognition for interview ID: ${interviewId}`);
-      toast.info("Stopping face recognition...");
-      
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-      
-      try {
-        const response = await fetch(`http://localhost:8001/stop/face-recognition/${interviewId}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log("Face recognition stopped successfully:", data);
-          toast.success('Face recognition stopped');
-        } else {
-          const errorText = await response.text();
-          console.warn("Error stopping face recognition:", errorText);
-          toast.warning('Face recognition may not have stopped properly');
-        }
-      } catch (error) {
-        clearTimeout(timeoutId);
-        console.warn("Failed to communicate with face recognition service when stopping:", error.message);
-        toast.warning("Could not confirm if face recognition was stopped properly");
-      }
-    } catch (error) {
-      console.error('Error stopping face recognition:', error);
+      console.error('Error stopping backend services:', error);
     } finally {
-      // Always consider face recognition stopped from frontend perspective
+      setBackendStreamActive(false);
       setFaceRecognitionStarted(false);
-    }
-  };
-
-  // Stop webcam and face recognition
-  const stopWebcamAndFaceRecognition = async () => {
-    try {
-      // Stop face recognition first
-      await stopFaceRecognition();
-      
-      // Then stop webcam stream
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => {
-          console.log(`Stopping track: ${track.kind}`);
-          track.stop();
-        });
-        streamRef.current = null;
+      if (videoFeedRef.current) {
+        videoFeedRef.current.src = ''; // Clear the video feed
       }
-      
-      console.log("Webcam and face recognition stopped");
-    } catch (error) {
-      console.error('Error cleaning up resources:', error);
     }
   };
 
   // Security restrictions and fullscreen handling
   useEffect(() => {
-    // Completely block Escape key at the document level
     const blockEscapeKey = (e) => {
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -372,9 +320,8 @@ function VideoPage() {
       }
     };
 
-    // Add event listener to document to capture Escape key before it triggers fullscreen exit
     document.addEventListener('keydown', blockEscapeKey, true);
-    
+
     const enterFullscreen = async () => {
       if (!document.fullscreenElement) {
         try {
@@ -388,13 +335,10 @@ function VideoPage() {
     };
 
     const handleKeyDown = (e) => {
-      // Block common shortcut keys
       if ((e.ctrlKey || e.metaKey) && ['t', 'T', 'w', 'W', 'n', 'N'].includes(e.key)) {
         e.preventDefault();
         toast.error('Shortcut disabled during interview');
       }
-      
-      // Block F11 and F12 keys
       if (['F11', 'F12'].includes(e.key)) {
         e.preventDefault();
       }
@@ -414,16 +358,12 @@ function VideoPage() {
 
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
-      
-      // If user exited fullscreen, force back to fullscreen
       if (!document.fullscreenElement && !sessionCompleted) {
         toast.error('Fullscreen mode is required until you reach the thank you page');
-        // Try to re-enter fullscreen immediately
         enterFullscreen();
       }
     };
 
-    // Initial setup
     enterFullscreen();
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('contextmenu', handleContextMenu);
@@ -436,11 +376,6 @@ function VideoPage() {
       window.removeEventListener('contextmenu', handleContextMenu);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      
-      // Clean up video stream when component unmounts
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
     };
   }, [sessionCompleted]);
 
@@ -451,7 +386,7 @@ function VideoPage() {
       e.returnValue = '';
     };
 
-    const handlePopState = (e) => {
+    const handlePopState = () => {
       window.history.pushState(null, null, window.location.href);
     };
 
@@ -497,41 +432,39 @@ function VideoPage() {
   };
 
   const handleActionButton = () => {
-    // Regular next question logic for non-final questions
     if (currentQuestionIndex < questions.length - 1) {
       handleNextQuestion();
       return;
     }
-    
-    // For the final question
     if (!sessionCompleted) {
-      // First click on final question marks session as completed
       setSessionCompleted(true);
       toast.success('You have completed the interview session!');
     } else {
-      // Second click (after completion) shows the completion alert
       setShowCompletionAlert(true);
     }
   };
 
   const handleEndSession = async () => {
     try {
-      // First stop the webcam and face recognition
-      await stopWebcamAndFaceRecognition();
-      
-      // Then exit fullscreen mode
+      await stopBackendServices();
       if (document.fullscreenElement) {
         await document.exitFullscreen();
       }
-      
-      // Navigate to feedback page
       navigate('/feedback');
     } catch (err) {
       console.error('Error ending session:', err);
-      // Navigate anyway if there's an error
       navigate('/feedback');
     }
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (backendStreamActive && interviewId) {
+        stopBackendServices();
+      }
+    };
+  }, [backendStreamActive, interviewId]);
 
   if (loading) {
     return (
@@ -549,28 +482,20 @@ function VideoPage() {
     );
   }
 
-  // Determine button text and style based on current state
   const getActionButtonStyles = () => {
-    if (sessionCompleted) {
-      return "bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-2.5 rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-md";
-    }
-    return "bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-2.5 rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-md";
+    return sessionCompleted
+      ? "bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-2.5 rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-md"
+      : "bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-2.5 rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-md";
   };
 
-  // Determine button text based on current state
   const getActionButtonText = () => {
-    if (currentQuestionIndex < questions.length - 1) {
-      return "Next Question";
-    }
-    if (!sessionCompleted) {
-      return "Complete Session";
-    }
+    if (currentQuestionIndex < questions.length - 1) return "Next Question";
+    if (!sessionCompleted) return "Complete Session";
     return "End Session";
   };
 
   return (
     <div className="h-screen w-full bg-emerald-50 flex flex-col">
-      {/* Service Initializing Message */}
       {serviceInitializing && !isServiceReady && (
         <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
@@ -578,25 +503,21 @@ function VideoPage() {
               <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
                 <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900">Initializing Service</h2>
-              <p className="text-gray-600">
-                Please wait while the face recognition service is initializing...
-              </p>
+              <h2 className="text-2xl font-bold text-gray-900">Initializing Interview</h2>
+              <p className="text-gray-600">Please wait while the interview system prepares your session...</p>
+              <p className="text-gray-500 text-sm">This may take a moment as we connect to your camera.</p>
             </div>
           </div>
         </div>
       )}
-      
-      {/* Fullscreen Warning */}
+
       {!isFullscreen && (
         <div className="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
             <div className="flex flex-col items-center text-center space-y-4">
               <AlertCircle className="w-12 h-12 text-red-600" />
               <h2 className="text-2xl font-bold text-gray-900">Fullscreen Required</h2>
-              <p className="text-gray-600">
-                This interview session requires fullscreen mode. Please click the button below to continue.
-              </p>
+              <p className="text-gray-600">This interview session requires fullscreen mode. Please click the button below to continue.</p>
               <button
                 onClick={() => document.documentElement.requestFullscreen()}
                 className="px-6 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors"
@@ -607,22 +528,20 @@ function VideoPage() {
           </div>
         </div>
       )}
-      
-      {/* Face Recognition Status */}
+
       {faceRecognitionError && (
         <div className="fixed top-4 right-4 z-40 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-md">
-          <p className="font-bold">Face Recognition Error</p>
+          <p className="font-bold">Interview System Error</p>
           <p className="text-sm">{faceRecognitionError}</p>
-          <button 
-            onClick={startFaceRecognition}
+          <button
+            onClick={() => window.location.reload()}
             className="mt-2 bg-red-600 text-white px-3 py-1 rounded text-sm"
           >
-            Retry
+            Restart Session
           </button>
         </div>
       )}
-      
-      {/* Completion Alert Modal */}
+
       {showCompletionAlert && (
         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 border border-emerald-100">
@@ -631,13 +550,9 @@ function VideoPage() {
                 <AlertCircle className="w-8 h-8 text-green-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900">End Interview Session?</h2>
-              <p className="text-gray-600">
-                You have completed all questions. Are you ready to end the session and proceed to feedback?
-              </p>
+              <p className="text-gray-600">You have completed all questions. Are you ready to end the session and proceed to feedback?</p>
               {tabSwitches > 0 && (
-                <div className="text-yellow-600 text-sm">
-                  Note: You switched tabs {tabSwitches} times during this session
-                </div>
+                <div className="text-yellow-600 text-sm">Note: You switched tabs {tabSwitches} times during this session</div>
               )}
               <div className="flex gap-4 w-full mt-4">
                 <button
@@ -658,7 +573,6 @@ function VideoPage() {
         </div>
       )}
 
-      {/* Header */}
       <header className="w-full bg-white shadow-sm py-4 px-4 md:px-6">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-4">
@@ -674,12 +588,12 @@ function VideoPage() {
               <div className="px-4 py-2 rounded-xl bg-emerald-100 text-emerald-700">
                 <span className="font-semibold text-sm md:text-base flex items-center gap-2">
                   <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                  Face Recognition Active
+                  AI Analysis Active
                 </span>
               </div>
             )}
           </div>
-          
+
           <div className="flex items-center gap-3 bg-emerald-100 px-4 py-2 rounded-lg">
             <Clock size={18} className="text-emerald-700" />
             <span className="font-medium text-emerald-800">{formatTime(timer)}</span>
@@ -690,14 +604,11 @@ function VideoPage() {
         </div>
       </header>
 
-      {/* Main Video Area */}
       <main className="flex-1 relative flex items-center justify-center p-4">
         <div className="w-full max-w-2xl aspect-video rounded-xl bg-black overflow-hidden shadow-2xl">
-          <video 
-            ref={videoRef} 
-            autoPlay 
-            muted 
-            playsInline
+          <img
+            ref={videoFeedRef}
+            alt="Video Feed"
             className="w-full h-full object-cover"
           />
         </div>
@@ -709,7 +620,6 @@ function VideoPage() {
         </div>
       </main>
 
-      {/* Question Section - Hide when session is completed */}
       {!sessionCompleted && (
         <footer className="w-full bg-white border-t border-emerald-100">
           <div className="max-w-6xl mx-auto px-4 md:px-6 py-4">
@@ -721,19 +631,16 @@ function VideoPage() {
                   </span>
                   <div className="flex items-center gap-2">
                     <Clock size={16} className="text-emerald-600" />
-                    <span className="text-emerald-600 font-medium">
-                      {formatTime(questionTimer)}
-                    </span>
+                    <span className="text-emerald-600 font-medium">{formatTime(questionTimer)}</span>
                   </div>
                 </div>
-                <p className="text-gray-800 font-medium mt-2">
-                  {questions[currentQuestionIndex]?.content}
-                </p>
+                <p className="text-gray-800 font-medium mt-2">{questions[currentQuestionIndex]?.content}</p>
               </div>
-              
+
               <button
                 onClick={handleActionButton}
                 className={getActionButtonStyles()}
+                disabled={!isServiceReady}
               >
                 {getActionButtonText()}
                 <ChevronRight size={20} className="text-white" />
@@ -743,20 +650,15 @@ function VideoPage() {
         </footer>
       )}
 
-      {/* Alternative Footer when Session is Completed */}
       {sessionCompleted && (
         <footer className="w-full bg-white border-t border-emerald-100">
           <div className="max-w-6xl mx-auto px-4 md:px-6 py-4">
             <div className="flex flex-col md:flex-row items-center justify-center gap-4">
               <div className="text-center">
-                <div className="text-emerald-700 font-medium text-lg mb-2">
-                  Interview Session Completed
-                </div>
-                <p className="text-gray-600">
-                  You have answered all questions. Ready to proceed to the feedback page?
-                </p>
+                <div className="text-emerald-700 font-medium text-lg mb-2">Interview Session Completed</div>
+                <p className="text-gray-600">You have answered all questions. Ready to proceed to the feedback page?</p>
               </div>
-              
+
               <button
                 onClick={() => setShowCompletionAlert(true)}
                 className="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-2.5 rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-md mt-4 md:mt-0"
