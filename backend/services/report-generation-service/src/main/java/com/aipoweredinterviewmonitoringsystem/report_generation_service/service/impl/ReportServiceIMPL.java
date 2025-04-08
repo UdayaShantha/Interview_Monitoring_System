@@ -53,7 +53,7 @@ public class ReportServiceIMPL implements ReportService {
     // Fetch CSV from Python service ------------------------------------------------------
     @Override
     public String fetchCsvFromPythonService(Long interviewId) {
-        String url = "http://127.0.0.1:8001/monitoring/report?interview_id=" + interviewId;
+        String url = "http://127.0.0.1:8001/monitoring/report/" + interviewId;
         return WebClient.create()
                 .get()
                 .uri(url)

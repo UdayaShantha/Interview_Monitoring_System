@@ -245,7 +245,9 @@ public class UserController {
         } catch (UserNotFoundException e) {
             return new ResponseEntity<>(
                     new StandardResponse(404, "User Not Found", e.getMessage()),
-                    HttpStatus.NOT_FOUND
+                    HttpStatus.NOT_FOUND);
+        }
+    }
 
     @PostMapping("hr/hr/save")
     public ResponseEntity<StandardResponse> saveHr(@RequestBody HrSaveDTO hrSaveDTO){

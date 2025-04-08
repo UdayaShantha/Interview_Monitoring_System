@@ -117,6 +117,14 @@ public class JasperReportController {
 
             //--------------------------------------------------------------------------------
 
+            //verification
+            String verification ;
+            if((metrics.getValidFaceDetections()/metrics.getAnalyzedFrames())*100 >= 40){
+                verification = "Identified";
+            }else{
+                verification = "Not Identified";
+            }
+
 
             //Add parameters to the report----------------------------------------------------
 
@@ -127,18 +135,21 @@ public class JasperReportController {
             parameters.put("Email", candidateDetailsDTO.getEmail());
             parameters.put("Contact_number", candidateDetailsDTO.getPhone());
             parameters.put("Duration", String.valueOf(interviewDetailsDTO.getDuration()) + " Minutes");
-            parameters.put("Verification", "Identified");
+            parameters.put("Verification", verification);
             parameters.put("Interview_id", interviewDetailsDTO.getCandidateId());
             parameters.put("Address", candidateDetailsDTO.getAddress());
             parameters.put("Date", String.valueOf(interviewDetailsDTO.getScheduleDate()));
 
             // Emotion Data
             List<EmotionData> emotionDataList = new ArrayList<>();
-            emotionDataList.add(new EmotionData("Confident", 40));
-            emotionDataList.add(new EmotionData("Neutral", 15));
-            emotionDataList.add(new EmotionData("Confuse", 25));
-            emotionDataList.add(new EmotionData("Fear", 5));
-            emotionDataList.add(new EmotionData("Others", 10));
+            emotionDataList.add(new EmotionData("Confident", (int) Math.round(metrics.getHappyPercentage())));
+            emotionDataList.add(new EmotionData("Neutral", (int) Math.round(metrics.getNeutralPercentage())));
+            emotionDataList.add(new EmotionData("Surprise", (int) Math.round(metrics.getSurprisePercentage())));
+            emotionDataList.add(new EmotionData("Fear", (int) Math.round(metrics.getFearPercentage())));
+            emotionDataList.add(new EmotionData("Others", (100 - ((int) Math.round(metrics.getHappyPercentage()) +
+                    (int) Math.round(metrics.getNeutralPercentage()) +
+                    (int) Math.round(metrics.getSurprisePercentage()) +
+                    (int) Math.round(metrics.getFearPercentage())))));
 
             // Convert to JRBeanCollectionDataSource
             JRBeanCollectionDataSource emotionDataSource = new JRBeanCollectionDataSource(emotionDataList);
@@ -210,5 +221,28 @@ public class JasperReportController {
         }
     }
 
+
+    @GetMapping("/view/{reportId}")
+    public ResponseEntity<byte[]> viewReportById(
+            @RequestParam(value = "reportId") Long reportId
+    ){
+        try {
+            ReportDownloadDTO reportDownloadDTO = reportService.getReportForDownload(reportId);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDisposition(
+                    ContentDisposition.inline()
+                            .filename(reportDownloadDTO.getCandidateName()+"_report.pdf")
+                            .build()
+            );
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(reportDownloadDTO.getPdfContent());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 
 }

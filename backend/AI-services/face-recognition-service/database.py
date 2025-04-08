@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 
 
 
-DATABASE_URL = "postgresql+asyncpg://postgres:21320@localhost:5432/ai_services_db1"
+DATABASE_URL = "postgresql+asyncpg://postgres:nimesh@localhost:5432/ai_services_db1"
 engine = create_async_engine(DATABASE_URL)
 async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
 
