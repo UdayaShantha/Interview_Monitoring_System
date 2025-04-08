@@ -32,7 +32,11 @@ public interface UserService {
 
     CandidatePhotoResponse getCandidatePhotosById(long userId);
 
+
+    CandidateUpdateDTO getUserDetailsByUserId(long userId);
+
     String saveHr(HrSaveDTO hrSaveDTO);
 
     String saveTechnical(TechnicalSaveDTO technicalSaveDTO);
+
 }
