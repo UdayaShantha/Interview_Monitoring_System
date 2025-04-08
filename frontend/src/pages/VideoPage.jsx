@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Mic, Clock, ChevronRight, AlertCircle } from 'lucide-react';
+import { Clock, ChevronRight, AlertCircle } from 'lucide-react';
 import axios from '../axiosInstance';
 import { toast } from 'react-toastify';
 import { jwtDecode } from 'jwt-decode';
@@ -13,7 +13,8 @@ function VideoPage() {
   const [sessionCompleted, setSessionCompleted] = useState(false);
   const [showCompletionAlert, setShowCompletionAlert] = useState(false);
   const [timer, setTimer] = useState(0);
-  const [questionTimer, setQuestionTimer] = useState(0);
+  const [questionTimer, setQuestionTimer] = useState(null); // Initially null until stream starts
+  const [initialQuestionDuration, setInitialQuestionDuration] = useState(0); // Store initial duration
   const [loading, setLoading] = useState(true);
   const [tabSwitches, setTabSwitches] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -58,7 +59,6 @@ function VideoPage() {
           return;
         }
 
-        // Fetch position type
         try {
           const positionResponse = await axios.get(`/users/hr/candidate/position/${userId}`);
           if (positionResponse.data && positionResponse.data.data) {
@@ -72,7 +72,6 @@ function VideoPage() {
         setCandidateId(userId);
         console.log("Candidate ID set:", userId);
 
-        // Fetch or set interview ID
         if (userId) {
           try {
             const interviewResponse = await axios.get(`http://localhost:9191/api/v1/interviews/get/interviewId/by/candidateId?candidateId=${userId}`);
@@ -153,10 +152,12 @@ function VideoPage() {
             setFaceRecognitionStarted(true);
             setIsServiceReady(true);
 
-            // Set video feed source
             if (videoFeedRef.current) {
               videoFeedRef.current.src = `http://localhost:8001/video_feed/${interviewId}`;
             }
+
+            // Set the initial question timer only when streaming starts
+            setQuestionTimer(initialQuestionDuration);
 
             toast.success('Interview session ready');
             toast.dismiss("service-init");
@@ -221,7 +222,7 @@ function VideoPage() {
     };
 
     initializeBackendServices();
-  }, [interviewId, serviceInitializing]);
+  }, [interviewId, serviceInitializing, initialQuestionDuration]);
 
   // Heartbeat to check backend service status
   useEffect(() => {
@@ -261,7 +262,8 @@ function VideoPage() {
         const response = await axios.get(`/questions/get/interview/questions?positionType=${positionType}`);
         if (response.data.data) {
           setQuestions(response.data.data);
-          setQuestionTimer(response.data.data[0]?.duration * 60 || 0);
+          // Store the initial duration but don't set questionTimer yet
+          setInitialQuestionDuration(response.data.data[0]?.duration * 60 || 0);
         }
       } catch (error) {
         toast.error('Failed to load questions');
@@ -273,15 +275,15 @@ function VideoPage() {
     fetchQuestions();
   }, [positionType]);
 
-  // Stop backend services
-  const stopBackendServices = async () => {
+  // Stop backend services and save face recognition report
+  const stopBackendServicesAndSaveReport = async () => {
     if (!interviewId || !backendStreamActive) return;
 
     try {
       console.log(`Stopping backend services for interview ID: ${interviewId}`);
-      toast.info("Stopping interview session...");
+      toast.info("Stopping interview session and saving report...");
 
-      const response = await fetch(`http://localhost:8001/stop/monitoring/${interviewId}`, {
+      const stopResponse = await fetch(`http://localhost:8001/stop/monitoring/${interviewId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -289,17 +291,18 @@ function VideoPage() {
         }
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log("Backend services stopped successfully:", data);
-        toast.success('Interview session ended');
+      if (stopResponse.ok) {
+        const stopData = await stopResponse.json();
+        console.log("Backend services stopped successfully:", stopData);
+        toast.success('Interview session ended and report saved');
       } else {
-        const errorText = await response.text();
+        const errorText = await stopResponse.text();
         console.warn("Error stopping backend services:", errorText);
         toast.warning('Backend services may not have stopped properly');
       }
     } catch (error) {
-      console.error('Error stopping backend services:', error);
+      console.error('Error stopping backend services or saving report:', error);
+      toast.error('Failed to stop session or save report');
     } finally {
       setBackendStreamActive(false);
       setFaceRecognitionStarted(false);
@@ -400,8 +403,10 @@ function VideoPage() {
     };
   }, []);
 
-  // Timer logic
+  // Timer logic (starts only when service is ready)
   useEffect(() => {
+    if (!isServiceReady || questions.length === 0) return; // Wait until service is ready and questions are loaded
+
     const interval = setInterval(() => {
       setTimer(prev => prev + 1);
       setQuestionTimer(prev => {
@@ -412,10 +417,12 @@ function VideoPage() {
         return prev - 1;
       });
     }, 1000);
+
     return () => clearInterval(interval);
-  }, [currentQuestionIndex, questions]);
+  }, [isServiceReady, currentQuestionIndex, questions]);
 
   const formatTime = (seconds) => {
+    if (seconds === null) return "0:00"; // Handle null case before streaming starts
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
@@ -437,7 +444,7 @@ function VideoPage() {
       return;
     }
     if (!sessionCompleted) {
-      await stopBackendServices(); // Moved streaming stop to "Complete Session"
+      await stopBackendServicesAndSaveReport(); // Stop streaming and save report on "Complete Session"
       setSessionCompleted(true);
       toast.success('You have completed the interview session!');
     } else {
@@ -461,7 +468,7 @@ function VideoPage() {
   useEffect(() => {
     return () => {
       if (backendStreamActive && interviewId && !sessionCompleted) {
-        stopBackendServices();
+        stopBackendServicesAndSaveReport();
       }
     };
   }, [backendStreamActive, interviewId, sessionCompleted]);
@@ -612,12 +619,6 @@ function VideoPage() {
             className="w-full h-full object-cover"
           />
         </div>
-
-        <div className="absolute bottom-4 left-4 md:bottom-6 md:left-6">
-          <div className="w-20 h-20 md:w-28 md:h-28 rounded-full bg-emerald-600 border-4 border-white shadow-xl flex items-center justify-center">
-            <Mic size={24} className="text-white" />
-          </div>
-        </div>
       </main>
 
       {!sessionCompleted && (
@@ -631,7 +632,9 @@ function VideoPage() {
                   </span>
                   <div className="flex items-center gap-2">
                     <Clock size={16} className="text-emerald-600" />
-                    <span className="text-emerald-600 font-medium">{formatTime(questionTimer)}</span>
+                    <span className="text-emerald-600 font-medium">
+                      {isServiceReady ? formatTime(questionTimer) : formatTime(initialQuestionDuration)}
+                    </span>
                   </div>
                 </div>
                 <p className="text-gray-800 font-medium mt-2">{questions[currentQuestionIndex]?.content}</p>
