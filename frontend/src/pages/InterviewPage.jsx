@@ -196,7 +196,7 @@ function InterviewPage() {
     <img 
       src={logo} 
       alt="Company Logo" 
-      className="h-12 w-12 object-contain rounded-md" 
+      className="w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 object-contain rounded-md hover:scale-105 transition duration-300" 
     />
     <h1 className="text-white text-xl font-bold">Interview Management</h1>
   </div>

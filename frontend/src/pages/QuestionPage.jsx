@@ -157,14 +157,14 @@ function QuestionPage() {
     <div className="min-h-screen flex flex-col font-['Poppins'] bg-gradient-to-b from-green-50 to-green-100">
       {/* Navbar */}
       <nav className="bg-green-500 text-white py-4 px-6 flex justify-between items-center shadow-lg">
-        <div className="flex items-center space-x-3">
-          <img 
-            src={logo} 
-            alt="Company Logo" 
-            className="h-8 w-auto object-contain" 
-          />
-          <h1 className="text-lg md:text-2xl font-bold">Question Management</h1>
-        </div>
+      <div className="flex items-center space-x-3">
+    <img 
+      src={logo} 
+      alt="Company Logo" 
+      className="w-12 h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 object-contain rounded-md" 
+    />
+    <h1 className="text-lg md:text-2xl font-bold">Question Management</h1>
+  </div>
         <Link
           to="/technical-dashboard"
           className="bg-white text-green-600 px-3 py-1 md:px-4 md:py-2 rounded-lg shadow-md hover:bg-gray-200 transition duration-300 text-sm md:text-base"
