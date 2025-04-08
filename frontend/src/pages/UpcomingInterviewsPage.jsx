@@ -198,13 +198,13 @@ function UpcomingInterviewsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-3">
-              <img 
-                src={logo} 
-                alt="Company Logo" 
-                className="h-10 w-10 object-contain rounded-md"
-              />
-              <h1 className="text-2xl font-bold tracking-tight">Interview Portal</h1>
-            </div>
+        <img 
+          src={logo} 
+          alt="Company Logo" 
+          className="w-12 h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 object-contain rounded-md"
+        />
+        <h1 className="text-2xl font-bold tracking-tight">Interview Portal</h1>
+      </div>
             <div className="hidden md:block">
               <div className="flex space-x-8">
                 <Link to="/interviews" className="hover:text-green-200">Dashboard</Link>

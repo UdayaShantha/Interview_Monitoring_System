@@ -89,13 +89,13 @@ function UserProfilePage() {
     <div className="user-container flex flex-col min-h-screen bg-white text-green-700 font-sans">
       {/* Header */}
       <header className="user-header bg-gradient-to-r from-green-300 to-green-500 p-6 shadow-lg flex justify-between items-center">
-        <div className="flex items-center">
-          <img 
-            src={logo} 
-            alt="Company Logo" 
-            className="h-12 w-auto object-contain" 
-          />
-        </div>
+      <div className="flex items-center">
+    <img 
+      src={logo} 
+      alt="Company Logo" 
+      className="w-12 h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 object-contain"
+    />
+  </div>
         <button
           className="logout-btn bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition duration-300"
           onClick={() => navigate('/login')}
