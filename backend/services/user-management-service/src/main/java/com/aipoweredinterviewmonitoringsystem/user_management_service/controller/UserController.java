@@ -196,6 +196,21 @@ public class UserController {
         }
     }
 
+    @GetMapping("/candidate /get-all/feedback")
+    public ResponseEntity<StandardResponse> getAllFeedbacks(){
+        try {
+            List<CandidateFeedbackDTO> feedbacks = userService.getAllFeedbacks();
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(200,"Success",feedbacks),HttpStatus.OK
+            );
+        }
+        catch (Exception e) {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(404,"User Not Found",e.getMessage()),HttpStatus.NOT_FOUND
+            );
+        }
+    }
+
     @GetMapping("/hr/candidate/position/{id}")
     public ResponseEntity<StandardResponse> getCandidatePositionById(@PathVariable(value = "id") Long userId){
         try {

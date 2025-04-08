@@ -318,4 +318,9 @@ public class UserServiceIMPL implements UserService {
         technicalTeamRepository.save(technicalTeam);
         return "Technical saved";
     }
+
+    @Override
+    public List<CandidateFeedbackDTO> getAllFeedbacks() {
+        return List.of();
+    }
 }

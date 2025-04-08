@@ -39,4 +39,5 @@ public interface UserService {
 
     String saveTechnical(TechnicalSaveDTO technicalSaveDTO);
 
+    List<CandidateFeedbackDTO> getAllFeedbacks();
 }
