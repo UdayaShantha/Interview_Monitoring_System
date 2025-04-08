@@ -112,15 +112,15 @@ const CandidatesPage = () => {
           <div className="flex items-center">
               {/* Updated logo section */}
               <div className="flex items-center space-x-3">
-                <img 
-                  src={logo} 
-                  alt="Company Logo" 
-                  className="h-8 w-8 object-contain" 
-                />
-                <Link to="/hr-dashboard" className="text-xl font-bold text-gray-800">
-                  HR Portal
-                </Link>
-              </div>
+    <img 
+      src={logo} 
+      alt="Company Logo" 
+      className="w-10 h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 object-contain rounded-md" 
+    />
+    <Link to="/hr-dashboard" className="text-xl font-bold text-gray-800">
+      HR Portal
+    </Link>
+  </div>
             </div>
             
             <div className="hidden md:block">
