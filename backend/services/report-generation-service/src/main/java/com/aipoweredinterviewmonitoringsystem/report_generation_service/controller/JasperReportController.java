@@ -53,10 +53,9 @@ public class JasperReportController {
         try {
             Long interviewId = getAccuracyRequestDTO.getInterviewId();
 
-            // Fetch CSV from Python service
-            String csvContent = reportService.fetchCsvFromPythonService(interviewId);
-            InterviewMetricsDto metrics = reportService.parseCsv(csvContent);
-            System.out.println("Metrics: " + metrics);
+            // Fetch json from Python service
+            InterviewMetricsDto metrics = reportService.fetchMetricsFromPythonService(interviewId);
+            System.out.println("Metrics from Python service: " + metrics);
 
             // Get interview details from interview management service
             ResponseEntity<StandardResponse> interviewDetails = interviewServiceClient

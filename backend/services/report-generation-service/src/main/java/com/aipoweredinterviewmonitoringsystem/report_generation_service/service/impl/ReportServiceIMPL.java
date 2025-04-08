@@ -1,20 +1,17 @@
 package com.aipoweredinterviewmonitoringsystem.report_generation_service.service.impl;
 
+import com.aipoweredinterviewmonitoringsystem.report_generation_service.dto.MetricValue;
 import com.aipoweredinterviewmonitoringsystem.report_generation_service.dto.ReportDownloadDTO;
 import com.aipoweredinterviewmonitoringsystem.report_generation_service.dto.respond.InterviewMetricsDto;
+import com.aipoweredinterviewmonitoringsystem.report_generation_service.dto.respond.PythonReportResponse;
 import com.aipoweredinterviewmonitoringsystem.report_generation_service.entity.Report;
 import com.aipoweredinterviewmonitoringsystem.report_generation_service.repository.ReportRepository;
 import com.aipoweredinterviewmonitoringsystem.report_generation_service.service.ReportService;
-import com.opencsv.CSVReader;
-import com.opencsv.bean.CsvToBeanBuilder;
-import com.opencsv.bean.HeaderColumnNameTranslateMappingStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.io.StringReader;
 import java.time.LocalDate;
-import java.util.Map;
 import java.util.List;
 
 @Service
@@ -22,9 +19,13 @@ public class ReportServiceIMPL implements ReportService {
 
     private final ReportRepository reportRepository;
 
+    private final WebClient webClient;
+
+
     @Autowired
-    public ReportServiceIMPL(ReportRepository reportRepository) {
+    public ReportServiceIMPL(ReportRepository reportRepository , WebClient webClient) {
         this.reportRepository = reportRepository;
+        this.webClient = webClient;
     }
 
     public String saveReport(Long interviewId, Long candidateId, String candidateName, byte[] pdfBytes) {
@@ -50,100 +51,87 @@ public class ReportServiceIMPL implements ReportService {
     }
 
 
-    // Fetch CSV from Python service ------------------------------------------------------
+    // Fetch json from Python service ------------------------------------------------------
     @Override
-    public String fetchCsvFromPythonService(Long interviewId) {
-        String url = "http://127.0.0.1:8001/monitoring/report/" + interviewId;
-        return WebClient.create()
-                .get()
-                .uri(url)
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
+    public InterviewMetricsDto fetchMetricsFromPythonService(Long interviewId) {
+        // Fetch data from Python service
+       try {
+           PythonReportResponse response = webClient.get()
+                   .uri("/monitoring/report/{interviewId}", interviewId)
+                   .retrieve()
+                   .bodyToMono(PythonReportResponse.class)
+                   .block();
+
+           // Convert to InterviewMetricsDto
+           return mapToInterviewMetricsDto(response.getData());
+       }catch (Exception e) {
+           throw new RuntimeException("Failed to fetch metrics from Python service", e);
+       }
+
     }
 
-    // Parse CSV into InterviewMetricsDto
-    @Override
-    public InterviewMetricsDto parseCsv(String csvContent) {
-        List<Map<String, String>> rows = parseCsvToKeyValuePairs(csvContent);
-        return extractMetrics(rows);
-    }
-
-    @Override
-    public List<Map<String, String>> parseCsvToKeyValuePairs(String csvContent) {
-        try (CSVReader reader = new CSVReader(new StringReader(csvContent))) {
-            HeaderColumnNameTranslateMappingStrategy<Map<String, String>> strategy =
-                    new HeaderColumnNameTranslateMappingStrategy<>();
-            strategy.setType((Class<? extends Map<String, String>>)(Class<?>) Map.class);
-
-            return new CsvToBeanBuilder<Map<String, String>>(reader)
-                    .withMappingStrategy(strategy)
-                    .build()
-                    .parse();
-        } catch (Exception e) {
-            throw new RuntimeException("CSV parsing failed", e);
-        }
-    }
-
-    //--- Extract the CSV file ----------------------------------
-    @Override
-    public InterviewMetricsDto extractMetrics(List<Map<String, String>> csvRows) {
+    private InterviewMetricsDto mapToInterviewMetricsDto(List<MetricValue> metrics) {
         InterviewMetricsDto dto = new InterviewMetricsDto();
 
-        for (Map<String, String> row : csvRows) {
-            String metric = row.get("Metric");
-            String value = row.get("Value");
-
-            if (metric == null || value == null) continue;
-
-            switch (metric.trim()) {
+        for (MetricValue mv : metrics) {
+            switch (mv.getMetric()) {
                 case "Interview Duration":
-                    dto.setInterviewDurationSeconds(parseDouble(value.replace(" seconds", "")));
+                    dto.setInterviewDurationSeconds(parseValue(mv.getValue(), "seconds"));
                     break;
                 case "Off-Screen Duration":
-                    dto.setOffScreenDurationSeconds(parseDouble(value.replace(" seconds", "")));
+                    dto.setOffScreenDurationSeconds(parseValue(mv.getValue(), "seconds"));
                     break;
                 case "Average Head Rotation":
-                    dto.setAverageHeadRotationDegrees(parseDouble(value.replace(" degrees", "")));
+                    dto.setAverageHeadRotationDegrees(parseValue(mv.getValue(), "degrees"));
                     break;
                 case "angry":
-                    dto.setAngryPercentage(parseDouble(value.replace("%", "")));
+                    dto.setAngryPercentage(parseValue(mv.getValue(), "%"));
                     break;
                 case "disgust":
-                    dto.setDisgustPercentage(parseDouble(value.replace("%", "")));
+                    dto.setDisgustPercentage(parseValue(mv.getValue(), "%"));
                     break;
                 case "fear":
-                    dto.setFearPercentage(parseDouble(value.replace("%", "")));
+                    dto.setFearPercentage(parseValue(mv.getValue(), "%"));
                     break;
                 case "happy":
-                    dto.setHappyPercentage(parseDouble(value.replace("%", "")));
+                    dto.setHappyPercentage(parseValue(mv.getValue(), "%"));
                     break;
                 case "sad":
-                    dto.setSadPercentage(parseDouble(value.replace("%", "")));
+                    dto.setSadPercentage(parseValue(mv.getValue(), "%"));
                     break;
                 case "surprise":
-                    dto.setSurprisePercentage(parseDouble(value.replace("%", "")));
+                    dto.setSurprisePercentage(parseValue(mv.getValue(), "%"));
                     break;
                 case "neutral":
-                    dto.setNeutralPercentage(parseDouble(value.replace("%", "")));
+                    dto.setNeutralPercentage(parseValue(mv.getValue(), "%"));
                     break;
                 case "Analyzed Frames":
-                    dto.setAnalyzedFrames(Integer.parseInt(value));
+                    dto.setAnalyzedFrames(parseInt(mv.getValue()));
                     break;
                 case "Valid Face Detections":
-                    dto.setValidFaceDetections(Integer.parseInt(value));
+                    dto.setValidFaceDetections(parseInt(mv.getValue()));
                     break;
             }
         }
-
         return dto;
     }
 
-    private Double parseDouble(String value) {
+    private Double parseValue(String value, String unit) {
+        if (value == null || value.isEmpty()) return 0.0;
         try {
-            return Double.parseDouble(value);
+            return Double.parseDouble(value.replace(unit, "").trim());
         } catch (NumberFormatException e) {
-            return 0.0; // or throw an error
+            return 0.0;
         }
     }
+
+    private Integer parseInt(String value) {
+        if (value == null || value.isEmpty()) return 0;
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
 }
