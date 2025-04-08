@@ -6,6 +6,15 @@ import './App.css';
 import { jwtDecode } from 'jwt-decode';
 import axiosInstance from '../axiosInstance';
 import logo from '../assets/logo.png';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faReact, 
+  faNodeJs, 
+  faPython, 
+  faAws, 
+  faDocker 
+} from '@fortawesome/free-brands-svg-icons';
+import { faDatabase } from '@fortawesome/free-solid-svg-icons';
 
 function UserProfilePage() {
   const navigate = useNavigate();
@@ -13,6 +22,27 @@ function UserProfilePage() {
   const [username, setUsername] = useState('');
   const [position, setPosition] = useState('Loading...');
   const [userId, setUserId] = useState(null);
+
+  // Company information
+  const companyInfo = {
+    name: "Us",
+    description: "Leading the industry in sustainable technology solutions and innovative software development.",
+    techStack: [
+      { name: "React", icon: faReact },
+      { name: "Node.js", icon: faNodeJs },
+      { name: "Python", icon: faPython },
+      { name: "AWS", icon: faAws },
+      { name: "Docker", icon: faDocker },
+      { name: "MongoDB", icon: faDatabase }
+    ],
+    departments: [
+      { name: "Engineering", employees: 50 },
+      { name: "Product", employees: 25 },
+      { name: "Design", employees: 15 },
+      { name: "HR", employees: 10 },
+      { name: "Marketing", employees: 20 }
+    ]
+  };
 
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken');
@@ -85,39 +115,46 @@ function UserProfilePage() {
     navigate('/video-screen');
   }
 
+  function handleHRDashboard() {
+    navigate('/hr-dashboard');
+  }
+
   return (
     <div className="user-container flex flex-col min-h-screen bg-white text-green-700 font-sans">
       {/* Header */}
       <header className="user-header bg-gradient-to-r from-green-300 to-green-500 p-6 shadow-lg flex justify-between items-center">
-      <div className="flex items-center">
-    <img 
-      src={logo} 
-      alt="Company Logo" 
-      className="w-12 h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 object-contain"
-    />
-  </div>
-        <button
-          className="logout-btn bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition duration-300"
-          onClick={() => navigate('/login')}
-        >
-          Log Out
-        </button>
+        <div className="flex items-center">
+          <img 
+            src={logo} 
+            alt="Company Logo" 
+            className="w-12 h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 object-contain"
+          />
+        </div>
+        <div className="flex space-x-2">
+          
+          <button
+            className="logout-btn bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition duration-300"
+            onClick={handleLogout}
+          >
+            Log Out
+          </button>
+        </div>
       </header>
       
-      <section className="welcome-banner text-center py-10 bg-green-200">
+      <section className="welcome-banner text-center py-8 bg-green-200">
         <h2 className="text-3xl font-bold text-white-700 animate__animated animate__fadeIn">Welcome, {username}!</h2>
       </section>
 
       {/* Main Content */}
       <main className="profile-section flex-grow p-6 md:p-12 grid grid-cols-1 md:grid-cols-2 gap-8 bg-green-50">
-        <div className="profile-card bg-white p-6 rounded-lg shadow-xl transition-all duration-300 hover:shadow-2xl hover:scale-105">
+        <div className="profile-card bg-white p-6 rounded-lg shadow-xl transition-all duration-300 hover:shadow-2xl">
           <h2 className="profile-title text-2xl font-semibold text-green-700 mb-4">{position} Interview</h2>
           <p className="profile-description text-gray-700 mb-6">
             Experience AI-driven hiring with real-time facial and emotion analysis.
           </p>
           <button
             className="start-btn bg-green-500 text-white py-3 px-6 rounded-lg hover:bg-green-600 transition duration-300"
-            onClick={() => navigate('/video-screen')}
+            onClick={handleStartInterview}
           >
             Start Interview
           </button>
@@ -133,6 +170,71 @@ function UserProfilePage() {
           />
         </div>
       </main>
+
+      {/* Company Information Section */}
+      <section className="company-info-section bg-gradient-to-b from-green-50 to-green-100 py-12 px-6 md:px-12">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl font-bold text-green-700 mb-8 text-center">About {companyInfo.name}</h2>
+          
+          <div className="company-description mb-12 text-center">
+            <p className="text-lg text-gray-700">{companyInfo.description}</p>
+          </div>
+          
+          {/* Tech Stack */}
+  <div className="mb-12">
+    <h3 className="text-2xl font-semibold text-green-600 mb-6 text-center">Our Technology Stack</h3>
+    <div className="tech-stack grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      {companyInfo.techStack.map((tech, index) => (
+        <div key={index} className="tech-item bg-white p-4 rounded-lg shadow-md text-center hover:shadow-lg transition duration-300">
+          <FontAwesomeIcon 
+            icon={tech.icon} 
+            className="text-3xl text-green-500 mb-2" 
+            style={{ width: '2em', height: '2em' }}
+          />
+          <p className="font-medium">{tech.name}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+          {/* Company Structure */}
+          <div>
+            <h3 className="text-2xl font-semibold text-green-600 mb-6 text-center">Company Structure</h3>
+            <div className="departments-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              {companyInfo.departments.map((dept, index) => (
+                <div key={index} className="department-card bg-white p-4 rounded-lg shadow-md text-center hover:bg-green-50 transition duration-300">
+                  <h4 className="font-bold text-green-600 text-lg">{dept.name}</h4>
+                  <p className="text-gray-600">{dept.employees} employees</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      {/* Quick Access Tools */}
+      <section className="tools-section bg-white py-8 px-6">
+        <div className="max-w-6xl mx-auto">
+          <h3 className="text-xl font-semibold text-green-700 mb-4 text-center">Quick Access Tools</h3>
+          <div className="tools-grid grid grid-cols-2 md:grid-cols-4 gap-4">
+            <button className="tool-btn bg-green-100 hover:bg-green-200 text-green-700 p-4 rounded-lg flex flex-col items-center justify-center transition duration-300">
+              <i className="fas fa-calendar-alt text-2xl mb-2"></i>
+              <span>Schedule Interview</span>
+            </button>
+            <button className="tool-btn bg-green-100 hover:bg-green-200 text-green-700 p-4 rounded-lg flex flex-col items-center justify-center transition duration-300">
+              <i className="fas fa-file-alt text-2xl mb-2"></i>
+              <span>View Resources</span>
+            </button>
+            <button className="tool-btn bg-green-100 hover:bg-green-200 text-green-700 p-4 rounded-lg flex flex-col items-center justify-center transition duration-300">
+              <i className="fas fa-users text-2xl mb-2"></i>
+              <span>Team Directory</span>
+            </button>
+            <button className="tool-btn bg-green-100 hover:bg-green-200 text-green-700 p-4 rounded-lg flex flex-col items-center justify-center transition duration-300">
+              <i className="fas fa-question-circle text-2xl mb-2"></i>
+              <span>Support</span>
+            </button>
+          </div>
+        </div>
+      </section>
 
       {/* Footer */}
       <Footer />
