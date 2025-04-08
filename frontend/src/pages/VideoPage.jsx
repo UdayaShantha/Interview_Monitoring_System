@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Mic, Video, Clock, ChevronRight, AlertCircle } from 'lucide-react';
-import axios from '../axiosInstance';
+import { Mic, Video, Clock, ChevronRight, AlertCircle, Square, Circle } from 'lucide-react';
+import axiosInstance from '../axiosInstance';
+import axios from 'axios';
 import { toast } from 'react-toastify';
 import { jwtDecode } from 'jwt-decode';
 
@@ -19,6 +20,12 @@ function VideoPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [positionType, setPositionType] = useState(null);
   const [interviewId, setInterviewId] = useState(null);
+  
+  // Audio recording states
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioChunks, setAudioChunks] = useState([]);
+  const mediaRecorderRef = useRef(null);
+  const audioStreamRef = useRef(null);
 
   // Get position type from backend using user ID from token
   useEffect(() => {
@@ -40,13 +47,13 @@ function VideoPage() {
           return;
         }
 
-        const response = await axios.get(`/users/hr/candidate/position/${userId}`);
+        const response = await axiosInstance.get(`/users/hr/candidate/position/${userId}`);
         if (response.data && response.data.data) {
           setPositionType(response.data.data);
         }
         
         // Fetch interview ID using the candidate ID
-        const interviewResponse = await axios.get(`/interviews/get/interview-id/${userId}`);
+        const interviewResponse = await axiosInstance.get(`/interviews/get/interview-id/${userId}`);
         if (interviewResponse.data && interviewResponse.data.data) {
           setInterviewId(interviewResponse.data.data);
         }
@@ -65,7 +72,7 @@ function VideoPage() {
       if (!positionType) return;
 
       try {
-        const response = await axios.get(`/questions/get/interview/questions?positionType=${positionType}`);
+        const response = await axiosInstance.get(`/questions/get/interview/questions?positionType=${positionType}`);
         if (response.data.data) {
           setQuestions(response.data.data);
           setQuestionTimer(response.data.data[0]?.duration * 60 || 0);
@@ -195,6 +202,128 @@ function VideoPage() {
     return () => clearInterval(interval);
   }, [currentQuestionIndex, questions]);
 
+  // Initialize audio recording
+  useEffect(() => {
+    const initializeAudioRecording = async () => {
+      try {
+        // First check if getUserMedia is supported
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error('getUserMedia is not supported in this browser');
+        }
+
+        // Request audio stream with specific settings for better quality
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            sampleRate: 44100,
+            channelCount: 1
+          } 
+        });
+        
+        console.log('Audio stream obtained:', stream.getAudioTracks()[0].label);
+        audioStreamRef.current = stream;
+
+        // Check for MediaRecorder support
+        if (!window.MediaRecorder) {
+          throw new Error('MediaRecorder is not supported in this browser');
+        }
+        
+        // Try to use MP3 format since it's widely supported
+        const mediaRecorder = new MediaRecorder(stream, {
+          audioBitsPerSecond: 128000
+        });
+        
+        mediaRecorderRef.current = mediaRecorder;
+        
+        // Set up event handlers
+        mediaRecorderRef.current.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            console.log('Received audio chunk of size:', event.data.size);
+            setAudioChunks(prev => [...prev, event.data]);
+          }
+        };
+        
+        mediaRecorderRef.current.onerror = (event) => {
+          console.error('MediaRecorder error:', event.error);
+          toast.error('Recording error: ' + event.error.message);
+        };
+        
+        mediaRecorderRef.current.onstop = () => {
+          console.log('MediaRecorder stopped');
+          setIsRecording(false);
+        };
+        
+        console.log('MediaRecorder initialized successfully');
+        
+      } catch (error) {
+        console.error('Error initializing audio recording:', error);
+        toast.error('Failed to initialize audio recording: ' + error.message);
+      }
+    };
+
+    initializeAudioRecording();
+
+    return () => {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.stop();
+      }
+      if (audioStreamRef.current) {
+        audioStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
+
+  const startRecording = () => {
+    if (!mediaRecorderRef.current) {
+      toast.error('Recording not initialized. Please refresh the page.');
+      return;
+    }
+
+    try {
+      if (mediaRecorderRef.current.state === 'recording') {
+        stopRecording();
+        // Wait a bit before starting new recording
+        setTimeout(() => {
+          setAudioChunks([]);
+          mediaRecorderRef.current.start();
+          setIsRecording(true);
+          toast.info('Recording started');
+        }, 100);
+      } else {
+        setAudioChunks([]);
+        mediaRecorderRef.current.start();
+        setIsRecording(true);
+        toast.info('Recording started');
+      }
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      toast.error('Failed to start recording: ' + error.message);
+    }
+  };
+
+  const stopRecording = () => {
+    console.log('Attempting to stop recording');
+    if (!mediaRecorderRef.current) {
+      console.error('MediaRecorder not initialized');
+      return;
+    }
+
+    try {
+      if (mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.stop();
+        setIsRecording(false);
+        toast.info('Recording stopped');
+        console.log('Recording stopped successfully');
+      } else {
+        console.log('MediaRecorder not in recording state:', mediaRecorderRef.current.state);
+      }
+    } catch (error) {
+      console.error('Error stopping recording:', error);
+      toast.error('Failed to stop recording: ' + error.message);
+    }
+  };
+
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -203,17 +332,48 @@ function VideoPage() {
 
   const handleNextQuestion = async () => {
     try {
+      // Stop current recording if active
+      if (isRecording) {
+        stopRecording();
+        // Add a small delay to ensure recording is properly stopped
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
       // Get the current question data
       const currentQuestion = questions[currentQuestionIndex];
       
-      // Send the current question data to another backend service
-      // Matching the QuestionResponseDTO structure from the backend
-      await axios.post('/api/questions/process', {
-        questionId: currentQuestion.questionId,
-        content: currentQuestion.content,
-        keywords: currentQuestion.keywords,
-        duration: currentQuestion.duration
+      // Create audio blob from chunks
+      const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+      
+      // Create form data for audio upload
+      const formData = new FormData();
+      formData.append('interview_id', interviewId);
+      formData.append('question_id', currentQuestion.questionId);
+      formData.append('audio_file', audioBlob, `answer_${interviewId}_${currentQuestion.questionId}.mp3`);
+
+      // Log the data being sent
+      console.log('Sending data:', {
+        interview_id: interviewId,
+        question_id: currentQuestion.questionId,
+        audio_file: `answer_${interviewId}_${currentQuestion.questionId}.mp3`
       });
+
+      try {
+        // Send audio file to backend
+        const transcribeResponse = await axios.post('http://localhost:8000/transcribe', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        console.log('Transcription response:', transcribeResponse.data);
+        toast.success('Answer recorded successfully');
+      } catch (transcribeError) {
+        console.error('Transcription error:', transcribeError.response?.data || transcribeError);
+        toast.error('Failed to send audio recording. Please try again.');
+      }
+      
+      // Clear audio chunks for next question
+      setAudioChunks([]);
       
       // Proceed with the original logic
       if (currentQuestionIndex === questions.length - 1) {
@@ -224,7 +384,7 @@ function VideoPage() {
         setQuestionTimer(questions[currentQuestionIndex + 1]?.duration * 60 || 0);
       }
     } catch (error) {
-      console.error('Error sending question data:', error);
+      console.error('Error processing question data:', error);
       toast.error('Failed to process question data');
       
       // Still proceed with the original logic even if the API call fails
@@ -262,7 +422,7 @@ function VideoPage() {
       if (interviewId) {
         // Convert seconds to minutes (round up to nearest minute)
         const durationInMinutes = Math.ceil(timer / 60);
-        await axios.put(`/interviews/update/interview/duration?interviewId=${interviewId}&duration=${durationInMinutes}`);
+        await axiosInstance.put(`/interviews/update/interview/duration?interviewId=${interviewId}&duration=${durationInMinutes}`);
         console.log('Interview duration updated successfully');
       } else {
         console.error('Interview ID not found, could not update duration');
@@ -398,14 +558,36 @@ function VideoPage() {
 
       {/* Main Video Area */}
       <main className="flex-1 relative flex items-center justify-center p-4">
-        <div className="w-64 h-64 md:w-96 md:h-96 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-2xl">
-          <Mic size={64} className="text-white opacity-80" />
-        </div>
+        {/* Removed the giant green gradient circle */}
 
         <div className="absolute bottom-4 left-4 md:bottom-6 md:left-6">
           <div className="w-20 h-20 md:w-28 md:h-28 rounded-full bg-gray-300 border-4 border-white shadow-xl flex items-center justify-center">
             <Video size={24} className="text-gray-500" />
           </div>
+        </div>
+
+        {/* Recording Controls */}
+        <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6 flex items-center gap-4">
+          <button
+            onClick={isRecording ? stopRecording : startRecording}
+            className={`p-6 rounded-full shadow-lg transition-all ${
+              isRecording 
+                ? 'bg-red-500 hover:bg-red-600' 
+                : 'bg-emerald-500 hover:bg-emerald-600'
+            }`}
+          >
+            {isRecording ? (
+              <Square size={32} className="text-white" />
+            ) : (
+              <Circle size={32} className="text-white" />
+            )}
+          </button>
+          {isRecording && (
+            <div className="bg-red-100 px-3 py-1 rounded-full flex items-center gap-2">
+              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+              <span className="text-sm text-red-600 font-medium">Recording</span>
+            </div>
+          )}
         </div>
       </main>
 

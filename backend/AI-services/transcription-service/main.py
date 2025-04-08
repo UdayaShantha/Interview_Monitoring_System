@@ -12,12 +12,21 @@ import os
 import logging
 
 from sqlalchemy.orm import Session
+from fastapi.middleware.cors import CORSMiddleware
 
 from database import get_db, create_tables, engine
 from models import Transcription
 
 # Initialize FastAPI
 app = FastAPI(title="Audio Transcription Service")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Your React app's origin
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Token configuration for JWT authentication
 CLIENT_ID = "audio-service"
@@ -27,6 +36,7 @@ TOKEN_URL = "http://localhost:8081/api/v1/auth/client-token"
 # Token cache
 token = None
 expiration_time = 0
+
 
 async def get_token():
     """Fetch and cache a JWT token from the User Management Service."""
@@ -53,7 +63,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Load Whisper model
-model = whisper.load_model("small")
+model = whisper.load_model("tiny")
 
 @app.on_event("startup")
 async def startup_event():
@@ -79,7 +89,7 @@ async def transcribe_audio(
 
     try:
         # Validate file type
-        if not audio_file.filename.lower().endswith(('.wav', '.mp3', '.ogg', '.m4a')):
+        if not audio_file.filename.lower().endswith(('.wav', '.mp3', '.ogg', '.m4a', '.webm')):
             raise HTTPException(400, "Invalid file format")
 
         # Save uploaded file temporarily
