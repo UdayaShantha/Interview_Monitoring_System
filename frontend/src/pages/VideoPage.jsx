@@ -13,6 +13,7 @@ function VideoPage() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [sessionCompleted, setSessionCompleted] = useState(false);
   const [showCompletionAlert, setShowCompletionAlert] = useState(false);
+  const [showNextQuestionWarning, setShowNextQuestionWarning] = useState(false);
   const [timer, setTimer] = useState(0);
   const [questionTimer, setQuestionTimer] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -401,7 +402,7 @@ function VideoPage() {
   const handleActionButton = async () => {
     // Regular next question logic for non-final questions
     if (currentQuestionIndex < questions.length - 1) {
-      await handleNextQuestion();
+      setShowNextQuestionWarning(true);
       return;
     }
     
@@ -414,6 +415,11 @@ function VideoPage() {
       // Second click (after completion) shows the completion alert
       setShowCompletionAlert(true);
     }
+  };
+
+  const handleConfirmNextQuestion = async () => {
+    setShowNextQuestionWarning(false);
+    await handleNextQuestion();
   };
 
   const handleEndSession = async () => {
@@ -528,6 +534,37 @@ function VideoPage() {
                   className="flex-1 px-6 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors"
                 >
                   End Session
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Next Question Warning Modal */}
+      {showNextQuestionWarning && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 border border-emerald-100">
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center">
+                <AlertCircle className="w-8 h-8 text-yellow-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900">Proceed to Next Question?</h2>
+              <p className="text-gray-600">
+                You cannot return to this question once you proceed. Are you sure you want to continue?
+              </p>
+              <div className="flex gap-4 w-full mt-4">
+                <button
+                  onClick={() => setShowNextQuestionWarning(false)}
+                  className="flex-1 px-6 py-2.5 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmNextQuestion}
+                  className="flex-1 px-6 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors"
+                >
+                  Continue
                 </button>
               </div>
             </div>
