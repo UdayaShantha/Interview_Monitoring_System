@@ -25,6 +25,9 @@ function InterviewPage() {
   const [date, setDate] = useState(new Date());
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [successRate, setSuccessRate] = useState(0);
+  const [statusPercentages, setStatusPercentages] = useState([]);
+  const [interviewCount, setInterviewCount] = useState(0);
+  const [averageDuration, setAverageDuration] = useState(0);
   const navigate = useNavigate();
 
   const handleHomeClick = (e) => {
@@ -51,6 +54,9 @@ function InterviewPage() {
 
   useEffect(() => {
     fetchSuccessRate();
+    fetchStatusPercentages();
+    fetchInterviewCount();
+    fetchAverageDuration();
   }, []);
 
   const fetchSuccessRate = async () => {
@@ -61,6 +67,39 @@ function InterviewPage() {
       }
     } catch (error) {
       console.error('Error fetching success rate:', error);
+    }
+  };
+
+  const fetchStatusPercentages = async () => {
+    try {
+      const response = await axios.get('/interviews/get/precentages/status');
+      if (response.data.code === 200) {
+        setStatusPercentages(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching status percentages:', error);
+    }
+  };
+
+  const fetchInterviewCount = async () => {
+    try {
+      const response = await axios.get('/interviews/get/interview/count');
+      if (response.data.code === 200) {
+        setInterviewCount(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching interview count:', error);
+    }
+  };
+
+  const fetchAverageDuration = async () => {
+    try {
+      const response = await axios.get('/interviews/get/interview/average-duration');
+      if (response.data.code === 200) {
+        setAverageDuration(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching average duration:', error);
     }
   };
 
@@ -86,13 +125,43 @@ function InterviewPage() {
     }]
   };
 
+  // Create status distribution data from real data
   const statusDistributionData = {
-    labels: ['Completed', 'Upcoming', 'Postponed', 'Cancelled'],
+    labels: statusPercentages.map(item => item.status),
     datasets: [{
-      data: [45, 35, 20, 10],
-      backgroundColor: ['#2D6A4F', '#40916C', '#95D5B2', '#D97706'],
+      data: statusPercentages.map(item => item.percentage),
+      backgroundColor: [
+        '#2D6A4F', // Completed - Green
+        '#EF4444', // Cancelled - Red
+        '#3B82F6', // Upcoming - Blue
+        '#D97706'  // Postponed - Orange
+      ],
+      borderColor: [
+        '#1B4332', // Darker Green
+        '#B91C1C', // Darker Red
+        '#1D4ED8', // Darker Blue
+        '#B45309'  // Darker Orange
+      ],
+      borderWidth: 1,
       hoverOffset: 4
     }]
+  };
+
+  // Add chart options for percentage display
+  const doughnutOptions = {
+    plugins: {
+      legend: {
+        position: 'bottom'
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            return `${context.label}: ${context.raw}%`;
+          }
+        }
+      }
+    },
+    cutout: '60%'
   };
 
   // Mock recent interviews data
@@ -104,8 +173,8 @@ function InterviewPage() {
 
   // Statistics Cards Data
   const stats = [
-    { title: 'Total Interviews', value: '248', icon: <FaUserTie />, color: 'bg-green-100' },
-    { title: 'Avg. Duration', value: '45m', icon: <FaRegClock />, color: 'bg-blue-100' },
+    { title: 'Total Interviews', value: interviewCount.toString(), icon: <FaUserTie />, color: 'bg-green-100' },
+    { title: 'Avg. Duration', value: `${averageDuration} minutes`, icon: <FaRegClock />, color: 'bg-blue-100' },
     { title: 'Success Rate', value: `${successRate}%`, icon: <FaChartLine />, color: 'bg-emerald-100' }
   ];
 
@@ -234,7 +303,7 @@ function InterviewPage() {
           <div className="bg-white p-6 rounded-xl shadow-sm">
             <h3 className="text-xl font-semibold mb-4">Status Distribution</h3>
             <div className="max-w-xs mx-auto">
-              <Doughnut data={statusDistributionData} />
+              <Doughnut data={statusDistributionData} options={doughnutOptions} />
             </div>
           </div>
         </div>

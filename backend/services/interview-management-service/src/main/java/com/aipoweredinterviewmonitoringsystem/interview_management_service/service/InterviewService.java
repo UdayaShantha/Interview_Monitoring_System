@@ -65,5 +65,13 @@ public interface InterviewService {
 
     double calculateSuccessRateByPositionType(String positionType);
 
+    List<InterviewStatusPresentageDTO> getInterviewStatusPercentages();
+
+    InterviewUpdateDTO updateInterviewDuration(long interviewId, int duration);
+
+    Long getInterviewIdByCandidateId(Long candidateId);
+
+    double getInterviewAverageDuration();
+
 }
 

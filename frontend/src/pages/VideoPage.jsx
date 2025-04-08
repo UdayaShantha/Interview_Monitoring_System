@@ -18,6 +18,7 @@ function VideoPage() {
   const [tabSwitches, setTabSwitches] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [positionType, setPositionType] = useState(null);
+  const [interviewId, setInterviewId] = useState(null);
 
   // Get position type from backend using user ID from token
   useEffect(() => {
@@ -43,9 +44,15 @@ function VideoPage() {
         if (response.data && response.data.data) {
           setPositionType(response.data.data);
         }
+        
+        // Fetch interview ID using the candidate ID
+        const interviewResponse = await axios.get(`/interviews/get/interview-id/${userId}`);
+        if (interviewResponse.data && interviewResponse.data.data) {
+          setInterviewId(interviewResponse.data.data);
+        }
       } catch (error) {
-        console.error('Error fetching position type:', error);
-        toast.error('Failed to fetch position type');
+        console.error('Error fetching position type or interview ID:', error);
+        toast.error('Failed to fetch required data');
       }
     };
 
@@ -251,6 +258,16 @@ function VideoPage() {
 
   const handleEndSession = async () => {
     try {
+      // Update interview duration in the backend
+      if (interviewId) {
+        // Convert seconds to minutes (round up to nearest minute)
+        const durationInMinutes = Math.ceil(timer / 60);
+        await axios.put(`/interviews/update/interview/duration?interviewId=${interviewId}&duration=${durationInMinutes}`);
+        console.log('Interview duration updated successfully');
+      } else {
+        console.error('Interview ID not found, could not update duration');
+      }
+      
       // Automatically exit fullscreen mode
       if (document.fullscreenElement) {
         await document.exitFullscreen();
@@ -258,7 +275,7 @@ function VideoPage() {
       // Navigate to feedback page after exiting fullscreen
       navigate('/feedback');
     } catch (err) {
-      console.error('Error exiting fullscreen:', err);
+      console.error('Error updating interview duration or exiting fullscreen:', err);
       // Navigate anyway if fullscreen exit fails
       navigate('/feedback');
     }
