@@ -23,6 +23,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.reactive.function.client.WebClient;
+
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -30,6 +33,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -402,6 +406,8 @@ public class InterviewServiceIMPL implements InterviewService {
         throw new EntityNotFoundException("No such interview found");
     }
 
+
+
     @Override
     public double calculateSuccessRateByPositionType(String positionType) {
         List<Interview> completedInterviews = interviewRepository.findAllByStatusEquals(Status.COMPLETED);
@@ -422,6 +428,56 @@ public class InterviewServiceIMPL implements InterviewService {
                 .count();
 
         return (selectedCount / (double) totalCompleted) * 100;
+    }
+
+    @Override
+    public List<InterviewStatusPresentageDTO> getInterviewStatusPercentages() {
+        List<Interview> interviews = interviewRepository.findAll();
+        Map<Status, Long> statusCountMap = interviews.stream()
+                .collect(Collectors.groupingBy(Interview::getStatus, Collectors.counting()));
+
+        List<InterviewStatusPresentageDTO> statusPercentages = new ArrayList<>();
+        for (Map.Entry<Status, Long> entry : statusCountMap.entrySet()) {
+            InterviewStatusPresentageDTO dto = new InterviewStatusPresentageDTO();
+            dto.setStatus(entry.getKey());
+            dto.setPercentage((entry.getValue() / (double) interviews.size()) * 100);
+            statusPercentages.add(dto);
+        }
+        return statusPercentages;
+    }
+
+    @Override
+    public InterviewUpdateDTO updateInterviewDuration(long interviewId, int duration) {
+        if(interviewRepository.existsById(interviewId)){
+            Interview interview = interviewRepository.findById(interviewId).get();
+            interview.setDuration(duration);
+            Interview updatedInterview = interviewRepository.save(interview);
+            InterviewUpdateDTO interviewUpdateDTO = modelMapper.map(updatedInterview, InterviewUpdateDTO.class);
+            return interviewUpdateDTO;
+        }
+        else {
+            throw new RuntimeException("No such interview");
+        }
+    }
+
+    @Override
+    public Long getInterviewIdByCandidateId(Long candidateId) {
+        if(interviewRepository.existsByCandidateId(candidateId)){
+            return interviewRepository.findByCandidateId(candidateId).getInterviewId();
+        }
+        throw new InterviewNotFountException("Not found this interview");
+    }
+
+    @Override
+    public double getInterviewAverageDuration() {
+        List<Interview> interviews = interviewRepository.findAll();
+        if (interviews.isEmpty()) {
+            return 0.0;
+        }
+        double totalDuration = interviews.stream()
+                .mapToDouble(Interview::getDuration)
+                .sum();
+        return totalDuration / interviews.size();
     }
 
 

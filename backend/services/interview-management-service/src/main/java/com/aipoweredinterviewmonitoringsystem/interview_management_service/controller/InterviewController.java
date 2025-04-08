@@ -44,7 +44,7 @@ public class InterviewController {
     public ResponseEntity<StandardResponse> saveInterview(@RequestBody InterviewSaveDTO interviewSaveDTO) {
         InterviewSaveDTO savedInterviewDTO = interviewService.saveInterview(interviewSaveDTO);
         return new ResponseEntity<StandardResponse>(
-                new StandardResponse(201,"Success",savedInterviewDTO),
+                new StandardResponse(201, "Success", savedInterviewDTO),
                 HttpStatus.CREATED
         );
     }
@@ -53,14 +53,14 @@ public class InterviewController {
     public ResponseEntity<StandardResponse> getAllInterviews() {
         List<GetAllInterviewsDTO> allInterviews = interviewService.getAllInterviews();
         return new ResponseEntity<StandardResponse>(
-                new StandardResponse(200,"Success",allInterviews),
+                new StandardResponse(200, "Success", allInterviews),
                 HttpStatus.OK
         );
     }
 
     @GetMapping(
-            path="all/paginated",
-            params={"page","size"}
+            path = "all/paginated",
+            params = {"page", "size"}
     )
     public ResponseEntity<StandardResponse> getAllInterviewsPaginated(@RequestParam(defaultValue = "0") int page,
                                                                       @RequestParam(defaultValue = "10") int size) {
@@ -75,12 +75,12 @@ public class InterviewController {
     public ResponseEntity<StandardResponse> getInterviewById(@RequestParam long interviewId) {
         GetInterviewDTO getInterviewDTO = interviewService.getInterviewById(interviewId);
         return new ResponseEntity<StandardResponse>(
-                new StandardResponse(200,"Success",getInterviewDTO),
+                new StandardResponse(200, "Success", getInterviewDTO),
                 HttpStatus.OK
         );
     }
 
-//    @DeleteMapping("/delete/{id}")
+    //    @DeleteMapping("/delete/{id}")
 //    public ResponseEntity<StandardResponse> deleteInterview(@PathVariable(value = "id") Long interviewId) {
 //        String message = interviewService.deleteInterview(interviewId);
 //        return new ResponseEntity<StandardResponse>(
@@ -89,10 +89,10 @@ public class InterviewController {
 //        );
 //    }
     @GetMapping("/user/{userId}")
-    ResponseEntity<StandardResponse> getInterviewByUserId(@PathVariable(value = "userId") Long userId){
+    ResponseEntity<StandardResponse> getInterviewByUserId(@PathVariable(value = "userId") Long userId) {
         GetInterviewDTO getInterviewDTO = interviewService.getInterviewByUserId(userId);
         return new ResponseEntity<StandardResponse>(
-                new StandardResponse(200,"Success",getInterviewDTO),
+                new StandardResponse(200, "Success", getInterviewDTO),
                 HttpStatus.OK
         );
     }
@@ -101,16 +101,16 @@ public class InterviewController {
     public ResponseEntity<StandardResponse> deleteInterviewByUserId(@PathVariable(value = "userId") Long userId) {
         String message = interviewService.deleteInterviewByUserId(userId);
         return new ResponseEntity<StandardResponse>(
-                new StandardResponse(200,"Success",message),
+                new StandardResponse(200, "Success", message),
                 HttpStatus.OK
         );
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<StandardResponse> updateInterview(@PathVariable(value = "id") Long interviewId, @RequestBody InterviewUpdateDTO interviewUpdateDTO) {
-        InterviewUpdateDTO updatedInterview = interviewService.updateInterview(interviewId,interviewUpdateDTO);
+        InterviewUpdateDTO updatedInterview = interviewService.updateInterview(interviewId, interviewUpdateDTO);
         return new ResponseEntity<StandardResponse>(
-                new StandardResponse(200,"Success",updatedInterview),
+                new StandardResponse(200, "Success", updatedInterview),
                 HttpStatus.OK
         );
 
@@ -120,27 +120,32 @@ public class InterviewController {
     public ResponseEntity<StandardResponse> getInterviewByStatus(@PathVariable(value = "status") Status status) {
         List<InterviewDTO> allInterviewsByStatus = interviewService.getAllInterviewsByStatus(status);
         return new ResponseEntity<StandardResponse>(
-                new StandardResponse(200,"Success",allInterviewsByStatus),
+                new StandardResponse(200, "Success", allInterviewsByStatus),
                 HttpStatus.OK
         );
     }
 
-    @GetMapping("/get/interview/candidateId")
-    Interview getInterviewByCandidateId(@RequestParam long candidateId){
-        return interviewService.getInterviewByCandidateId(candidateId);
+    @GetMapping("/get/interview-id/{candidateId}")
+    public ResponseEntity<StandardResponse> getInterviewIdByCandidateId(@PathVariable(value = "candidateId") Long candidateId) {
+        Long interviewId = interviewService.getInterviewIdByCandidateId(candidateId);
+        return new ResponseEntity<StandardResponse>(
+                new StandardResponse(200, "Success", interviewId),
+                HttpStatus.OK
+        );
+
     }
 
     @PutMapping("/status/{interviewId}")
     public ResponseEntity<StandardResponse> updateInterviewStatus(@PathVariable(value = "interviewId") long interviewId, @RequestBody InterviewStatusUpdateDTO interviewStatusUpdateDTO) {
-        InterviewStatusUpdateDTO updatedInterview = interviewService.updateInterviewStatus(interviewId,interviewStatusUpdateDTO);
+        InterviewStatusUpdateDTO updatedInterview = interviewService.updateInterviewStatus(interviewId, interviewStatusUpdateDTO);
         return new ResponseEntity<StandardResponse>(
-                new StandardResponse(200,"Success",updatedInterview),
+                new StandardResponse(200, "Success", updatedInterview),
                 HttpStatus.OK
         );
 
     }
 
-    @GetMapping(value={"/get/interview/questions"},params = {"interviewId"})
+    @GetMapping(value = {"/get/interview/questions"}, params = {"interviewId"})
     public ResponseEntity<StandardResponse> getInterviewQuestions(@RequestParam(value = "interviewId") long interviewId) {
         try {
             List<QuestionResponseDTO> questionResponseDTOS = interviewService.getInterviewQuestions(interviewId);
@@ -148,7 +153,7 @@ public class InterviewController {
                 throw new QuestionNotFoundException("Question Not Found");
             }
             return new ResponseEntity<>(new StandardResponse(200, "Success", questionResponseDTOS), HttpStatus.OK);
-        }catch (Exception e) {
+        } catch (Exception e) {
             return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -240,7 +245,7 @@ public class InterviewController {
         try {
             boolean value = interviewService.checkInterview(interviewId);
             return new ResponseEntity<>(new StandardResponse(200, "Success", value), HttpStatus.OK);
-        }catch (Exception e) {
+        } catch (Exception e) {
             return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -250,7 +255,7 @@ public class InterviewController {
         try {
             LocalTime startTime = interviewService.getInterviewStartTime(interviewId);
             return new ResponseEntity<>(new StandardResponse(200, "Success", startTime), HttpStatus.OK);
-        }catch (Exception e) {
+        } catch (Exception e) {
             return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -260,18 +265,68 @@ public class InterviewController {
         try {
             long candidateId = interviewService.getCandidateIdByInterviewId(interviewId);
             return new ResponseEntity<>(new StandardResponse(200, "Success", candidateId), HttpStatus.OK);
-        }catch (Exception e) {
+        } catch (Exception e) {
             return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    // get interview details by interview id for generate the pdf.
+
+    @GetMapping("/get/precentages/status")
+    public ResponseEntity<StandardResponse> getInterviewStatusPercentages() {
+        try {
+            List<InterviewStatusPresentageDTO> percentages = interviewService.getInterviewStatusPercentages();
+            return new ResponseEntity<>(new StandardResponse(200, "Success", percentages), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/get/interview/count")
+    public ResponseEntity<StandardResponse> getInterviewCount() {
+        try {
+            long count = interviewService.getAllInterviews().size();
+            return new ResponseEntity<>(new StandardResponse(200, "Success", count), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping("/update/interview/duration")
+    public ResponseEntity<StandardResponse> updateInterviewDuration(@RequestParam long interviewId, @RequestParam int duration) {
+        try {
+            InterviewUpdateDTO updatedInterview = interviewService.updateInterviewDuration(interviewId, duration);
+            return new ResponseEntity<>(new StandardResponse(200, "Success", updatedInterview), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/get/interview/average-duration")
+    public ResponseEntity<StandardResponse> getInterviewAverageDuration() {
+        try {
+            double avarageDuration = interviewService.getInterviewAverageDuration();
+            return new ResponseEntity<>(new StandardResponse(200, "Success", avarageDuration), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
     @GetMapping("/get/interviews-Details-by-interviewId")
-    public ResponseEntity<StandardResponse> getInterviewDetailsByInterviewId(@RequestParam long interviewId) {
+    public ResponseEntity<StandardResponse> getInterviewDetailsByInterviewId ( @RequestParam long interviewId){
         try {
             GetInterviewDetailsDTO getInterviewDetailsDTO = interviewService.getInterviewDetailsByInterviewId(interviewId);
             return new ResponseEntity<>(new StandardResponse(200, "Success", getInterviewDetailsDTO), HttpStatus.OK);
-        }catch (Exception e) {
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+
+        }
+    }
+    @GetMapping("/get/interviewId/by/candidateId")
+    public ResponseEntity<StandardResponse> getInterviewIdByCandidateId(@RequestParam long candidateId) {
+        try {
+            long interviewId = interviewService.getInterviewIdByCandidateId(candidateId);
+            return new ResponseEntity<>(new StandardResponse(200, "Success", interviewId), HttpStatus.OK);
+        } catch (Exception e) {
             return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

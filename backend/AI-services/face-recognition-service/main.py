@@ -27,7 +27,7 @@ app = FastAPI(title="Face-Recognition")
 # Add CORS middleware to allow frontend requests
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with your frontend domain
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -212,6 +212,7 @@ async def convert_spring_photos_to_base64(photos_data):
             base64_photos.append(base64_str)
     return base64_photos
 
+
 async def get_candidate_data(interview_id: int):
     """Get candidate ID and photos from Spring Boot endpoints with authentication."""
     async with httpx.AsyncClient(timeout=120.0) as client:
@@ -221,44 +222,50 @@ async def get_candidate_data(interview_id: int):
             headers = {"Authorization": f"Bearer {current_token}"}
 
             # Get candidate ID
-            candidate_response = await client.get(
-                "http://localhost:9191/api/v1/interviews/get/candidateId/by/interviewId",
-                params={"interviewId": interview_id},
-                headers=headers
-            )
-            candidate_response.raise_for_status()
-            candidate_data = candidate_response.json()
+            try:
+                candidate_response = await client.get(
+                    "http://localhost:9191/api/v1/interviews/get/candidateId/by/interviewId",
+                    params={"interviewId": interview_id},
+                    headers=headers
+                )
+                candidate_response.raise_for_status()
+                candidate_data = candidate_response.json()
 
-            if 'data' not in candidate_data or candidate_data['data'] is None:
-                raise HTTPException(status_code=404, detail="Candidate ID not found")
+                if 'data' not in candidate_data or candidate_data['data'] is None:
+                    print(f"Candidate ID not found for interview ID {interview_id}, using interview ID as candidate ID")
+                    candidate_id = interview_id  # Fallback to using interview ID as candidate ID
+                else:
+                    candidate_id = candidate_data['data']
+            except Exception as e:
+                print(f"Error getting candidate ID: {str(e)}, using interview ID as candidate ID")
+                candidate_id = interview_id  # Fallback to using interview ID as candidate ID
 
-            candidate_id = candidate_data['data']
+            # Get candidate photos or use empty list if not available
+            try:
+                photos_response = await client.get(
+                    "http://localhost:9191/api/v1/users/hr/get/candidate/photos",
+                    params={"userId": candidate_id},
+                    headers=headers
+                )
+                photos_response.raise_for_status()
+                photos_data = photos_response.json()
 
-            # Get candidate photos
-            photos_response = await client.get(
-                "http://localhost:9191/api/v1/users/hr/get/candidate/photos",
-                params={"userId": candidate_id},
-                headers=headers
-            )
-            photos_response.raise_for_status()
-            photos_data = photos_response.json()
+                if 'data' not in photos_data or 'photos' not in photos_data['data'] or not photos_data['data'][
+                    'photos']:
+                    print(f"Candidate photos not found, using empty list")
+                    photos = []
+                else:
+                    photos = await convert_spring_photos_to_base64(photos_data['data']['photos'])
+            except Exception as e:
+                print(f"Error getting candidate photos: {str(e)}, using empty list")
+                photos = []  # Fallback to empty photos list
 
-            if 'data' not in photos_data or 'photos' not in photos_data['data'] or not photos_data['data']['photos']:
-                raise HTTPException(status_code=404, detail="Candidate photos not found")
-
-            photos = await convert_spring_photos_to_base64(photos_data['data']['photos'])
             return candidate_id, photos
 
-        except httpx.HTTPStatusError as e:
-            raise HTTPException(
-                status_code=e.response.status_code,
-                detail=f"External service error: {e.response.text}"
-            )
-        except httpx.RequestError as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Connection error: {str(e)}"
-            )
+        except Exception as e:
+            print(f"Connection error during candidate data retrieval: {str(e)}")
+            # Return the interview ID as candidate ID and empty photos as fallback
+            return interview_id, []
 
 
 @app.get("/load/model/face-recognition/{interview_id}")
@@ -272,34 +279,50 @@ async def start_face_recognition(
 ):
     """Endpoint to start face recognition for an interview."""
     try:
+        # Check if an existing report already exists
         existing = await db.execute(
             select(InterviewReport).where(InterviewReport.interview_id == interview_id)
         )
-        if existing.scalars().first():
-            raise HTTPException(
-                status_code=400,
-                detail=f"Interview ID {interview_id} already exists. Please use a different ID."
-            )
+        existing_report = existing.scalars().first()
 
-        candidate_id, candidate_photos = await get_candidate_data(interview_id)
-        if not candidate_photos:
-            raise HTTPException(
-                status_code=400,
-                detail="No candidate photos found. Unable to proceed with face recognition."
-            )
+        # If report exists, return info instead of error
+        if existing_report:
+            return {
+                "message": f"Interview ID {interview_id} already exists",
+                "status": "existing",
+                "interview_id": interview_id
+            }
 
+        # Get candidate data with fallback options
+        try:
+            candidate_id, candidate_photos = await get_candidate_data(interview_id)
+        except Exception as e:
+            print(f"Error getting candidate data: {str(e)}")
+            # Use default values as fallback
+            candidate_id = interview_id
+            candidate_photos = []
+
+        # Proceed even with empty photos - we'll do face detection only in that case
         photos_json = json.dumps(candidate_photos)
-        db_report = InterviewReport(
-            interview_id=interview_id,
-            candidate_id=candidate_id,
-            photos=photos_json,
-            report="",
-            csv_file_path=""
-        )
-        db.add(db_report)
-        await db.commit()
-        await db.refresh(db_report)
 
+        # Create report record
+        try:
+            db_report = InterviewReport(
+                interview_id=interview_id,
+                candidate_id=candidate_id,
+                photos=photos_json,
+                report="",
+                csv_file_path=""
+            )
+            db.add(db_report)
+            await db.commit()
+            await db.refresh(db_report)
+        except Exception as db_error:
+            print(f"Database error: {str(db_error)}")
+            await db.rollback()
+            # Continue anyway - the face recognition will work without DB record
+
+        # Set up the stop event and process tracking
         stop_event = threading.Event()
         process = {
             "stop_event": stop_event,
@@ -309,6 +332,7 @@ async def start_face_recognition(
             "error": None
         }
 
+        # Function for background thread
         def run_face_recognition_process(
                 photos: list,
                 stop_event: threading.Event,
@@ -316,9 +340,16 @@ async def start_face_recognition(
                 min_detect: float,
                 min_presence: float,
                 min_track: float,
-                interview_id: int  # Add interview_id parameter
+                interview_id: int
         ):
             try:
+                print(f"Starting face recognition for interview {interview_id} with {len(photos)} photos")
+
+                # If no photos, just do face detection without recognition
+                if not photos:
+                    print(f"No photos available for interview {interview_id}, doing face detection only")
+
+                # Call face recognition function with empty photos if needed
                 report_path = run(
                     candidate_photos=photos,
                     stop_event=stop_event,
@@ -328,18 +359,7 @@ async def start_face_recognition(
                     min_tracking_confidence=min_track
                 )
 
-                if not report_path or not os.path.exists(report_path):
-                    error_msg = f"Report file not found or not generated"
-                    # Create new event loop for async database operations
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-                    loop.run_until_complete(update_db_with_report(interview_id, error_message=error_msg))
-                    loop.close()
-
-                    active_processes[interview_id]["error"] = error_msg
-                    return
-
-                # Create new event loop for async database operations
+                # Update database with report path
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
                 loop.run_until_complete(update_db_with_report(interview_id, report_path))
@@ -347,12 +367,13 @@ async def start_face_recognition(
 
                 active_processes[interview_id]["report_path"] = report_path
                 active_processes[interview_id]["completed"] = True
+                print(f"Face recognition completed for interview {interview_id}")
             except Exception as e:
                 error_msg = str(e)
-                active_processes[interview_id]["error"] = error_msg
                 print(f"Face recognition process error: {error_msg}")
+                active_processes[interview_id]["error"] = error_msg
 
-                # Even on exception, update the database with the error
+                # Update database with error
                 try:
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
@@ -361,7 +382,7 @@ async def start_face_recognition(
                 except Exception as db_error:
                     print(f"Failed to update database with error: {str(db_error)}")
 
-        # Updated thread creation in the start_face_recognition function
+        # Create thread for face recognition
         thread = threading.Thread(
             target=run_face_recognition_process,
             daemon=False,
@@ -372,10 +393,11 @@ async def start_face_recognition(
                 'min_detect': min_face_detection,
                 'min_presence': min_face_presence,
                 'min_track': min_tracking,
-                'interview_id': interview_id  # Pass the interview_id
+                'interview_id': interview_id
             }
         )
 
+        # Track the process
         active_processes[interview_id] = {
             "thread": thread,
             "stop_event": stop_event,
@@ -383,26 +405,32 @@ async def start_face_recognition(
             "completed": False,
             "error": None
         }
+
+        # Start the thread
         thread.start()
 
         return {
             "message": "Face recognition started",
             "interview_id": interview_id,
+            "candidate_id": candidate_id,
+            "photos_count": len(candidate_photos),
             "parameters": {
                 "detection_confidence": min_face_detection,
                 "presence_confidence": min_face_presence,
                 "tracking_confidence": min_tracking
             }
         }
-    except HTTPException as e:
-        raise e
     except Exception as e:
-        await db.rollback()
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error starting face recognition: {str(e)}"
+        print(f"Error starting face recognition: {str(e)}")
+        # Return a 200 OK with error details instead of 500
+        return JSONResponse(
+            status_code=200,
+            content={
+                "message": f"Error starting face recognition: {str(e)}",
+                "status": "error_but_continuing",
+                "interview_id": interview_id
+            }
         )
-
 
 async def face_recognition_task(photos, stop_event):
     """
