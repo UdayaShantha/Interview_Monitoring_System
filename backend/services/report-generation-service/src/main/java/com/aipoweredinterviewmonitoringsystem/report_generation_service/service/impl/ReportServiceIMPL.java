@@ -8,8 +8,10 @@ import com.aipoweredinterviewmonitoringsystem.report_generation_service.entity.R
 import com.aipoweredinterviewmonitoringsystem.report_generation_service.repository.ReportRepository;
 import com.aipoweredinterviewmonitoringsystem.report_generation_service.service.ReportService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -55,18 +57,33 @@ public class ReportServiceIMPL implements ReportService {
     @Override
     public InterviewMetricsDto fetchMetricsFromPythonService(Long interviewId) {
         // Fetch data from Python service
-       try {
-           PythonReportResponse response = webClient.get()
-                   .uri("/monitoring/report/{interviewId}", interviewId)
-                   .retrieve()
-                   .bodyToMono(PythonReportResponse.class)
-                   .block();
+        try {
+            String url = "/monitoring/report/" + interviewId;
+            System.out.println("Calling Python service at: " + url);
 
-           // Convert to InterviewMetricsDto
-           return mapToInterviewMetricsDto(response.getData());
-       }catch (Exception e) {
-           throw new RuntimeException("Failed to fetch metrics from Python service", e);
-       }
+            PythonReportResponse response = webClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::isError, res -> {
+                        System.err.println("Python service error! Status: " + res.statusCode());
+                        return res.bodyToMono(String.class)
+                                .flatMap(body -> {
+                                    System.err.println("Error response body: " + body);
+                                    return Mono.error(new RuntimeException("Python service error: " + body));
+                                });
+                    })
+                    .bodyToMono(PythonReportResponse.class)
+                    .doOnNext(r -> System.out.println("Raw Python response: " + r))
+                    .block();
+
+            System.out.println("Python service response received successfully");
+            return mapToInterviewMetricsDto(response.getData());
+
+        } catch (Exception e) {
+            System.err.println("Critical error in fetchMetricsFromPythonService: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to fetch metrics: " + e.getMessage(), e);
+        }
 
     }
 
