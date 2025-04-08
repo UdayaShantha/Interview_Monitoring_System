@@ -13,6 +13,7 @@ function UserProfilePage() {
   const [username, setUsername] = useState('');
   const [position, setPosition] = useState('Loading...');
   const [userId, setUserId] = useState(null);
+  const [userImage, setUserImage] = useState(null);
 
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken');
@@ -30,6 +31,25 @@ function UserProfilePage() {
       }
     }
   }, []);
+
+  // Fetch user image from backend
+  useEffect(() => {
+    const fetchUserImage = async () => {
+      if (!userId) return;
+
+      try {
+        const response = await axiosInstance.get(`users/hr/get/candidate/photos?userId=${userId}`);
+        if (response.data && response.data.data && response.data.data.photos && response.data.data.photos.length > 0) {
+          // Get the first photo from the array
+          setUserImage(response.data.data.photos[0]);
+        }
+      } catch (error) {
+        console.error('Error fetching user image:', error);
+      }
+    };
+
+    fetchUserImage();
+  }, [userId]);
 
   // Fetch position from backend
   useEffect(() => {
@@ -127,9 +147,9 @@ function UserProfilePage() {
         </div>
         <div className="profile-picture flex justify-center items-center">
           <img
-            src={bobImage}
+            src={userImage ? `data:image/jpeg;base64,${userImage}` : bobImage}
             alt="User Profile"
-            className="profile-img w-48 h-48 rounded-full shadow-lg"
+            className="profile-img w-48 h-48 rounded-full shadow-lg object-cover"
           />
         </div>
       </main>
