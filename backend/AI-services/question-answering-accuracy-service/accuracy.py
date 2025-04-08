@@ -34,9 +34,12 @@ def semantic_score(question, answer):
     return (similarity + nli_score) / 2  # Average of both
 
 def final_accuracy(question, answer, keywords, keyword_weight=0.35):
+    if answer is None or not answer.strip():
+        return 0.0
     k_score = keyword_score(answer, keywords)
     s_score = semantic_score(question, answer)
     return (k_score * keyword_weight) + (s_score * (1 - keyword_weight))
+
 
 # Example usage
 question = "What are the benefits of using containerization in application deployment?"
