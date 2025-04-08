@@ -9,6 +9,7 @@ import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.I
 
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.*;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.paginated.PaginatedInterviewGetAllDTO;
+import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.response.GetInterviewDetailsDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.dto.response.QuestionResponseDTO;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.Interview;
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Result;
@@ -269,6 +270,7 @@ public class InterviewController {
         }
     }
 
+
     @GetMapping("/get/precentages/status")
     public ResponseEntity<StandardResponse> getInterviewStatusPercentages() {
         try {
@@ -305,6 +307,15 @@ public class InterviewController {
             double avarageDuration = interviewService.getInterviewAverageDuration();
             return new ResponseEntity<>(new StandardResponse(200, "Success", avarageDuration), HttpStatus.OK);
         } catch (Exception e) {
+
+    // get interview details by interview id for generate the pdf.
+    @GetMapping("/get/interviews-Details-by-interviewId")
+    public ResponseEntity<StandardResponse> getInterviewDetailsByInterviewId(@RequestParam long interviewId) {
+        try {
+            GetInterviewDetailsDTO getInterviewDetailsDTO = interviewService.getInterviewDetailsByInterviewId(interviewId);
+            return new ResponseEntity<>(new StandardResponse(200, "Success", getInterviewDetailsDTO), HttpStatus.OK);
+        }catch (Exception e) {
+
             return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

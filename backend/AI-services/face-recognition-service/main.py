@@ -426,11 +426,13 @@ async def get_report(interview_id: int, db: AsyncSession = Depends(get_db)):
         if process and process["thread"].is_alive():
             return {"status": "processing", "message": "Report generation in progress"}
         raise HTTPException(status_code=404, detail="Report not found or not ready yet")
-    return FileResponse(
-        report.csv_file_path,
-        media_type="text/csv",
-        filename=f"interview_report_{interview_id}.csv"
-    )
+
+    # Read CSV and convert to JSON
+    with open(report.csv_file_path, newline='', encoding='utf-8') as csvfile:
+        reader = csv.DictReader(csvfile)
+        data = list(reader)
+
+    return JSONResponse(content={"status": "completed", "data": data})
 
 @app.get("/monitoring/status/{interview_id}")
 async def get_status(interview_id: int, db: AsyncSession = Depends(get_db)):

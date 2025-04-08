@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import CandidateForm from "./CandidateForm";
 import axios from "../axiosInstance";
 import "./App.css";
+import logo from "../assets/logo.png";
 
 const CandidatesPage = () => {
   const [candidates, setCandidates] = useState([]);
@@ -108,8 +109,18 @@ const CandidatesPage = () => {
       <nav className="bg-white shadow-md fixed w-full z-10">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <Link to="/hr-dashboard" className="text-xl font-bold text-gray-800">HR Portal</Link>
+          <div className="flex items-center">
+              {/* Updated logo section */}
+              <div className="flex items-center space-x-3">
+    <img 
+      src={logo} 
+      alt="Company Logo" 
+      className="w-10 h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 object-contain rounded-md" 
+    />
+    <Link to="/hr-dashboard" className="text-xl font-bold text-gray-800">
+      HR Portal
+    </Link>
+  </div>
             </div>
             
             <div className="hidden md:block">

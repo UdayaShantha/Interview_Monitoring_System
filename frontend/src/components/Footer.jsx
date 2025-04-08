@@ -1,6 +1,8 @@
+
 import React from "react";
 import { Link } from "react-router-dom";
 import { FaFacebookF, FaTwitter, FaLinkedinIn } from "react-icons/fa";
+import Logo from "./Logo";
 
 function Footer() {
   return (
@@ -9,11 +11,9 @@ function Footer() {
         
         {/* Company Info */}
         <div className="flex flex-col items-start">
-          <div className="flex items-center space-x-2">
-            <div className="bg-white w-10 h-10 rounded-full flex items-center justify-center">
-              <span className="text-green-900 text-lg font-bold">LOGO</span>
-            </div>
-            <h3 className="text-lg font-semibold">Interview System</h3>
+        <div className="flex items-center space-x-2">
+        <   Logo className="w-32 h-32" />
+
           </div>
           <p className="mt-3 opacity-80 leading-relaxed">
             Empowering companies with AI-driven interview solutions.

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
+import logo from "../assets/logo.png";
 import { 
   FaChartLine, 
   FaCalendarAlt, 
@@ -190,10 +191,15 @@ function InterviewPage() {
     <div className="min-h-screen bg-gray-50 font-sans">
       {/* 🟩 UPDATED NAVBAR */}
       <nav className="bg-gradient-to-r from-green-900 to-green-600 text-white p-4 md:p-6 flex justify-between items-center shadow-lg">
-        <h1 className="text-xl md:text-3xl font-bold tracking-tight">
-          <span className="bg-white text-green-800 px-3 py-1 rounded-md mr-2">AI</span>
-          Interview Management
-        </h1>
+        
+      <div className="flex items-center space-x-4">
+    <img 
+      src={logo} 
+      alt="Company Logo" 
+      className="w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 object-contain rounded-md hover:scale-105 transition duration-300" 
+    />
+    <h1 className="text-white text-xl font-bold">Interview Management</h1>
+  </div>
         
         {/* 🟩 MOBILE MENU TOGGLE */}
         <div className="md:hidden">

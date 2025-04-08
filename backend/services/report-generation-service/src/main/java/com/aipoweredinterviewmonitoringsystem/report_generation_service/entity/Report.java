@@ -29,7 +29,7 @@ public class Report {
     private String candidateName;
 
     @Lob
-    @Column(name = "pdf_file", nullable = false, columnDefinition = "LONGBLOB")
+    @Column(name = "pdf_file", nullable = false)
     private byte[] pdfFile;
 
     @Column(name = "genarated_at", nullable = false)

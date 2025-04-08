@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FaEye, FaTrashAlt, FaBars, FaTimes, FaUser, FaCalendarAlt } from "react-icons/fa";
 import { Bar, Pie } from "react-chartjs-2";
+import logo from "../assets/logo.png";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -196,7 +197,14 @@ function UpcomingInterviewsPage() {
       <nav className="bg-gradient-to-r from-green-800 to-green-600 text-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <h1 className="text-2xl font-bold tracking-tight">Interview Portal</h1>
+          <div className="flex items-center space-x-3">
+        <img 
+          src={logo} 
+          alt="Company Logo" 
+          className="w-12 h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 object-contain rounded-md"
+        />
+        <h1 className="text-2xl font-bold tracking-tight">Interview Portal</h1>
+      </div>
             <div className="hidden md:block">
               <div className="flex space-x-8">
                 <Link to="/interviews" className="hover:text-green-200">Dashboard</Link>
