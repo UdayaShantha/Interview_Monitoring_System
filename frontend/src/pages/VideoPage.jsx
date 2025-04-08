@@ -359,24 +359,13 @@ function VideoPage() {
         audio_file: `answer_${interviewId}_${currentQuestion.questionId}.mp3`
       });
 
-      try {
-        // Send audio file to backend
-        const transcribeResponse = await axios.post('http://localhost:8000/transcribe', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        });
-        console.log('Transcription response:', transcribeResponse.data);
-        toast.success('Answer recorded successfully');
-      } catch (transcribeError) {
-        console.error('Transcription error:', transcribeError.response?.data || transcribeError);
-        toast.error('Failed to send audio recording. Please try again.');
-      }
+      // Save audio in the background without waiting for it to complete
+      saveAudioInBackground(formData);
       
       // Clear audio chunks for next question
       setAudioChunks([]);
       
-      // Proceed with the original logic
+      // Proceed with the original logic immediately
       if (currentQuestionIndex === questions.length - 1) {
         setSessionCompleted(true);
         toast.success('You have completed the interview session!');
@@ -396,6 +385,23 @@ function VideoPage() {
         setCurrentQuestionIndex(prev => prev + 1);
         setQuestionTimer(questions[currentQuestionIndex + 1]?.duration * 60 || 0);
       }
+    }
+  };
+
+  // New function to handle audio saving in the background
+  const saveAudioInBackground = async (formData) => {
+    try {
+      // Send audio file to backend
+      const transcribeResponse = await axios.post('http://localhost:8000/transcribe', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      console.log('Transcription response:', transcribeResponse.data);
+      toast.success('Answer recorded successfully');
+    } catch (transcribeError) {
+      console.error('Transcription error:', transcribeError.response?.data || transcribeError);
+      toast.error('Failed to send audio recording. Please try again.');
     }
   };
 
@@ -596,12 +602,6 @@ function VideoPage() {
       {/* Main Video Area */}
       <main className="flex-1 relative flex items-center justify-center p-4">
         {/* Removed the giant green gradient circle */}
-
-        <div className="absolute bottom-4 left-4 md:bottom-6 md:left-6">
-          <div className="w-20 h-20 md:w-28 md:h-28 rounded-full bg-gray-300 border-4 border-white shadow-xl flex items-center justify-center">
-            <Video size={24} className="text-gray-500" />
-          </div>
-        </div>
 
         {/* Recording Controls */}
         <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6 flex items-center gap-4">
