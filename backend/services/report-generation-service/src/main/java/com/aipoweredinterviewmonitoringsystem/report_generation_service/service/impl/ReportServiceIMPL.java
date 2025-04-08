@@ -8,8 +8,10 @@ import com.aipoweredinterviewmonitoringsystem.report_generation_service.entity.R
 import com.aipoweredinterviewmonitoringsystem.report_generation_service.repository.ReportRepository;
 import com.aipoweredinterviewmonitoringsystem.report_generation_service.service.ReportService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -55,18 +57,33 @@ public class ReportServiceIMPL implements ReportService {
     @Override
     public InterviewMetricsDto fetchMetricsFromPythonService(Long interviewId) {
         // Fetch data from Python service
-       try {
-           PythonReportResponse response = webClient.get()
-                   .uri("/monitoring/report/{interviewId}", interviewId)
-                   .retrieve()
-                   .bodyToMono(PythonReportResponse.class)
-                   .block();
+        try {
+            String url = "/monitoring/report/" + interviewId;
+            System.out.println("Calling Python service at: " + url);
 
-           // Convert to InterviewMetricsDto
-           return mapToInterviewMetricsDto(response.getData());
-       }catch (Exception e) {
-           throw new RuntimeException("Failed to fetch metrics from Python service", e);
-       }
+            PythonReportResponse response = webClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::isError, res -> {
+                        System.err.println("Python service error! Status: " + res.statusCode());
+                        return res.bodyToMono(String.class)
+                                .flatMap(body -> {
+                                    System.err.println("Error response body: " + body);
+                                    return Mono.error(new RuntimeException("Python service error: " + body));
+                                });
+                    })
+                    .bodyToMono(PythonReportResponse.class)
+                    .doOnNext(r -> System.out.println("Raw Python response: " + r))
+                    .block();
+
+            System.out.println("Python service response received successfully");
+            return mapToInterviewMetricsDto(response.getData());
+
+        } catch (Exception e) {
+            System.err.println("Critical error in fetchMetricsFromPythonService: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to fetch metrics: " + e.getMessage(), e);
+        }
 
     }
 
@@ -74,42 +91,56 @@ public class ReportServiceIMPL implements ReportService {
         InterviewMetricsDto dto = new InterviewMetricsDto();
 
         for (MetricValue mv : metrics) {
-            switch (mv.getMetric()) {
+
+            String metricName = mv.getMetric();
+            String value = mv.getValue();
+
+            // Skip entries with null/empty metric names
+            if (metricName == null || metricName.trim().isEmpty()) {
+                System.err.println("Skipping metric with null/empty name. Value: " + value);
+                continue;
+            }
+
+            // Trim and switch on the metric name
+            switch (metricName.trim()) {
                 case "Interview Duration":
-                    dto.setInterviewDurationSeconds(parseValue(mv.getValue(), "seconds"));
+                    dto.setInterviewDurationSeconds(parseValue(value, "seconds"));
                     break;
                 case "Off-Screen Duration":
-                    dto.setOffScreenDurationSeconds(parseValue(mv.getValue(), "seconds"));
+                    dto.setOffScreenDurationSeconds(parseValue(value, "seconds"));
                     break;
                 case "Average Head Rotation":
-                    dto.setAverageHeadRotationDegrees(parseValue(mv.getValue(), "degrees"));
+                    dto.setAverageHeadRotationDegrees(parseValue(value, "degrees"));
                     break;
                 case "angry":
-                    dto.setAngryPercentage(parseValue(mv.getValue(), "%"));
+                    dto.setAngryPercentage(parseValue(value, "%"));
                     break;
                 case "disgust":
-                    dto.setDisgustPercentage(parseValue(mv.getValue(), "%"));
+                    dto.setDisgustPercentage(parseValue(value, "%"));
                     break;
                 case "fear":
-                    dto.setFearPercentage(parseValue(mv.getValue(), "%"));
+                    dto.setFearPercentage(parseValue(value, "%"));
                     break;
                 case "happy":
-                    dto.setHappyPercentage(parseValue(mv.getValue(), "%"));
+                    dto.setHappyPercentage(parseValue(value, "%"));
                     break;
                 case "sad":
-                    dto.setSadPercentage(parseValue(mv.getValue(), "%"));
+                    dto.setSadPercentage(parseValue(value, "%"));
                     break;
                 case "surprise":
-                    dto.setSurprisePercentage(parseValue(mv.getValue(), "%"));
+                    dto.setSurprisePercentage(parseValue(value, "%"));
                     break;
                 case "neutral":
-                    dto.setNeutralPercentage(parseValue(mv.getValue(), "%"));
+                    dto.setNeutralPercentage(parseValue(value, "%"));
                     break;
                 case "Analyzed Frames":
-                    dto.setAnalyzedFrames(parseInt(mv.getValue()));
+                    dto.setAnalyzedFrames(parseInt(value));
                     break;
                 case "Valid Face Detections":
-                    dto.setValidFaceDetections(parseInt(mv.getValue()));
+                    dto.setValidFaceDetections(parseInt(value));
+                    break;
+                default:
+                    System.out.println("Unhandled metric: " + metricName);
                     break;
             }
         }
