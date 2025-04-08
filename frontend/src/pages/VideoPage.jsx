@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Mic, Video, Clock, ChevronRight, AlertCircle, Camera } from 'lucide-react';
+import { Mic, Video, Clock, ChevronRight, AlertCircle } from 'lucide-react';
 import axios from '../axiosInstance';
 import { toast } from 'react-toastify';
 import { jwtDecode } from 'jwt-decode';
@@ -18,17 +18,10 @@ function VideoPage() {
   const [tabSwitches, setTabSwitches] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [positionType, setPositionType] = useState(null);
-  
-  // Face recognition states
-  const [interviewId, setInterviewId] = useState(null);
-  const [faceRecognitionActive, setFaceRecognitionActive] = useState(false);
-  const [candidateId, setCandidateId] = useState(null);
-  const videoRef = useRef(null);
-  const streamRef = useRef(null);
 
-  // Get user ID and position type from token
+  // Get position type from backend using user ID from token
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchPositionType = async () => {
       try {
         const accessToken = localStorage.getItem('accessToken');
         if (!accessToken) {
@@ -39,7 +32,6 @@ function VideoPage() {
 
         const decodedToken = jwtDecode(accessToken);
         const userId = decodedToken.userId;
-        setCandidateId(userId);
 
         if (!userId) {
           toast.error('User ID not found in token');
@@ -47,31 +39,17 @@ function VideoPage() {
           return;
         }
 
-        // Fetch position type
         const response = await axios.get(`/users/hr/candidate/position/${userId}`);
         if (response.data && response.data.data) {
           setPositionType(response.data.data);
         }
-
-        // Get interview ID for the candidate
-        try {
-          const interviewResponse = await axios.get(`/candidate/interview/${userId}`);
-          if (interviewResponse.data && interviewResponse.data.interviewId) {
-            setInterviewId(interviewResponse.data.interviewId);
-          } else {
-            toast.error('No interview ID found for this candidate');
-          }
-        } catch (error) {
-          console.error('Error fetching interview ID:', error);
-          toast.error('Failed to fetch interview ID');
-        }
       } catch (error) {
-        console.error('Error fetching user data:', error);
-        toast.error('Failed to fetch user data');
+        console.error('Error fetching position type:', error);
+        toast.error('Failed to fetch position type');
       }
     };
 
-    fetchUserData();
+    fetchPositionType();
   }, [navigate]);
 
   // Fetch questions from backend
@@ -94,95 +72,6 @@ function VideoPage() {
     };
     fetchQuestions();
   }, [positionType]);
-
-  // Initialize face recognition
-  useEffect(() => {
-    const startFaceRecognition = async () => {
-      if (!interviewId) return;
-      
-      try {
-        // Call the face recognition endpoint
-        const response = await axios.get(`/load/model/face-recognition/${interviewId}`, {
-          params: {
-            emotion_library: "deepface",
-            min_face_detection: 0.5,
-            min_face_presence: 0.5, 
-            min_tracking: 0.5
-          }
-        });
-        
-        if (response.data && response.data.message === "Face recognition started") {
-          setFaceRecognitionActive(true);
-          toast.success('Face recognition started successfully');
-          
-          // Start webcam for local display
-          startWebcam();
-        }
-      } catch (error) {
-        console.error('Error starting face recognition:', error);
-        toast.error('Failed to start face recognition');
-      }
-    };
-
-    if (interviewId && !faceRecognitionActive) {
-      startFaceRecognition();
-    }
-
-    // Cleanup function to stop face recognition when component unmounts
-    return () => {
-      if (faceRecognitionActive && interviewId) {
-        stopFaceRecognition();
-      }
-    };
-  }, [interviewId]);
-
-  // Start webcam function
-  const startWebcam = async () => {
-    try {
-      const constraints = {
-        video: {
-          width: { ideal: 640 },
-          height: { ideal: 480 },
-          facingMode: "user"
-        },
-        audio: false
-      };
-      
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      streamRef.current = stream;
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    } catch (error) {
-      console.error('Error accessing webcam:', error);
-      toast.error('Failed to access webcam');
-    }
-  };
-
-  // Stop face recognition
-  const stopFaceRecognition = async () => {
-    try {
-      if (interviewId) {
-        await axios.get(`/stop/face-recognition/${interviewId}`);
-        toast.info('Face recognition stopped');
-      }
-      
-      // Stop the local webcam stream
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-        streamRef.current = null;
-      }
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
-      }
-      
-      setFaceRecognitionActive(false);
-    } catch (error) {
-      console.error('Error stopping face recognition:', error);
-    }
-  };
 
   // Security restrictions and fullscreen handling
   useEffect(() => {
@@ -335,18 +224,14 @@ function VideoPage() {
 
   const handleEndSession = async () => {
     try {
-      // Stop face recognition before ending session
-      await stopFaceRecognition();
-      
       // Automatically exit fullscreen mode
       if (document.fullscreenElement) {
         await document.exitFullscreen();
       }
-      
       // Navigate to feedback page after exiting fullscreen
       navigate('/feedback');
     } catch (err) {
-      console.error('Error during session end:', err);
+      console.error('Error exiting fullscreen:', err);
       // Navigate anyway if fullscreen exit fails
       navigate('/feedback');
     }
@@ -469,28 +354,13 @@ function VideoPage() {
 
       {/* Main Video Area */}
       <main className="flex-1 relative flex items-center justify-center p-4">
-        {/* Webcam video feed */}
-        <div className="relative w-64 h-64 md:w-96 md:h-96 rounded-full overflow-hidden shadow-2xl border-4 border-emerald-500">
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          {!faceRecognitionActive && (
-            <div className="absolute inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center">
-              <Camera size={64} className="text-white opacity-80" />
-              <p className="absolute bottom-10 text-white text-center px-4">
-                Starting face recognition...
-              </p>
-            </div>
-          )}
+        <div className="w-64 h-64 md:w-96 md:h-96 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-2xl">
+          <Mic size={64} className="text-white opacity-80" />
         </div>
 
         <div className="absolute bottom-4 left-4 md:bottom-6 md:left-6">
           <div className="w-20 h-20 md:w-28 md:h-28 rounded-full bg-gray-300 border-4 border-white shadow-xl flex items-center justify-center">
-            <Mic size={24} className="text-gray-500" />
+            <Video size={24} className="text-gray-500" />
           </div>
         </div>
       </main>
@@ -553,14 +423,6 @@ function VideoPage() {
             </div>
           </div>
         </footer>
-      )}
-
-      {/* Face recognition status indicator */}
-      {faceRecognitionActive && (
-        <div className="fixed top-4 right-4 bg-green-100 px-3 py-1 rounded-full text-xs text-green-700 flex items-center gap-1 shadow">
-          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-          Face Recognition Active
-        </div>
       )}
     </div>
   );

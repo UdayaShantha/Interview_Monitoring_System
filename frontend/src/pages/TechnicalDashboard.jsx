@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import employeeImage from "../assets/employee.jpg";
 import interviewImage from "../assets/interview.jpg";
 import reportImage from "../assets/report.jpg";
+import logo from "../assets/logo.png";
 
 function HRDashboard() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -14,7 +15,13 @@ function HRDashboard() {
   return (
     <div className="min-h-screen flex flex-col font-['Poppins'] bg-gradient-to-b from-green-50 to-green-100">
       <nav className="bg-gradient-to-r from-green-500 to-green-300 text-white p-5 flex justify-between items-center shadow-xl">
-        <h1 className="text-4xl font-extrabold text-white tracking-wider hover:text-yellow-300 transition duration-300">Technical Dashboard</h1>
+      <div className="flex items-center space-x-3">
+          <img 
+            src={logo} 
+            alt="Company Logo" 
+            className="h-12 w-auto object-contain" 
+          />
+        </div>
 
         {/* Desktop Menu */}
         <ul className="hidden md:flex space-x-8 text-lg font-semibold">
