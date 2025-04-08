@@ -2,11 +2,7 @@ package com.aipoweredinterviewmonitoringsystem.report_generation_service.service
 
 import com.aipoweredinterviewmonitoringsystem.report_generation_service.dto.ReportDownloadDTO;
 import com.aipoweredinterviewmonitoringsystem.report_generation_service.dto.respond.InterviewMetricsDto;
-import com.aipoweredinterviewmonitoringsystem.report_generation_service.entity.Report;
 import org.springframework.stereotype.Service;
-
-import java.util.Map;
-import java.util.List;
 
 @Service
 public interface ReportService {
@@ -14,11 +10,13 @@ public interface ReportService {
 
     ReportDownloadDTO getReportForDownload(Long reportId);
 
-    InterviewMetricsDto extractMetrics(List<Map<String, String>> csvRows);
+   // InterviewMetricsDto extractMetrics(InterviewMetricsDto);
 
-    String fetchCsvFromPythonService(Long interviewId);
+   // InterviewMetricsDto fetchMetricsFromPythonService(Long interviewId);
+   public InterviewMetricsDto fetchMetricsFromPythonService(Long interviewId);
 
-    InterviewMetricsDto parseCsv(String csvContent);
 
-    List<Map<String, String>> parseCsvToKeyValuePairs(String csvContent);
+//    InterviewMetricsDto parseCsv(String csvContent);
+
+  //  List<Map<String, String>> parseCsvToKeyValuePairs(String csvContent);
 }
