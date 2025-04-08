@@ -91,42 +91,56 @@ public class ReportServiceIMPL implements ReportService {
         InterviewMetricsDto dto = new InterviewMetricsDto();
 
         for (MetricValue mv : metrics) {
-            switch (mv.getMetric()) {
+
+            String metricName = mv.getMetric();
+            String value = mv.getValue();
+
+            // Skip entries with null/empty metric names
+            if (metricName == null || metricName.trim().isEmpty()) {
+                System.err.println("Skipping metric with null/empty name. Value: " + value);
+                continue;
+            }
+
+            // Trim and switch on the metric name
+            switch (metricName.trim()) {
                 case "Interview Duration":
-                    dto.setInterviewDurationSeconds(parseValue(mv.getValue(), "seconds"));
+                    dto.setInterviewDurationSeconds(parseValue(value, "seconds"));
                     break;
                 case "Off-Screen Duration":
-                    dto.setOffScreenDurationSeconds(parseValue(mv.getValue(), "seconds"));
+                    dto.setOffScreenDurationSeconds(parseValue(value, "seconds"));
                     break;
                 case "Average Head Rotation":
-                    dto.setAverageHeadRotationDegrees(parseValue(mv.getValue(), "degrees"));
+                    dto.setAverageHeadRotationDegrees(parseValue(value, "degrees"));
                     break;
                 case "angry":
-                    dto.setAngryPercentage(parseValue(mv.getValue(), "%"));
+                    dto.setAngryPercentage(parseValue(value, "%"));
                     break;
                 case "disgust":
-                    dto.setDisgustPercentage(parseValue(mv.getValue(), "%"));
+                    dto.setDisgustPercentage(parseValue(value, "%"));
                     break;
                 case "fear":
-                    dto.setFearPercentage(parseValue(mv.getValue(), "%"));
+                    dto.setFearPercentage(parseValue(value, "%"));
                     break;
                 case "happy":
-                    dto.setHappyPercentage(parseValue(mv.getValue(), "%"));
+                    dto.setHappyPercentage(parseValue(value, "%"));
                     break;
                 case "sad":
-                    dto.setSadPercentage(parseValue(mv.getValue(), "%"));
+                    dto.setSadPercentage(parseValue(value, "%"));
                     break;
                 case "surprise":
-                    dto.setSurprisePercentage(parseValue(mv.getValue(), "%"));
+                    dto.setSurprisePercentage(parseValue(value, "%"));
                     break;
                 case "neutral":
-                    dto.setNeutralPercentage(parseValue(mv.getValue(), "%"));
+                    dto.setNeutralPercentage(parseValue(value, "%"));
                     break;
                 case "Analyzed Frames":
-                    dto.setAnalyzedFrames(parseInt(mv.getValue()));
+                    dto.setAnalyzedFrames(parseInt(value));
                     break;
                 case "Valid Face Detections":
-                    dto.setValidFaceDetections(parseInt(mv.getValue()));
+                    dto.setValidFaceDetections(parseInt(value));
+                    break;
+                default:
+                    System.out.println("Unhandled metric: " + metricName);
                     break;
             }
         }
