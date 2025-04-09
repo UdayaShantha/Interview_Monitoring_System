@@ -18,7 +18,7 @@ from basicDetect import run as basic_detect
 from faceVerify import run as face_verify
 from reportGeneration import run as report_generation
 from faceRecognition import run as face_recognition
-from database import get_db, create_tables, async_session_maker
+from database import get_db, create_tables, async_session_maker,SessionLocal
 from models import InterviewReport
 import cv2
 
@@ -310,6 +310,15 @@ async def start_face_recognition(
             "tracking_confidence": min_tracking
         }
     }
+
+@app.get("/interview_exists/{interview_id}", response_model=bool)
+def interview_exists(interview_id: int, db: SessionLocal = Depends(get_db)):
+    """
+    Check if an InterviewReport exists for the given interview_id.
+    Returns True if exists, False otherwise.
+    """
+    exists = db.query(InterviewReport).filter(InterviewReport.interview_id == interview_id).first() is not None
+    return exists
 
 async def update_db_with_report(interview_id: int, report_path: str = None, error_message: str = None):
     try:

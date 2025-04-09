@@ -15,7 +15,7 @@ function VideoPage() {
   const [showCompletionAlert, setShowCompletionAlert] = useState(false);
   const [showNextQuestionWarning, setShowNextQuestionWarning] = useState(false);
   const [timer, setTimer] = useState(0);
-  const [questionTimer, setQuestionTimer] = useState(null); // Initially null until stream starts
+  const [questionTimer, setQuestionTimer] = useState(null); // Initially null until recording starts
   const [initialQuestionDuration, setInitialQuestionDuration] = useState(0);
   const [loading, setLoading] = useState(true);
   const [tabSwitches, setTabSwitches] = useState(0);
@@ -28,6 +28,7 @@ function VideoPage() {
   const [isServiceReady, setIsServiceReady] = useState(false);
   const [serviceInitializing, setServiceInitializing] = useState(false);
   const [backendStreamActive, setBackendStreamActive] = useState(false);
+  const [timerStarted, setTimerStarted] = useState(false); // Control timer start
   const videoFeedRef = useRef(null);
   const maxRetries = 10;
   const retryDelay = 2000;
@@ -164,7 +165,12 @@ function VideoPage() {
               videoFeedRef.current.src = `http://localhost:8001/video_feed/${interviewId}`;
             }
 
-            setQuestionTimer(initialQuestionDuration);
+            // Set initial timer and start it when service is ready
+            if (currentQuestionIndex === 0 && questionTimer === null) {
+              setQuestionTimer(initialQuestionDuration);
+              // Start the timer when service is ready
+              setTimerStarted(true);
+            }
 
             toast.success('Interview session ready');
             toast.dismiss("service-init");
@@ -298,7 +304,7 @@ function VideoPage() {
       });
 
       if (stopResponse.ok) {
-        const stopData = await stopResponse.json();
+        const stopData = await response.json();
         console.log("Backend services stopped successfully:", stopData);
         toast.success('Interview session ended and report saved');
       } else {
@@ -409,23 +415,24 @@ function VideoPage() {
     };
   }, []);
 
-  // Timer logic (starts only when service is ready)
+  // Timer logic (only runs after recording starts and service is ready)
   useEffect(() => {
-    if (!isServiceReady || questions.length === 0) return;
+    if (!isServiceReady || questions.length === 0 || !timerStarted || questionTimer === null) return;
 
     const interval = setInterval(() => {
       setTimer(prev => prev + 1);
       setQuestionTimer(prev => {
         if (prev <= 0) {
-          handleNextQuestion();
-          return questions[currentQuestionIndex + 1]?.duration * 60 || 0;
+          // Don't automatically move to next question when timer reaches zero
+          // This prevents skipping questions
+          return 0;
         }
         return prev - 1;
       });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isServiceReady, currentQuestionIndex, questions]);
+  }, [isServiceReady, currentQuestionIndex, questions, timerStarted, questionTimer]);
 
   // Initialize audio recording
   useEffect(() => {
@@ -500,6 +507,11 @@ function VideoPage() {
       return;
     }
 
+    if (!isServiceReady) {
+      toast.error('Please wait until the interview session is fully initialized.');
+      return;
+    }
+
     try {
       if (mediaRecorderRef.current.state === 'recording') {
         stopRecording();
@@ -508,12 +520,14 @@ function VideoPage() {
           mediaRecorderRef.current.start();
           setIsRecording(true);
           toast.info('Recording started');
+          // Don't start timer here, it should already be running from service initialization
         }, 100);
       } else {
         setAudioChunks([]);
         mediaRecorderRef.current.start();
         setIsRecording(true);
         toast.info('Recording started');
+        // Don't start timer here, it should already be running from service initialization
       }
     } catch (error) {
       console.error('Error starting recording:', error);
@@ -575,20 +589,26 @@ function VideoPage() {
 
       if (currentQuestionIndex === questions.length - 1) {
         setSessionCompleted(true);
+        setQuestionTimer(0); // Stop timer
         toast.success('You have completed the interview session!');
       } else {
-        setCurrentQuestionIndex(prev => prev + 1);
-        setQuestionTimer(questions[currentQuestionIndex + 1]?.duration * 60 || 0);
+        // Move to next question one at a time
+        const nextIndex = currentQuestionIndex + 1;
+        setCurrentQuestionIndex(nextIndex);
+        setQuestionTimer(questions[nextIndex]?.duration * 60 || 0);
       }
     } catch (error) {
       console.error('Error processing question data:', error);
       toast.error('Failed to process question data');
       if (currentQuestionIndex === questions.length - 1) {
         setSessionCompleted(true);
+        setQuestionTimer(0); // Stop timer
         toast.success('You have completed the interview session!');
       } else {
-        setCurrentQuestionIndex(prev => prev + 1);
-        setQuestionTimer(questions[currentQuestionIndex + 1]?.duration * 60 || 0);
+        // Move to next question one at a time
+        const nextIndex = currentQuestionIndex + 1;
+        setCurrentQuestionIndex(nextIndex);
+        setQuestionTimer(questions[nextIndex]?.duration * 60 || 0);
       }
     }
   };
@@ -609,6 +629,11 @@ function VideoPage() {
   };
 
   const handleActionButton = async () => {
+    if (!isServiceReady) {
+      toast.error('Please wait until the interview session is fully initialized.');
+      return;
+    }
+
     if (currentQuestionIndex < questions.length - 1) {
       setShowNextQuestionWarning(true);
       return;
@@ -838,6 +863,7 @@ function VideoPage() {
                 ? 'bg-red-500 hover:bg-red-600' 
                 : 'bg-emerald-500 hover:bg-emerald-600'
             }`}
+            disabled={!isServiceReady}
           >
             {isRecording ? (
               <Square size={32} className="text-white" />
