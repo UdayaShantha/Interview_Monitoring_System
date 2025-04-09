@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Footer from "../components/Footer";
 import bobImage from '../assets/bob.jpg';
@@ -19,10 +19,14 @@ import { faDatabase } from '@fortawesome/free-solid-svg-icons';
 function UserProfilePage() {
   const navigate = useNavigate();
   const [timeLeft, setTimeLeft] = useState('00D 00H 00M 00S');
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
+  const timerRef = useRef(null);
   const [username, setUsername] = useState('');
   const [position, setPosition] = useState('Loading...');
   const [userId, setUserId] = useState(null);
   const [userImage, setUserImage] = useState(null);
+  const [interviewId, setInterviewId] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Company information
   const companyInfo = {
@@ -100,30 +104,150 @@ function UserProfilePage() {
     fetchPosition();
   }, [userId]);
 
+  // Fetch interview ID from backend
   useEffect(() => {
-    const interviewStartTime = new Date('2025-02-10T10:00:00').getTime();
+    const fetchInterviewId = async () => {
+      if (!userId) return;
 
-    function updateTimer() {
-      const now = Date.now();
-      const diff = interviewStartTime - now;
-
-      if (diff <= 0) {
-        setTimeLeft('00D 00H 00M 00S');
-        return;
+      try {
+        const response = await axiosInstance.get(`http://localhost:9191/api/v1/interviews/get/interviewId/by/candidateId?candidateId=${userId}`);
+        console.log("Interview ID response:", response.data);
+        if (response.data && response.data.data) {
+          setInterviewId(response.data.data);
+          console.log("Interview ID set:", response.data.data);
+        } else {
+          console.warn("No interview ID received, using userId instead");
+          setInterviewId(userId);
+        }
+      } catch (error) {
+        console.error('Error fetching interview ID:', error);
+        // Set a default value or handle the error appropriately
+        setInterviewId(userId);
       }
+    };
 
-      const days    = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours   = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    fetchInterviewId();
+  }, [userId]);
 
-      setTimeLeft(`${days}D ${hours}H ${minutes}M ${seconds}S`);
+  // Convert ISO-8601 Duration string to total seconds
+  const parseDuration = (durationString) => {
+    try {
+      // Remove the "PT" prefix
+      const duration = durationString.substring(2);
+      
+      let totalSeconds = 0;
+      
+      // Extract hours
+      const hoursMatch = duration.match(/(\d+)H/);
+      if (hoursMatch) {
+        totalSeconds += parseInt(hoursMatch[1]) * 3600;
+      }
+      
+      // Extract minutes
+      const minutesMatch = duration.match(/(\d+)M/);
+      if (minutesMatch && !duration.endsWith('M')) { // Ensure we're not catching milliseconds
+        totalSeconds += parseInt(minutesMatch[1]) * 60;
+      }
+      
+      // Extract seconds
+      const secondsMatch = duration.match(/([\d.]+)S/);
+      if (secondsMatch) {
+        totalSeconds += parseFloat(secondsMatch[1]);
+      }
+      
+      return Math.floor(totalSeconds); // Round down to nearest second
+    } catch (error) {
+      console.error('Error parsing duration string:', error);
+      return 0;
+    }
+  };
+
+  // Fetch remaining time from backend
+  useEffect(() => {
+    const fetchRemainingTime = async () => {
+      if (!interviewId) return;
+
+      try {
+        const response = await axiosInstance.get(`http://localhost:9191/api/v1/interviews/get/remaining-time/by/interviewId/${interviewId}`);
+        console.log('Remaining time response:', response.data);
+        
+        if (response.data && response.data.data) {
+          const durationString = response.data.data;
+          console.log('Duration string:', durationString);
+          
+          // Parse the duration string to seconds
+          const totalSeconds = parseDuration(durationString);
+          console.log('Total seconds:', totalSeconds);
+          
+          if (totalSeconds > 0) {
+            setRemainingSeconds(totalSeconds);
+            updateTimerDisplay(totalSeconds);
+          } else {
+            setTimeLeft('00D 00H 00M 00S');
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching remaining time:', error);
+        if (error.response?.data?.data) {
+          console.error('Error message from server:', error.response.data.data);
+        }
+        setTimeLeft('00D 00H 00M 00S');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRemainingTime();
+  }, [interviewId]);
+
+  // Function to update timer display based on seconds
+  const updateTimerDisplay = (totalSeconds) => {
+    if (totalSeconds <= 0) {
+      setTimeLeft('00D 00H 00M 00S');
+      return;
     }
 
-    updateTimer();
-    const timer = setInterval(updateTimer, 1000);
-    return () => clearInterval(timer);
-  }, []);
+    const days = Math.floor(totalSeconds / (24 * 60 * 60));
+    const hours = Math.floor((totalSeconds % (24 * 60 * 60)) / (60 * 60));
+    const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+
+    const formattedTime = `${String(days).padStart(2, '0')}D ${String(hours).padStart(2, '0')}H ${String(minutes).padStart(2, '0')}M ${String(seconds).padStart(2, '0')}S`;
+    setTimeLeft(formattedTime);
+  };
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (remainingSeconds > 0) {
+      // Clear any existing interval
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+
+      // Set up new interval
+      timerRef.current = setInterval(() => {
+        setRemainingSeconds(prev => {
+          if (prev <= 0) {
+            clearInterval(timerRef.current);
+            return 0;
+          }
+          const newValue = prev - 1;
+          updateTimerDisplay(newValue);
+          return newValue;
+        });
+      }, 1000);
+
+      // Initial display update
+      updateTimerDisplay(remainingSeconds);
+    }
+
+    // Cleanup function
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [remainingSeconds]);
 
   function handleLogout() {
     localStorage.removeItem('accessToken');
@@ -175,8 +299,9 @@ function UserProfilePage() {
           <button
             className="start-btn bg-green-500 text-white py-3 px-6 rounded-lg hover:bg-green-600 transition duration-300"
             onClick={handleStartInterview}
+            disabled={isLoading}
           >
-            Start Interview
+            {isLoading ? 'Loading...' : 'Start Interview'}
           </button>
           <p className="time-left text-xl text-green-600 mt-6">
             Time Left: {timeLeft}
