@@ -22,12 +22,11 @@ app = FastAPI(title="Audio Transcription Service")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Your React app's origin
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 # Token configuration for JWT authentication
 CLIENT_ID = "audio-service"
 CLIENT_SECRET = "super-secret-key"
@@ -36,7 +35,6 @@ TOKEN_URL = "http://localhost:8081/api/v1/auth/client-token"
 # Token cache
 token = None
 expiration_time = 0
-
 
 async def get_token():
     """Fetch and cache a JWT token from the User Management Service."""
@@ -89,7 +87,7 @@ async def transcribe_audio(
 
     try:
         # Validate file type
-        if not audio_file.filename.lower().endswith(('.wav', '.mp3', '.ogg', '.m4a', '.webm')):
+        if not audio_file.filename.lower().endswith(('.wav', '.mp3', '.ogg', '.m4a')):
             raise HTTPException(400, "Invalid file format")
 
         # Save uploaded file temporarily
@@ -159,5 +157,5 @@ async def get_question_answer(
     return transcription.text
 
 
-if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+if __name__ == "_main_":
+    uvicorn.run(app, host="127.0.0.1",port=8000)

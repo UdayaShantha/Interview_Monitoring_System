@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaTimes } from "react-icons/fa";
 import DOMPurify from "dompurify";
 import axios from "../axiosInstance"; 
 
-const CandidateForm = ({ onClose, onSuccess }) => {
+const CandidateForm = ({ onClose, onSuccess, editMode = false, initialData = null }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPasswordFields, setShowPasswordFields] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     nic: "",
@@ -21,6 +22,57 @@ const CandidateForm = ({ onClose, onSuccess }) => {
     password: "",
     confirmPassword: ""
   });
+
+  useEffect(() => {
+    if (editMode && initialData) {
+      console.log("Initial data received:", initialData);
+      
+      // Format dates properly
+      const formattedBirthday = initialData.birthday 
+        ? new Date(initialData.birthday).toISOString().split('T')[0] 
+        : "";
+      
+      const formattedScheduleDate = initialData.scheduleDate 
+        ? new Date(initialData.scheduleDate).toISOString().split('T')[0] 
+        : "";
+      
+      // Format time properly (ensure it's in HH:MM format)
+      let formattedStartTime = initialData.startTime || "";
+      if (formattedStartTime && !formattedStartTime.includes(":")) {
+        // If time is not in HH:MM format, try to format it
+        try {
+          const [hours, minutes] = formattedStartTime.split(":");
+          if (hours && minutes) {
+            formattedStartTime = `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+          }
+        } catch (e) {
+          console.error("Error formatting time:", e);
+        }
+      }
+      
+      console.log("Formatted dates:", {
+        birthday: formattedBirthday,
+        scheduleDate: formattedScheduleDate,
+        startTime: formattedStartTime
+      });
+      
+      setFormData({
+        name: initialData.name || "",
+        nic: initialData.nic || "",
+        email: initialData.email || "",
+        address: initialData.address || "",
+        contactNumber: initialData.phone || "",
+        dob: formattedBirthday,
+        images: [],
+        position: initialData.positionType || "",
+        date: formattedScheduleDate,
+        startTime: formattedStartTime,
+        username: initialData.username || "",
+        password: "",
+        confirmPassword: ""
+      });
+    }
+  }, [editMode, initialData]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -56,19 +108,22 @@ const CandidateForm = ({ onClose, onSuccess }) => {
     formData.address &&
     formData.contactNumber &&
     formData.dob &&
-    formData.images.length === 5;
+    (!editMode ? formData.images.length === 5 : true);
 
   const isStep2Valid = () => 
     formData.position && 
     formData.date && 
     formData.startTime;
 
-  const isStep3Valid = () => 
-    formData.username && 
-    formData.password && 
-    formData.password === formData.confirmPassword;
+  const isStep3Valid = () => {
+    if (editMode) {
+      return formData.username && (!showPasswordFields || (formData.password && formData.password === formData.confirmPassword));
+    }
+    return formData.username && formData.password && formData.password === formData.confirmPassword;
+  };
 
   const formatDate = (dateString) => {
+    if (!dateString) return null;
     const date = new Date(dateString);
     return date.toISOString().split('T')[0];
   };
@@ -84,7 +139,7 @@ const CandidateForm = ({ onClose, onSuccess }) => {
   
       const candidateData = {
         username: formData.username,
-        password: formData.password,
+        password: formData.password || undefined,
         name: formData.name,
         nic: formData.nic,
         email: formData.email,
@@ -95,25 +150,35 @@ const CandidateForm = ({ onClose, onSuccess }) => {
         scheduleDate: scheduleDate,
         startTime: formData.startTime
       };
+
+      console.log("Submitting candidate data:", candidateData);
+
+      if (editMode) {
+        const response = await axios.put(
+          `/users/hr/candidate/${initialData.userId}`,
+          candidateData
+        );
+        console.log("Update response:", response.data);
+      } else {
+        const formDataToSend = new FormData();
+        formDataToSend.append('candidate', new Blob([JSON.stringify(candidateData)], {
+          type: 'application/json'
+        }));
   
-      const formDataToSend = new FormData();
-      formDataToSend.append('candidate', new Blob([JSON.stringify(candidateData)], {
-        type: 'application/json'
-      }));
+        formData.images.forEach((file) => {
+          formDataToSend.append('photos', file);
+        });
   
-      formData.images.forEach((file) => {
-        formDataToSend.append('photos', file);
-      });
-  
-      const response = await axios.post(
-        '/users/hr/candidate/save', 
-        formDataToSend,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
+        await axios.post(
+          '/users/hr/candidate/save', 
+          formDataToSend,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          }
+        );
+      }
   
       if (onSuccess) {
         await onSuccess();
@@ -136,7 +201,7 @@ const CandidateForm = ({ onClose, onSuccess }) => {
     <div className="space-y-4">
       {currentStep === 1 ? (
         <>
-          <h2 className="text-xl font-semibold text-center mb-4">Candidate Registration Form</h2>
+          <h2 className="text-xl font-semibold text-center mb-4">{editMode ? 'Edit Candidate' : 'Candidate Registration Form'}</h2>
           <div className="border-b-2 border-gray-300 w-full mb-4"></div>
           <form>
             <div className="space-y-3">
@@ -217,36 +282,38 @@ const CandidateForm = ({ onClose, onSuccess }) => {
                 />
               </div>
 
-              <div className="flex flex-col">
-                <label className="font-medium text-xs text-gray-700 mb-2">Upload Images (5 required)</label>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {formData.images.map((file, index) => (
-                    <div key={index} className="relative">
-                      <img
-                        src={file ? DOMPurify.sanitize(URL.createObjectURL(file)) : ""}
-                        alt={`upload ${index}`}
-                        className="h-12 w-12 object-cover rounded"
-                      />
-                      <button
-                        type="button"
-                        className="absolute -top-1 -right-1 text-red-500 bg-white rounded-full"
-                        onClick={() => handleRemoveImage(index)}
-                      >
-                        <FaTimes size={12} />
-                      </button>
-                    </div>
-                  ))}
+              {!editMode && (
+                <div className="flex flex-col">
+                  <label className="font-medium text-xs text-gray-700 mb-2">Upload Images (5 required)</label>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {formData.images.map((file, index) => (
+                      <div key={index} className="relative">
+                        <img
+                          src={file ? DOMPurify.sanitize(URL.createObjectURL(file)) : ""}
+                          alt={`upload ${index}`}
+                          className="h-12 w-12 object-cover rounded"
+                        />
+                        <button
+                          type="button"
+                          className="absolute -top-1 -right-1 text-red-500 bg-white rounded-full"
+                          onClick={() => handleRemoveImage(index)}
+                        >
+                          <FaTimes size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <input
+                    type="file"
+                    multiple
+                    onChange={handleImageUpload}
+                    className="text-xs"
+                    accept="image/*"
+                    disabled={formData.images.length >= 5}
+                    required
+                  />
                 </div>
-                <input
-                  type="file"
-                  multiple
-                  onChange={handleImageUpload}
-                  className="text-xs"
-                  accept="image/*"
-                  disabled={formData.images.length >= 5}
-                  required
-                />
-              </div>
+              )}
             </div>
 
             <div className="flex justify-end mt-4">
@@ -346,34 +413,53 @@ const CandidateForm = ({ onClose, onSuccess }) => {
                 />
               </div>
 
-              <div className="flex justify-between items-center">
-                <label className="font-medium text-xs text-gray-700 w-1/3">Password</label>
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-2/3 border p-2 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  placeholder="Enter password"
-                  required
-                />
-              </div>
+              {editMode ? (
+                <div className="flex justify-between items-center">
+                  <div className="w-1/3"></div>
+                  <div className="w-2/3">
+                    <button
+                      type="button"
+                      onClick={() => setShowPasswordFields(!showPasswordFields)}
+                      className="text-xs text-blue-600 hover:text-blue-800 underline"
+                    >
+                      {showPasswordFields ? "Hide Password Fields" : "Update Password"}
+                    </button>
+                  </div>
+                </div>
+              ) : null}
 
-              <div className="flex justify-between items-center">
-                <label className="font-medium text-xs text-gray-700 w-1/3">Re-enter Password</label>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  className="w-2/3 border p-2 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  placeholder="Confirm password"
-                  required
-                />
-              </div>
+              {(showPasswordFields || !editMode) && (
+                <>
+                  <div className="flex justify-between items-center">
+                    <label className="font-medium text-xs text-gray-700 w-1/3">Password</label>
+                    <input
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      className="w-2/3 border p-2 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      placeholder="Enter password"
+                      required={!editMode || showPasswordFields}
+                    />
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <label className="font-medium text-xs text-gray-700 w-1/3">Re-enter Password</label>
+                    <input
+                      type="password"
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      className="w-2/3 border p-2 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      placeholder="Confirm password"
+                      required={!editMode || showPasswordFields}
+                    />
+                  </div>
+                </>
+              )}
             </div>
 
-            {formData.password && formData.password !== formData.confirmPassword && (
+            {((!editMode || showPasswordFields) && formData.password && formData.password !== formData.confirmPassword) && (
               <p className="text-red-500 text-xs mt-2">Passwords do not match</p>
             )}
 
@@ -400,7 +486,7 @@ const CandidateForm = ({ onClose, onSuccess }) => {
                     </svg>
                     Processing...
                   </>
-                ) : 'Submit'}
+                ) : editMode ? 'Update' : 'Submit'}
               </button>
             </div>
           </form>

@@ -64,9 +64,9 @@ async def startup_event():
 async def root():
     return {"message": "Face Recognition API is running"}
 
-# @app.get("/health")
-# async def health_check():
-#     return {"status": "ok", "timestamp": datetime.now().isoformat()}
+@app.get("/health")
+async def health_check():
+    return {"status": "ok", "timestamp": datetime.now().isoformat()}
 
 @app.get("/load/basic/model/mesh/matrice")
 async def load_basic_model():
