@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.reactive.function.client.WebClient;
 
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -478,6 +479,38 @@ public class InterviewServiceIMPL implements InterviewService {
                 .mapToDouble(Interview::getDuration)
                 .sum();
         return totalDuration / interviews.size();
+    }
+
+    @Override
+    public Duration getInterviewRemainingTime(long interviewId) {
+        if (interviewRepository.existsById(interviewId)) {
+            Interview interview = interviewRepository.findById(interviewId).get();
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime interviewTime = interview.getScheduleDate().atTime(interview.getStartTime());
+
+            if (interviewTime.isBefore(now)) {
+                throw new IllegalArgumentException("The interview time has already passed.");
+            }
+
+            return Duration.between(now, interviewTime);
+        }
+        throw new InterviewNotFountException("Not found this interview");
+    }
+
+    @Override
+    public List<Integer> getCompletedInterviewCountByEachMonth() {
+        List<Interview> interviews = interviewRepository.findAll();
+        List<Integer> completedCountByMonth = new ArrayList<>(Arrays.asList(new Integer[12]));
+        for (int i = 0; i < 12; i++) {
+            completedCountByMonth.set(i, 0);
+        }
+        for (Interview interview : interviews) {
+            if (interview.getStatus() == Status.COMPLETED) {
+                int month = interview.getScheduleDate().getMonthValue();
+                completedCountByMonth.set(month - 1, completedCountByMonth.get(month - 1) + 1);
+            }
+        }
+        return completedCountByMonth;
     }
 
 

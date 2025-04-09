@@ -29,6 +29,7 @@ function InterviewPage() {
   const [statusPercentages, setStatusPercentages] = useState([]);
   const [interviewCount, setInterviewCount] = useState(0);
   const [averageDuration, setAverageDuration] = useState(0);
+  const [completedInterviewCounts, setCompletedInterviewCounts] = useState([]);
   const navigate = useNavigate();
 
   const handleHomeClick = (e) => {
@@ -58,6 +59,7 @@ function InterviewPage() {
     fetchStatusPercentages();
     fetchInterviewCount();
     fetchAverageDuration();
+    fetchCompletedInterviewCounts();
   }, []);
 
   const fetchSuccessRate = async () => {
@@ -104,12 +106,23 @@ function InterviewPage() {
     }
   };
 
+  const fetchCompletedInterviewCounts = async () => {
+    try {
+      const response = await axios.get('/interviews/completed-interview-count/by/each-month');
+      if (response.data.code === 200) {
+        setCompletedInterviewCounts(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching completed interview counts:', error);
+    }
+  };
+
   // Chart Data Configurations
   const completionData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
     datasets: [{
       label: 'Completed Interviews',
-      data: [12, 19, 8, 15, 12, 17],
+      data: completedInterviewCounts,
       borderColor: '#2D6A4F',
       backgroundColor: 'rgba(45, 106, 79, 0.2)',
       tension: 0.4,

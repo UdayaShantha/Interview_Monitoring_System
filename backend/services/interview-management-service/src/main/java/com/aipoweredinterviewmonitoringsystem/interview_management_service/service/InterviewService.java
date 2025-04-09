@@ -9,8 +9,10 @@ import com.aipoweredinterviewmonitoringsystem.interview_management_service.entit
 import com.aipoweredinterviewmonitoringsystem.interview_management_service.entity.enums.Status;
 import org.springframework.data.domain.Page;
 
+import java.time.Duration;
 import java.time.LocalDate;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -73,4 +75,7 @@ public interface InterviewService {
 
     double getInterviewAverageDuration();
 
+    Duration getInterviewRemainingTime(long interviewId);
+
+    List<Integer> getCompletedInterviewCountByEachMonth();
 }

@@ -64,9 +64,9 @@ async def startup_event():
 async def root():
     return {"message": "Face Recognition API is running"}
 
-@app.get("/health")
-async def health_check():
-    return {"status": "ok", "timestamp": datetime.now().isoformat()}
+# @app.get("/health")
+# async def health_check():
+#     return {"status": "ok", "timestamp": datetime.now().isoformat()}
 
 @app.get("/load/basic/model/mesh/matrice")
 async def load_basic_model():
@@ -441,4 +441,4 @@ async def stop_monitoring(interview_id: int):
     return {"message": "Face recognition process stopped", "status": "stopped"}
 
 if __name__ == "_main_":
-    uvicorn.run(app, host="127.0.0.1", port=8001)
+    uvicorn.run(app, host="127.0.0.1",port=8001)
