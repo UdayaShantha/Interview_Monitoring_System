@@ -513,5 +513,33 @@ public class InterviewServiceIMPL implements InterviewService {
         return completedCountByMonth;
     }
 
+    @Override
+    public List<LocalDateTime> getUpcomingInterviewDates() {
+        List<Interview> interviews = interviewRepository.findAll();
+        List<LocalDateTime> upcomingDates = new ArrayList<>();
+        for (Interview interview : interviews) {
+            if (interview.getScheduleDate().isAfter(LocalDate.now())) {
+                upcomingDates.add(interview.getScheduleDate().atTime(interview.getStartTime()));
+            }
+        }
+        return upcomingDates;
+    }
+
+    @Override
+    public List<ResultCountDTO> getResultCountForEachType() {
+        List<Interview> interviews = interviewRepository.findAll();
+        Map<Result, Long> resultCountMap = interviews.stream()
+                .collect(Collectors.groupingBy(Interview::getResult, Collectors.counting()));
+
+        List<ResultCountDTO> resultCounts = new ArrayList<>();
+        for (Map.Entry<Result, Long> entry : resultCountMap.entrySet()) {
+            ResultCountDTO dto = new ResultCountDTO();
+            dto.setResult(entry.getKey());
+            dto.setCount(entry.getValue());
+            resultCounts.add(dto);
+        }
+        return resultCounts;
+    }
+
 
 }

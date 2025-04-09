@@ -30,6 +30,8 @@ function InterviewPage() {
   const [interviewCount, setInterviewCount] = useState(0);
   const [averageDuration, setAverageDuration] = useState(0);
   const [completedInterviewCounts, setCompletedInterviewCounts] = useState([]);
+  const [upcomingInterviewDates, setUpcomingInterviewDates] = useState([]);
+  const [resultCounts, setResultCounts] = useState([]);
   const navigate = useNavigate();
 
   const handleHomeClick = (e) => {
@@ -60,6 +62,8 @@ function InterviewPage() {
     fetchInterviewCount();
     fetchAverageDuration();
     fetchCompletedInterviewCounts();
+    fetchUpcomingInterviewDates();
+    fetchResultCounts();
   }, []);
 
   const fetchSuccessRate = async () => {
@@ -117,6 +121,31 @@ function InterviewPage() {
     }
   };
 
+  const fetchUpcomingInterviewDates = async () => {
+    try {
+      const response = await axios.get('/interviews/upcoming/interview/dates');
+      if (response.data.code === 200) {
+        // Convert the dates to Date objects
+        const dates = response.data.data.map(dateStr => new Date(dateStr));
+        console.log('Upcoming interview dates:', dates);
+        setUpcomingInterviewDates(dates);
+      }
+    } catch (error) {
+      console.error('Error fetching upcoming interview dates:', error);
+    }
+  };
+
+  const fetchResultCounts = async () => {
+    try {
+      const response = await axios.get('/interviews/interview-count-list/by/result');
+      if (response.data.code === 200) {
+        setResultCounts(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching result counts:', error);
+    }
+  };
+
   // Chart Data Configurations
   const completionData = {
     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
@@ -130,11 +159,16 @@ function InterviewPage() {
   };
 
   const successRateData = {
-    labels: ['Software Engineer', 'QA Engineer', 'Data Analyst'],
+    labels: resultCounts.map(item => item.result),
     datasets: [{
-      label: 'Success Rate %',
-      data: [78, 82, 65],
-      backgroundColor: ['#2D6A4F', '#40916C', '#52B788'],
+      label: 'Interview Results',
+      data: resultCounts.map(item => item.count),
+      backgroundColor: [
+        '#2D6A4F', // Selected
+        '#EF4444', // Rejected
+        '#3B82F6', // On Hold
+        '#D97706'  // Pending
+      ],
       borderWidth: 0,
     }]
   };
@@ -297,6 +331,33 @@ function InterviewPage() {
               onChange={setDate}
               value={date}
               className="border-2 border-gray-100 rounded-lg"
+              tileClassName={({ date }) => {
+                const hasInterview = upcomingInterviewDates.some(interviewDate => {
+                  const interviewDateObj = new Date(interviewDate);
+                  return (
+                    interviewDateObj.getDate() === date.getDate() &&
+                    interviewDateObj.getMonth() === date.getMonth() &&
+                    interviewDateObj.getFullYear() === date.getFullYear()
+                  );
+                });
+                return hasInterview ? '!bg-green-500 !text-white font-bold hover:!bg-green-600' : '';
+              }}
+              tileContent={({ date }) => {
+                const hasInterview = upcomingInterviewDates.some(interviewDate => {
+                  const interviewDateObj = new Date(interviewDate);
+                  return (
+                    interviewDateObj.getDate() === date.getDate() &&
+                    interviewDateObj.getMonth() === date.getMonth() &&
+                    interviewDateObj.getFullYear() === date.getFullYear()
+                  );
+                });
+                return hasInterview ? (
+                  <div className="absolute bottom-1 right-1 w-2 h-2 bg-white rounded-full"></div>
+                ) : null;
+              }}
+              formatDay={(locale, date) => date.getDate()}
+              minDetail="month"
+              maxDetail="month"
             />
           </div>
 
@@ -314,7 +375,7 @@ function InterviewPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Bar Chart */}
           <div className="bg-white p-6 rounded-xl shadow-sm">
-            <h3 className="text-xl font-semibold mb-4">Success Rate by Department</h3>
+            <h3 className="text-xl font-semibold mb-4">Interview Results Distribution</h3>
             <Bar data={successRateData} />
           </div>
 

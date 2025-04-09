@@ -78,4 +78,8 @@ public interface InterviewService {
     Duration getInterviewRemainingTime(long interviewId);
 
     List<Integer> getCompletedInterviewCountByEachMonth();
+
+    List<LocalDateTime> getUpcomingInterviewDates();
+
+    List<ResultCountDTO> getResultCountForEachType();
 }

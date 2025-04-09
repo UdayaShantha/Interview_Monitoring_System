@@ -353,4 +353,23 @@ public class InterviewController {
         }
     }
 
+    @GetMapping("upcoming/interview/dates")
+    public ResponseEntity<StandardResponse> getUpcomingInterviewDates() {
+        try {
+            List<LocalDateTime> upcomingDates = interviewService.getUpcomingInterviewDates();
+            return new ResponseEntity<>(new StandardResponse(200, "Success", upcomingDates), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/interview-count-list/by/result")
+    public ResponseEntity<StandardResponse> getResultCountForEachType() {
+        try {
+            List<ResultCountDTO> resultCounts = interviewService.getResultCountForEachType();
+            return new ResponseEntity<>(new StandardResponse(200, "Success", resultCounts), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
