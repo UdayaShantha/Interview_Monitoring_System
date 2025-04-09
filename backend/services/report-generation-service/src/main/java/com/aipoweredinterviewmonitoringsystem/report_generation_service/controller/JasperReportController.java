@@ -52,10 +52,12 @@ public class JasperReportController {
             ) {
         try {
             Long interviewId = getAccuracyRequestDTO.getInterviewId();
+            System.out.println("Interview ID: " + interviewId);
+            System.out.println("Data ; " + getAccuracyRequestDTO.getConfident());
 
             // Fetch json from Python service
-            InterviewMetricsDto metrics = reportService.fetchMetricsFromPythonService(interviewId);
-            System.out.println("Metrics from Python service: " + metrics);
+//            InterviewMetricsDto metrics = reportService.fetchMetricsFromPythonService(interviewId);
+//            System.out.println("Metrics from Python service: " + metrics);
 
             // Get interview details from interview management service
             ResponseEntity<StandardResponse> interviewDetails = interviewServiceClient
@@ -77,7 +79,7 @@ public class JasperReportController {
             interviewDetailsDTO.setScheduleDate(LocalDate.parse((String) mapInterviewData.get("scheduleDate")));
             interviewDetailsDTO.setDuration((Double) mapInterviewData.get("duration"));
 
-
+            System.out.println("User Id : " + interviewDetailsDTO.getCandidateId());
 
             //Get user details from user management service
             ResponseEntity<StandardResponse> userDetails = userServiceClient.
@@ -114,15 +116,17 @@ public class JasperReportController {
                 candidateDetailsDTO.setPositionType(null);
             }
 
+            System.out.println("Username :" + candidateDetailsDTO.getUsername());
+
             //--------------------------------------------------------------------------------
 
             //verification
-            String verification ;
-            if((metrics.getValidFaceDetections()/metrics.getAnalyzedFrames())*100 >= 40){
-                verification = "Identified";
-            }else{
-                verification = "Not Identified";
-            }
+//            String verification ;
+//            if((metrics.getValidFaceDetections()/metrics.getAnalyzedFrames())*100 >= 40){
+//                verification = "Identified";
+//            }else{
+//                verification = "Not Identified";
+//            }
 
 
             //Add parameters to the report----------------------------------------------------
@@ -134,21 +138,18 @@ public class JasperReportController {
             parameters.put("Email", candidateDetailsDTO.getEmail());
             parameters.put("Contact_number", candidateDetailsDTO.getPhone());
             parameters.put("Duration", String.valueOf(interviewDetailsDTO.getDuration()) + " Minutes");
-            parameters.put("Verification", verification);
+            parameters.put("Verification", "Identified");
             parameters.put("Interview_id", interviewDetailsDTO.getCandidateId());
             parameters.put("Address", candidateDetailsDTO.getAddress());
             parameters.put("Date", String.valueOf(interviewDetailsDTO.getScheduleDate()));
 
             // Emotion Data
             List<EmotionData> emotionDataList = new ArrayList<>();
-            emotionDataList.add(new EmotionData("Confident", (int) Math.round(metrics.getHappyPercentage())));
-            emotionDataList.add(new EmotionData("Neutral", (int) Math.round(metrics.getNeutralPercentage())));
-            emotionDataList.add(new EmotionData("Surprise", (int) Math.round(metrics.getSurprisePercentage())));
-            emotionDataList.add(new EmotionData("Fear", (int) Math.round(metrics.getFearPercentage())));
-            emotionDataList.add(new EmotionData("Others", (100 - ((int) Math.round(metrics.getHappyPercentage()) +
-                    (int) Math.round(metrics.getNeutralPercentage()) +
-                    (int) Math.round(metrics.getSurprisePercentage()) +
-                    (int) Math.round(metrics.getFearPercentage())))));
+            emotionDataList.add(new EmotionData("Confident", getAccuracyRequestDTO.getConfident()));
+            emotionDataList.add(new EmotionData("Neutral", getAccuracyRequestDTO.getNeutral()));
+            emotionDataList.add(new EmotionData("Surprise", getAccuracyRequestDTO.getSurprise()));
+            emotionDataList.add(new EmotionData("Fear", getAccuracyRequestDTO.getFear()));
+            emotionDataList.add(new EmotionData("Others",getAccuracyRequestDTO.getOthers()));
 
             // Convert to JRBeanCollectionDataSource
             JRBeanCollectionDataSource emotionDataSource = new JRBeanCollectionDataSource(emotionDataList);
