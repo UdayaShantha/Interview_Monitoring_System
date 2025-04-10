@@ -1,0 +1,202 @@
+:root {
+    --color-background: #98b2a0;
+    --color-white: #ffffff;
+    --color-success: #10b981;
+    --color-gray-100: #f5f5f5;
+    --color-gray-200: #e5e7eb;
+    --color-gray-300: #d1d5db;
+    --color-gray-400: #9ca3af;
+    --color-gray-500: #6b7280;
+    --color-gray-600: #4b5563;
+    --color-star: #fbbf24;
+    --shadow-card: 0 10px 25px rgba(0, 0, 0, 0.1);
+    --border-radius: 16px;
+  }
+  
+  /* Container styles */
+  .feedback-container {
+    min-height: 100vh;
+    background-color: var(--color-background);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  
+  .feedback-card {
+    width: 100%;
+    max-width: 672px;
+    background-color: var(--color-gray-100);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+  }
+  
+  .feedback-content {
+    padding: 32px;
+  }
+  
+  /* Thank you section styles */
+  .thank-you {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  
+  .thank-you__title {
+    color: var(--color-success);
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 0 0 16px 0;
+  }
+  
+  .thank-you__message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--color-gray-600);
+    font-size: 1rem;
+  }
+  
+  .thank-you__icon {
+    width: 24px;
+    height: 24px;
+    background-color: var(--color-success);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .check-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--color-white);
+  }
+  
+  /* Form styles */
+  .feedback-form-container {
+    background-color: var(--color-gray-400);
+    background-color: rgba(156, 163, 175, 0.3); /* var(--color-gray-400) with 30% opacity */
+    border-radius: var(--border-radius);
+    padding: 24px;
+  }
+  
+  .feedback-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  
+  .feedback-form__title {
+    text-align: center;
+    color: var(--color-gray-600);
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 0;
+  }
+  
+  /* Star rating styles */
+  .star-rating {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+  }
+  
+  .star-rating__button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+  
+  .star-rating__button:hover {
+    transform: scale(1.1);
+  }
+  
+  .star-icon {
+    width: 32px;
+    height: 32px;
+    color: var(--color-gray-300);
+  }
+  
+  .star-icon--active {
+    color: var(--color-star);
+    fill: var(--color-star);
+  }
+  
+  /* Textarea styles */
+  .feedback-form__textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--color-white);
+    color: var(--color-gray-600);
+    font-size: 1rem;
+    resize: none;
+  }
+  
+  .feedback-form__textarea:focus {
+    outline: 2px solid var(--color-success);
+    outline-offset: -2px;
+  }
+  
+  /* Button styles */
+  .feedback-form__buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+  
+  .button {
+    padding: 8px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .button--secondary {
+    background-color: var(--color-gray-200);
+    color: var(--color-gray-600);
+  }
+  
+  .button--secondary:hover {
+    background-color: var(--color-gray-300);
+  }
+  
+  .button--primary {
+    background-color: var(--color-success);
+    color: var(--color-white);
+  }
+  
+  .button--primary:hover {
+    background-color: #0ea472;
+  }
+  
+  /* Responsive styles */
+  @media (max-width: 640px) {
+    .feedback-content {
+      padding: 24px;
+    }
+  
+    .thank-you__title {
+      font-size: 2rem;
+    }
+  
+    .feedback-form-container {
+      padding: 16px;
+    }
+  
+    .star-icon {
+      width: 28px;
+      height: 28px;
+    }
+  }
+  
+  
