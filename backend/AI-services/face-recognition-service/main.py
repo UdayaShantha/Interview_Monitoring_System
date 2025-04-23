@@ -18,7 +18,7 @@ from basicDetect import run as basic_detect
 from faceVerify import run as face_verify
 from reportGeneration import run as report_generation
 from faceRecognition import run as face_recognition
-from database import get_db, create_tables, async_session_maker
+from database import get_db, create_tables, async_session_maker,SessionLocal
 from models import InterviewReport
 import cv2
 
@@ -311,6 +311,15 @@ async def start_face_recognition(
         }
     }
 
+@app.get("/interview_exists/{interview_id}", response_model=bool)
+def interview_exists(interview_id: int, db: SessionLocal = Depends(get_db)):
+    """
+    Check if an InterviewReport exists for the given interview_id.
+    Returns True if exists, False otherwise.
+    """
+    exists = db.query(InterviewReport).filter(InterviewReport.interview_id == interview_id).first() is not None
+    return exists
+
 async def update_db_with_report(interview_id: int, report_path: str = None, error_message: str = None):
     try:
         async with async_session_maker() as db:
@@ -440,5 +449,5 @@ async def stop_monitoring(interview_id: int):
     del active_processes[interview_id]  # Clean up
     return {"message": "Face recognition process stopped", "status": "stopped"}
 
-if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8001)
+if __name__ == "_main_":
+    uvicorn.run(app, host="127.0.0.1",port=8001)

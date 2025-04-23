@@ -51,6 +51,16 @@ public class ReportServiceIMPL implements ReportService {
     }
 
 
+    @Override
+    public Long getReportIdByCandidateId(Long candidateId) {
+        Report report = (Report) reportRepository.findByCandidateId(candidateId)
+                .orElseThrow(() -> new RuntimeException("Report not found for candidate ID: " + candidateId));
+
+        return report.getReportId();
+    }
+
+
+
     // Fetch json from Python service ------------------------------------------------------
 //    @Override
 //    public InterviewMetricsDto fetchMetricsFromPythonService(Long interviewId) {
@@ -160,6 +170,10 @@ public class ReportServiceIMPL implements ReportService {
 //            return Integer.parseInt(value.trim());
 //        } catch (NumberFormatException e) {
 //            return 0;
+
+//        }
+//    }
+
 //        }
 //    }
 

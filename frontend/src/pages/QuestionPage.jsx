@@ -115,26 +115,26 @@ function QuestionPage() {
     setLoading(true);
     setError(null);
     try {
-      let url =
-        categoryFilter || timeFilter
-          ? `questions/filter/questions/paiginated?page=${currentPage}&size=${pageSize}`
-          : `questions/get/questions/paiginated?page=${currentPage}&size=${pageSize}`;
+      // Always use the paginated endpoint
+      let url = `questions/filter/questions/paiginated?page=${currentPage}&size=${pageSize}`;
 
+      // Add category if present
       if (categoryFilter) {
         const formattedCategory = formatCategory(categoryFilter);
         url += `&category=${formattedCategory}`;
       }
-      if (timeFilter) {
-        url += `&duration=${timeFilter}`;
-      }
+
+      // Add duration (required parameter, defaults to 0)
+      url += `&duration=${timeFilter || 0}`;
 
       console.log("Request URL:", url); // Debugging log
 
       const response = await axios.get(url);
-      // Update questions and pagination (adjust based on your API response structure)
       if (response.status === 200) {
         setQuestions(response.data.data.updateResponseDTOS || []);
-        setTotalPages(Math.ceil(response.data.data.totalQuestions / pageSize));
+        // Update total pages based on filtered total count
+        const filteredTotal = response.data.data.totalQuestions || 0;
+        setTotalPages(Math.ceil(filteredTotal / pageSize));
       }
     } catch (error) {
       setError("Failed to load questions");

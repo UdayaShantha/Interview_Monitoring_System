@@ -106,25 +106,37 @@ public class UserServiceIMPL implements UserService {
 
     @Override
     public CandidateAndInterviewDTO getCandidateAndInterviewById(Long userId) {
-        if (candidateRepository.existsById(userId)) {
-            Candidate candidate = candidateRepository.findById(userId).get();
-            CandidateAndInterviewDTO candidateAndInterviewDTO = modelMapper.map(candidate, CandidateAndInterviewDTO.class);
+        Candidate candidate = candidateRepository.findById(userId)
+                .orElseThrow(() -> new CandidateNotFoundException("No candidate found with id " + userId));
 
-            ResponseEntity<StandardResponse> response = interviewFeignClient.getInterviewByUserId(candidate.getUserId());
-            if (response.getBody() != null && response.getBody().getData() != null) {
-                Map<String, Object> data = (Map<String, Object>) response.getBody().getData();
-                if (data.containsKey("duration") && data.containsKey("scheduleDate") && data.containsKey("startTime")) {
-                    candidateAndInterviewDTO.setDuration(Double.parseDouble(data.get("duration").toString()));
-                    candidateAndInterviewDTO.setScheduleDate(LocalDate.parse(data.get("scheduleDate").toString()));
-                    candidateAndInterviewDTO.setStartTime(LocalTime.parse(data.get("startTime").toString()));
-                    candidateAndInterviewDTO.setInterviewId(Long.parseLong(data.get("interviewId").toString()));
-                }
-            }
-            return candidateAndInterviewDTO;
-        } else {
-            throw new CandidateNotFoundException("No candidate found with id " + userId);
+        CandidateAndInterviewDTO candidateAndInterviewDTO = modelMapper.map(candidate, CandidateAndInterviewDTO.class);
+
+        ResponseEntity<StandardResponse> response = interviewFeignClient.getInterviewByUserId(candidate.getUserId());
+        if (response != null && response.getBody() != null && response.getBody().getData() != null) {
+            Map<String, Object> data = (Map<String, Object>) response.getBody().getData();
+            candidateAndInterviewDTO.setDuration(parseDouble(data, "duration"));
+            candidateAndInterviewDTO.setScheduleDate(parseLocalDate(data, "scheduleDate"));
+            candidateAndInterviewDTO.setStartTime(parseLocalTime(data, "startTime"));
+            candidateAndInterviewDTO.setInterviewId(parseLong(data, "interviewId"));
         }
 
+        return candidateAndInterviewDTO;
+    }
+
+    private Double parseDouble(Map<String, Object> data, String key) {
+        return data.containsKey(key) ? Double.parseDouble(data.get(key).toString()) : null;
+    }
+
+    private LocalDate parseLocalDate(Map<String, Object> data, String key) {
+        return data.containsKey(key) ? LocalDate.parse(data.get(key).toString()) : null;
+    }
+
+    private LocalTime parseLocalTime(Map<String, Object> data, String key) {
+        return data.containsKey(key) ? LocalTime.parse(data.get(key).toString()) : null;
+    }
+
+    private Long parseLong(Map<String, Object> data, String key) {
+        return data.containsKey(key) ? Long.parseLong(data.get(key).toString()) : null;
     }
 
     @Override
@@ -317,5 +329,10 @@ public class UserServiceIMPL implements UserService {
         technicalTeam.setPassword(passwordEncoder.encode(technicalSaveDTO.getPassword()));
         technicalTeamRepository.save(technicalTeam);
         return "Technical saved";
+    }
+
+    @Override
+    public List<CandidateFeedbackDTO> getAllFeedbacks() {
+        return List.of();
     }
 }

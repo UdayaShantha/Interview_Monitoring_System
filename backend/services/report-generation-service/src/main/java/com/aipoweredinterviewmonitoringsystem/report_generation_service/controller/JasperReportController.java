@@ -46,10 +46,10 @@ public class JasperReportController {
         this.userServiceClient = userServiceClient;
     }
 
-    @PostMapping(path = "/generate" )
+    @PostMapping(path = "/generate")
     public ResponseEntity<StandardResponse> generateReport(
             @RequestBody AccuracyRequest getAccuracyRequestDTO
-            ) {
+    ) {
         try {
             Long interviewId = getAccuracyRequestDTO.getInterviewId();
             System.out.println("Interview ID: " + interviewId);
@@ -63,7 +63,7 @@ public class JasperReportController {
             ResponseEntity<StandardResponse> interviewDetails = interviewServiceClient
                     .getInterviewDetailsByInterviewId(interviewId);
 
-            if(!interviewDetails.getStatusCode().is2xxSuccessful()) {
+            if (!interviewDetails.getStatusCode().is2xxSuccessful()) {
                 throw new RuntimeException("Interview service error: " +
                         interviewDetails.getStatusCode());
             }
@@ -106,13 +106,13 @@ public class JasperReportController {
             candidateDetailsDTO.setPhone((String) mapData.get("phone"));
             candidateDetailsDTO.setBirthday(LocalDate.parse((String) mapData.get("birthday")));
             //candidateDetailsDTO.setPositionType(PositionType.valueOf((String) mapData.get("positionType")));
-            if(mapData.get("positionType").equals("SOFTWARE_ENGINEER")){
+            if (mapData.get("positionType").equals("SOFTWARE_ENGINEER")) {
                 candidateDetailsDTO.setPositionType("Software Engineering");
-            }else if(mapData.get("positionType").equals("QA")) {
+            } else if (mapData.get("positionType").equals("QA")) {
                 candidateDetailsDTO.setPositionType("Quality Assurance");
-            }else if(mapData.get("positionType").equals("DATA_ANALYTICS")) {
+            } else if (mapData.get("positionType").equals("DATA_ANALYTICS")) {
                 candidateDetailsDTO.setPositionType("Data Analytics");
-            }else{
+            } else {
                 candidateDetailsDTO.setPositionType(null);
             }
 
@@ -149,7 +149,9 @@ public class JasperReportController {
             emotionDataList.add(new EmotionData("Neutral", getAccuracyRequestDTO.getNeutral()));
             emotionDataList.add(new EmotionData("Surprise", getAccuracyRequestDTO.getSurprise()));
             emotionDataList.add(new EmotionData("Fear", getAccuracyRequestDTO.getFear()));
-            emotionDataList.add(new EmotionData("Others",getAccuracyRequestDTO.getOthers()));
+
+            emotionDataList.add(new EmotionData("Others", getAccuracyRequestDTO.getOthers()));
+
 
             // Convert to JRBeanCollectionDataSource
             JRBeanCollectionDataSource emotionDataSource = new JRBeanCollectionDataSource(emotionDataList);
@@ -157,7 +159,7 @@ public class JasperReportController {
 
             //Answer Accuracy Data
             List<AnswerAccuracyDTO> answerAccuracyDataList = new ArrayList<>();
-            for(AccuracyData data : getAccuracyRequestDTO.getAccuracyData()){
+            for (AccuracyData data : getAccuracyRequestDTO.getAccuracyData()) {
                 answerAccuracyDataList.add(new AnswerAccuracyDTO(data.getQuestion_id(), (int) Math.round(data.getAccuracy())));
             }
 //            answerAccuracyDataList.add(new AnswerAccuracyDTO(1L, 70));
@@ -201,7 +203,7 @@ public class JasperReportController {
     @GetMapping("/download/{reportId}")
     public ResponseEntity<byte[]> downloadReportById(
             @RequestParam(value = "reportId") Long reportId
-    ){
+    ) {
         try {
             ReportDownloadDTO reportDownloadDTO = reportService.getReportForDownload(reportId);
 
@@ -209,7 +211,7 @@ public class JasperReportController {
             headers.setContentType(MediaType.APPLICATION_PDF);
             headers.setContentDisposition(
                     ContentDisposition.attachment()
-                            .filename(reportDownloadDTO.getCandidateName()+"_report.pdf")
+                            .filename(reportDownloadDTO.getCandidateName() + "_report.pdf")
                             .build()
             );
 
@@ -225,7 +227,7 @@ public class JasperReportController {
     @GetMapping("/view/{reportId}")
     public ResponseEntity<byte[]> viewReportById(
             @RequestParam(value = "reportId") Long reportId
-    ){
+    ) {
         try {
             ReportDownloadDTO reportDownloadDTO = reportService.getReportForDownload(reportId);
 
@@ -233,7 +235,7 @@ public class JasperReportController {
             headers.setContentType(MediaType.APPLICATION_PDF);
             headers.setContentDisposition(
                     ContentDisposition.inline()
-                            .filename(reportDownloadDTO.getCandidateName()+"_report.pdf")
+                            .filename(reportDownloadDTO.getCandidateName() + "_report.pdf")
                             .build()
             );
 
@@ -243,6 +245,19 @@ public class JasperReportController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
+
+
     }
 
+    @GetMapping("/get/report-id/by/candidate-id")
+    public ResponseEntity<StandardResponse> getReportIdByCandidateId(
+            @RequestParam(value = "candidateId") Long candidateId
+    ) {
+        try {
+            Long reportId = reportService.getReportIdByCandidateId(candidateId);
+            return ResponseEntity.ok().body(new StandardResponse(200, "Success", reportId));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(new StandardResponse(500, "Error", e.getMessage()));
+        }
+    }
 }

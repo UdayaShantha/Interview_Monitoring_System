@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Footer from "../components/Footer";
-import { FaTrash, FaPlus, FaEye, FaBars, FaSearch, FaFilter, FaTimes, FaUser, FaCalendarAlt } from "react-icons/fa";
+import { FaTrash, FaPlus, FaEye, FaBars, FaSearch, FaFilter, FaTimes, FaUser, FaCalendarAlt, FaEdit } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import CandidateForm from "./CandidateForm";
 import axios from "../axiosInstance";
@@ -23,6 +23,8 @@ const CandidatesPage = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [candidateToDelete, setCandidateToDelete] = useState(null);
   const [candidatePhoto, setCandidatePhoto] = useState(null);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [candidateToEdit, setCandidateToEdit] = useState(null);
 
   const toggleNavbar = () => setIsNavbarOpen(!isNavbarOpen);
 
@@ -87,6 +89,17 @@ const CandidatesPage = () => {
   const handleDeleteCancel = () => {
     setShowDeleteModal(false);
     setCandidateToDelete(null);
+  };
+
+  const handleEditClick = (candidate) => {
+    setCandidateToEdit(candidate);
+    setShowEditForm(true);
+  };
+
+  const handleEditSuccess = () => {
+    setRefreshTrigger(prev => !prev);
+    setShowEditForm(false);
+    setCandidateToEdit(null);
   };
 
   const DetailItem = ({ label, value }) => (
@@ -251,6 +264,12 @@ const CandidatesPage = () => {
                             <FaEye />
                           </button>
                           <button 
+                            onClick={() => handleEditClick(candidate)}
+                            className="text-blue-600 hover:text-blue-900 mr-3"
+                          >
+                            <FaEdit />
+                          </button>
+                          <button 
                             onClick={() => handleDeleteClick(candidate)}
                             className="text-red-600 hover:text-red-900"
                           >
@@ -344,6 +363,46 @@ const CandidatesPage = () => {
               </div>
               <div className="p-4">
                 <CandidateForm onClose={() => setShowForm(false)} onSuccess={handleCandidateAdded} />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {showEditForm && candidateToEdit && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          >
+            <motion.div
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 50, opacity: 0 }}
+              className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 overflow-hidden"
+            >
+              <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                <h3 className="text-lg font-medium text-gray-900">Edit Candidate</h3>
+                <button 
+                  onClick={() => {
+                    setShowEditForm(false);
+                    setCandidateToEdit(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-500 focus:outline-none"
+                >
+                  &times;
+                </button>
+              </div>
+              <div className="p-4">
+                <CandidateForm 
+                  onClose={() => {
+                    setShowEditForm(false);
+                    setCandidateToEdit(null);
+                  }} 
+                  onSuccess={handleEditSuccess}
+                  editMode={true}
+                  initialData={candidateToEdit}
+                />
               </div>
             </motion.div>
           </motion.div>
@@ -451,20 +510,6 @@ const CandidatesPage = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-600">Schedule Date:</label>
-                        <div className="mt-1 p-2 w-full bg-gray-50 border border-gray-200 rounded-md">
-                          {selectedCandidate.scheduleDate ? new Date(selectedCandidate.scheduleDate).toLocaleDateString() : 'N/A'}
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-600">Start Time:</label>
-                        <div className="mt-1 p-2 w-full bg-gray-50 border border-gray-200 rounded-md">
-                          {selectedCandidate.startTime || 'N/A'}
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -473,9 +518,9 @@ const CandidatesPage = () => {
               <div className="px-6 py-3 bg-gray-50 flex justify-end">
                 <button
                   onClick={() => setShowViewModal(false)}
-                  className="px-4 py-2 bg-emerald-500 text-white rounded-md hover:bg-emerald-600 transition-colors"
+                  className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
                 >
-                  Edit
+                  Close
                 </button>
               </div>
             </motion.div>

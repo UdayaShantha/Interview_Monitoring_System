@@ -34,6 +34,7 @@ function VideoScreen() {
   const [audioLevel, setAudioLevel] = useState(0);
   const [showSuccess, setShowSuccess] = useState({ camera: false, microphone: false });
   const [showPrepModal, setShowPrepModal] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
 
   // Video element initialization
   useEffect(() => {
@@ -687,72 +688,121 @@ function VideoScreen() {
             <div className="flex flex-col space-y-6">
               <div className="text-center">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Interview Preparation</h2>
-                <p className="text-gray-600">Please ensure you're ready for the interview by following these guidelines:</p>
+                <p className="text-gray-600">Please review all instructions before starting the interview</p>
               </div>
 
-              <div className="space-y-4">
-                <div className="flex items-start gap-4 p-4 bg-emerald-50 rounded-xl">
-                  <div className="p-2 bg-emerald-100 rounded-lg">
-                    <Sun className="w-6 h-6 text-emerald-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">Good Lighting</h3>
-                    <p className="text-gray-600">Find a well-lit area with natural or bright artificial lighting. Avoid backlighting and ensure your face is clearly visible.</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4 p-4 bg-cyan-50 rounded-xl">
-                  <div className="p-2 bg-cyan-100 rounded-lg">
-                    <Headphones className="w-6 h-6 text-cyan-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">Quiet Environment</h3>
-                    <p className="text-gray-600">Choose a quiet location with minimal background noise. Close windows and doors to reduce external sounds.</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4 p-4 bg-emerald-50 rounded-xl">
-                  <div className="p-2 bg-emerald-100 rounded-lg">
-                    <User className="w-6 h-6 text-emerald-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">Professional Setup</h3>
-                    <p className="text-gray-600">Position yourself in a professional setting. Ensure your background is clean and appropriate for an interview.</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4 p-4 bg-rose-50 rounded-xl border border-rose-100">
-                  <div className="p-2 bg-rose-100 rounded-lg">
-                    <AlertCircle className="w-6 h-6 text-rose-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">Important: Fullscreen Mode Required</h3>
-                    <p className="text-gray-600">The interview must be conducted in fullscreen mode. If you accidentally exit fullscreen mode:</p>
-                    <ul className="list-disc ml-4 mt-2 text-gray-600 space-y-1">
-                      <li>Your audio and video will not be recorded</li>
-                      <li>You must return to fullscreen mode to continue the interview</li>
-                      <li>Do not attempt to exit fullscreen mode during the interview</li>
-                    </ul>
-                  </div>
-                </div>
+              {/* Step Indicator */}
+              <div className="flex justify-center items-center gap-2">
+                {[1, 2, 3, 4].map((step) => (
+                  <div
+                    key={step}
+                    className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                      currentStep === step
+                        ? 'bg-emerald-600 w-4'
+                        : 'bg-emerald-200'
+                    }`}
+                  />
+                ))}
               </div>
 
-              <div className="flex gap-4 mt-6">
+              {/* Content based on current step */}
+              <div className="min-h-[300px] flex items-center">
+                {currentStep === 1 && (
+                  <div className="flex items-start gap-4 p-4 bg-emerald-50 rounded-xl w-full">
+                    <div className="p-2 bg-emerald-100 rounded-lg">
+                      <Sun className="w-6 h-6 text-emerald-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-1">Good Lighting</h3>
+                      <p className="text-gray-600">Find a well-lit area with natural or bright artificial lighting. Avoid backlighting and ensure your face is clearly visible.</p>
+                    </div>
+                  </div>
+                )}
+
+                {currentStep === 2 && (
+                  <div className="flex items-start gap-4 p-4 bg-cyan-50 rounded-xl w-full">
+                    <div className="p-2 bg-cyan-100 rounded-lg">
+                      <Headphones className="w-6 h-6 text-cyan-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-1">Quiet Environment</h3>
+                      <p className="text-gray-600">Choose a quiet location with minimal background noise. Close windows and doors to reduce external sounds.</p>
+                    </div>
+                  </div>
+                )}
+
+                {currentStep === 3 && (
+                  <div className="flex items-start gap-4 p-4 bg-rose-50 rounded-xl border border-rose-100 w-full">
+                    <div className="p-2 bg-rose-100 rounded-lg">
+                      <AlertCircle className="w-6 h-6 text-rose-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-1">Important: Fullscreen Mode Required</h3>
+                      <p className="text-gray-600">The interview must be conducted in fullscreen mode. If you accidentally exit fullscreen mode:</p>
+                      <ul className="list-disc ml-4 mt-2 text-gray-600 space-y-1">
+                        <li>Your video will not be recorded</li>
+                        <li>You must return to fullscreen mode to continue the interview</li>
+                        <li>Do not attempt to exit fullscreen mode during the interview</li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                {currentStep === 4 && (
+                  <div className="flex items-start gap-4 p-4 bg-emerald-50 rounded-xl border border-emerald-100 w-full">
+                    <div className="p-2 bg-emerald-100 rounded-lg">
+                      <Mic className="w-6 h-6 text-emerald-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-1">Recording Instructions</h3>
+                      <p className="text-gray-600">For each question in the interview, please follow these steps:</p>
+                      <ul className="list-disc ml-4 mt-2 text-gray-600 space-y-2">
+                        <li><strong>Before answering:</strong> Click the circular button to start recording</li>
+                        <li><strong>After answering:</strong> Click the square button to stop recording</li>
+                        <li><strong>Important:</strong> Always stop the recording before clicking "Next Question"</li>
+                        <li>A red recording indicator will appear when your answer is being recorded</li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Navigation Buttons */}
+              <div className="flex justify-between items-center pt-4">
                 <button
-                  onClick={() => setShowPrepModal(false)}
-                  className="flex-1 px-6 py-2.5 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+                  onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
+                  className={`px-4 py-2 rounded-lg transition-all duration-300 ${
+                    currentStep === 1
+                      ? 'opacity-50 cursor-not-allowed bg-gray-100 text-gray-400'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                  disabled={currentStep === 1}
                 >
-                  Go Back
+                  Previous
                 </button>
-                <button
-                  onClick={() => {
-                    setShowPrepModal(false);
-                    navigate('/video-session');
-                  }}
-                  className="flex-1 px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white rounded-xl hover:from-emerald-700 hover:to-cyan-700 transition-colors"
-                >
-                  Start Interview
-                </button>
+                
+                <div className="text-sm text-gray-500">
+                  Step {currentStep} of 4
+                </div>
+
+                {currentStep < 4 ? (
+                  <button
+                    onClick={() => setCurrentStep(prev => Math.min(4, prev + 1))}
+                    className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all duration-300"
+                  >
+                    Next
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setShowPrepModal(false);
+                      navigate('/video-session');
+                    }}
+                    className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all duration-300"
+                  >
+                    Start Interview
+                  </button>
+                )}
               </div>
             </div>
           </div>

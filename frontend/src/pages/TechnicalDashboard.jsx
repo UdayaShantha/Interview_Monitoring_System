@@ -141,9 +141,6 @@ function HRDashboard() {
             <img src={item.image} alt={item.title} className="w-full h-40 object-cover rounded-md mb-4 transition-transform duration-300 hover:scale-105" />
             <h3 className="text-xl sm:text-2xl font-semibold text-green-800 hover:text-green-600 transition duration-300">{item.title}</h3>
             <p className="text-gray-700 mt-2">{item.desc}</p>
-            <Link to={item.link} className="block mt-4 bg-green-600 text-white py-2 rounded-lg hover:bg-green-500 transition duration-300">
-              View More
-            </Link>
           </motion.div>
         ))}
       </div>

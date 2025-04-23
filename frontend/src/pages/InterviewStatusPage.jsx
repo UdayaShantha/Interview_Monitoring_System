@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaEye, FaTrashAlt, FaBars, FaTimes } from 'react-icons/fa';
+import { FaEye, FaTrashAlt, FaBars, FaTimes, FaDownload, FaFilePdf } from 'react-icons/fa';
 import Footer from '../components/Footer';
 import axios from '../axiosInstance';
 import { toast } from 'react-toastify';
@@ -91,6 +91,44 @@ function InterviewStatusPage({ status }) {
     if (!timeString) return 'N/A';
     const time = new Date(`2000-01-01T${timeString}`);
     return time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const handleViewReport = async (candidateId) => {
+    try {
+      const response = await axios.get(`/reports/view/${candidateId}`, {
+        responseType: 'blob'
+      });
+      
+      // Create a blob URL and open in new window
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch (error) {
+      console.error('Error viewing report:', error);
+      toast.error('Failed to view report');
+    }
+  };
+
+  const handleDownloadReport = async (candidateId) => {
+    try {
+      const response = await axios.get(`/reports/download/${candidateId}`, {
+        responseType: 'blob'
+      });
+      
+      // Create a blob URL and trigger download
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `interview_report_${candidateId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading report:', error);
+      toast.error('Failed to download report');
+    }
   };
 
   return (
@@ -204,6 +242,9 @@ function InterviewStatusPage({ status }) {
                     {status === 'COMPLETED' && (
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Result</th>
                     )}
+                    {status === 'COMPLETED' && (
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Report</th>
+                    )}
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
@@ -234,6 +275,24 @@ function InterviewStatusPage({ status }) {
                               {interview.result}
                             </span>
                           ) : 'N/A'}
+                        </td>
+                      )}
+                      {status === 'COMPLETED' && (
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <button 
+                            onClick={() => handleViewReport(interview.candidateId)}
+                            className="text-blue-600 hover:text-blue-800 p-2 rounded-lg hover:bg-blue-50"
+                            title="View report"
+                          >
+                            <FaFilePdf size={18} />
+                          </button>
+                          <button 
+                            onClick={() => handleDownloadReport(interview.candidateId)}
+                            className="text-green-600 hover:text-green-800 ml-2 p-2 rounded-lg hover:bg-green-50"
+                            title="Download report"
+                          >
+                            <FaDownload size={18} />
+                          </button>
                         </td>
                       )}
                       <td className="px-6 py-4 whitespace-nowrap">
