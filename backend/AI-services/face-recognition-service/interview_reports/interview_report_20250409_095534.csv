@@ -1,17 +1,25 @@
 Metric,Value
+<<<<<<<< HEAD:backend/AI-services/face-recognition-service/interview_reports/interview_report_20250409_095534.csv
 Interview Duration,28.01 seconds
 Maximum Simultaneous Faces,1
 Off-Screen Duration,0.00 seconds
 Average Head Rotation,4.27 degrees
+========
+Interview Duration,101.19 seconds
+Maximum Simultaneous Faces,1
+Off-Screen Duration,8.38 seconds
+Average Head Rotation,-3.16 degrees
+>>>>>>>> 2bfc69c37116a09c7a44aed09cbb10b14de4b7cd:backend/AI-services/face-recognition-service/interview_reports/interview_report_20250410_204249.csv
 
 Violations,
 Multiple Faces Detected,0
-Face Off-Screen Instances,0
+Face Off-Screen Instances,44
 Excessive Head Rotation Instances,0
 Identity Verification Failed,False
 Identity Mismatch Count,0
 
 MediaPipe Emotion Percentages,
+<<<<<<<< HEAD:backend/AI-services/face-recognition-service/interview_reports/interview_report_20250409_095534.csv
 browInnerUp,0.23%
 jawForward,0.02%
 jawOpen,10.05%
@@ -26,6 +34,22 @@ happy,0.00%
 sad,9.12%
 surprise,0.00%
 neutral,72.31%
+========
+browInnerUp,11.01%
+jawForward,0.01%
+jawOpen,2.56%
+mouthPucker,70.49%
+
+DeepFace Analysis,
+Emotion,Percentage
+angry,2.92%
+disgust,0.00%
+fear,11.97%
+happy,4.11%
+sad,12.64%
+surprise,0.14%
+neutral,68.21%
+>>>>>>>> 2bfc69c37116a09c7a44aed09cbb10b14de4b7cd:backend/AI-services/face-recognition-service/interview_reports/interview_report_20250410_204249.csv
 Gender,Percentage
 Man,0.00%
 Woman,0.00%
@@ -38,6 +62,12 @@ middle eastern,0.00%
 latino hispanic,0.00%
 Average Age,0.00
 Average Face Confidence,0.00
+<<<<<<<< HEAD:backend/AI-services/face-recognition-service/interview_reports/interview_report_20250409_095534.csv
 Face Detection Rate,100.00%
 Analyzed Frames,10
 Valid Face Detections,10
+========
+Face Detection Rate,18.32%
+Analyzed Frames,191
+Valid Face Detections,35
+>>>>>>>> 2bfc69c37116a09c7a44aed09cbb10b14de4b7cd:backend/AI-services/face-recognition-service/interview_reports/interview_report_20250410_204249.csv

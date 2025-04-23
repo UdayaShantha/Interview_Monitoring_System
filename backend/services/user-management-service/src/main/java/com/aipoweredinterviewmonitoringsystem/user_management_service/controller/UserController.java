@@ -76,7 +76,7 @@ public class UserController {
             CandidateAndInterviewDTO candidateAndInterviewDTO = userService.getCandidateAndInterviewById(userId);
             return new ResponseEntity<StandardResponse>(
                     new StandardResponse(200, "Success", candidateAndInterviewDTO),
-                    HttpStatus.FOUND
+                    HttpStatus.OK
             );
         } catch (RuntimeException e) {
             return new ResponseEntity<StandardResponse>(
@@ -128,7 +128,7 @@ public class UserController {
     public ResponseEntity<StandardResponse> updateCandidate(@PathVariable(value = "id") Long userId, @RequestBody CandidateUpdateDTO candidateUpdateDTO) {
         CandidateUpdateDTO updatedCandidate = userService.updateCandidate(userId, candidateUpdateDTO);
         return new ResponseEntity<StandardResponse>(
-                new StandardResponse(200,"Success",candidateUpdateDTO),
+                new StandardResponse(200,"Success",updatedCandidate),
                 HttpStatus.OK
         );
     }
@@ -187,6 +187,21 @@ public class UserController {
             String msg=userService.saveCandidateFeedback(user_id,rate,comment);
             return new ResponseEntity<StandardResponse>(
                     new StandardResponse(200,"Success",msg),HttpStatus.CREATED
+            );
+        }
+        catch (Exception e) {
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(404,"User Not Found",e.getMessage()),HttpStatus.NOT_FOUND
+            );
+        }
+    }
+
+    @GetMapping("/candidate /get-all/feedback")
+    public ResponseEntity<StandardResponse> getAllFeedbacks(){
+        try {
+            List<CandidateFeedbackDTO> feedbacks = userService.getAllFeedbacks();
+            return new ResponseEntity<StandardResponse>(
+                    new StandardResponse(200,"Success",feedbacks),HttpStatus.OK
             );
         }
         catch (Exception e) {

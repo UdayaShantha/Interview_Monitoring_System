@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@fortawesome/react-fontawesome": "^0.2.2",
     "chartjs-plugin-datalabels": "^2.2.0"
   }
 }

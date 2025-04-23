@@ -165,9 +165,11 @@ function VideoPage() {
               videoFeedRef.current.src = `http://localhost:8001/video_feed/${interviewId}`;
             }
 
-            // Set initial timer only once, but don’t start it
+            // Set initial timer and start it when service is ready
             if (currentQuestionIndex === 0 && questionTimer === null) {
               setQuestionTimer(initialQuestionDuration);
+              // Start the timer when service is ready
+              setTimerStarted(true);
             }
 
             toast.success('Interview session ready');
@@ -421,9 +423,9 @@ function VideoPage() {
       setTimer(prev => prev + 1);
       setQuestionTimer(prev => {
         if (prev <= 0) {
-          handleNextQuestion();
-          const nextIndex = currentQuestionIndex + 1;
-          return nextIndex < questions.length ? questions[nextIndex].duration * 60 : 0;
+          // Don't automatically move to next question when timer reaches zero
+          // This prevents skipping questions
+          return 0;
         }
         return prev - 1;
       });
@@ -518,18 +520,14 @@ function VideoPage() {
           mediaRecorderRef.current.start();
           setIsRecording(true);
           toast.info('Recording started');
-          if (!timerStarted) {
-            setTimerStarted(true); // Start timer only once
-          }
+          // Don't start timer here, it should already be running from service initialization
         }, 100);
       } else {
         setAudioChunks([]);
         mediaRecorderRef.current.start();
         setIsRecording(true);
         toast.info('Recording started');
-        if (!timerStarted) {
-          setTimerStarted(true); // Start timer only once
-        }
+        // Don't start timer here, it should already be running from service initialization
       }
     } catch (error) {
       console.error('Error starting recording:', error);
@@ -594,11 +592,10 @@ function VideoPage() {
         setQuestionTimer(0); // Stop timer
         toast.success('You have completed the interview session!');
       } else {
-        setCurrentQuestionIndex(prev => {
-          const nextIndex = prev + 1;
-          setQuestionTimer(questions[nextIndex]?.duration * 60 || 0);
-          return nextIndex;
-        });
+        // Move to next question one at a time
+        const nextIndex = currentQuestionIndex + 1;
+        setCurrentQuestionIndex(nextIndex);
+        setQuestionTimer(questions[nextIndex]?.duration * 60 || 0);
       }
     } catch (error) {
       console.error('Error processing question data:', error);
@@ -608,11 +605,10 @@ function VideoPage() {
         setQuestionTimer(0); // Stop timer
         toast.success('You have completed the interview session!');
       } else {
-        setCurrentQuestionIndex(prev => {
-          const nextIndex = prev + 1;
-          setQuestionTimer(questions[nextIndex]?.duration * 60 || 0);
-          return nextIndex;
-        });
+        // Move to next question one at a time
+        const nextIndex = currentQuestionIndex + 1;
+        setCurrentQuestionIndex(nextIndex);
+        setQuestionTimer(questions[nextIndex]?.duration * 60 || 0);
       }
     }
   };

@@ -26,7 +26,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -326,6 +328,46 @@ public class InterviewController {
         try {
             long interviewId = interviewService.getInterviewIdByCandidateId(candidateId);
             return new ResponseEntity<>(new StandardResponse(200, "Success", interviewId), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/get/remaining-time/by/interviewId/{interviewId}")
+    public ResponseEntity<StandardResponse> getRemainingTimeByInterviewId(@PathVariable long interviewId) {
+        try {
+            Duration remainingTime = interviewService.getInterviewRemainingTime(interviewId);
+            return new ResponseEntity<>(new StandardResponse(200, "Success", remainingTime), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/completed-interview-count/by/each-month")
+    public ResponseEntity<StandardResponse> getCompletedInterviewCountByEachMonth() {
+        try {
+            List<Integer> completedInterviewCounts = interviewService.getCompletedInterviewCountByEachMonth();
+            return new ResponseEntity<>(new StandardResponse(200, "Success", completedInterviewCounts), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("upcoming/interview/dates")
+    public ResponseEntity<StandardResponse> getUpcomingInterviewDates() {
+        try {
+            List<LocalDateTime> upcomingDates = interviewService.getUpcomingInterviewDates();
+            return new ResponseEntity<>(new StandardResponse(200, "Success", upcomingDates), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/interview-count-list/by/result")
+    public ResponseEntity<StandardResponse> getResultCountForEachType() {
+        try {
+            List<ResultCountDTO> resultCounts = interviewService.getResultCountForEachType();
+            return new ResponseEntity<>(new StandardResponse(200, "Success", resultCounts), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(new StandardResponse(500, "Internal Server Error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }

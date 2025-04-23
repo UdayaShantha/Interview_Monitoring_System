@@ -8,8 +8,10 @@ import com.aipoweredinterviewmonitoringsystem.report_generation_service.entity.R
 import com.aipoweredinterviewmonitoringsystem.report_generation_service.repository.ReportRepository;
 import com.aipoweredinterviewmonitoringsystem.report_generation_service.service.ReportService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -19,13 +21,11 @@ public class ReportServiceIMPL implements ReportService {
 
     private final ReportRepository reportRepository;
 
-    private final WebClient webClient;
-
 
     @Autowired
-    public ReportServiceIMPL(ReportRepository reportRepository , WebClient webClient) {
+    public ReportServiceIMPL(ReportRepository reportRepository ) {
         this.reportRepository = reportRepository;
-        this.webClient = webClient;
+
     }
 
     public String saveReport(Long interviewId, Long candidateId, String candidateName, byte[] pdfBytes) {
@@ -51,87 +51,130 @@ public class ReportServiceIMPL implements ReportService {
     }
 
 
-    // Fetch json from Python service ------------------------------------------------------
     @Override
-    public InterviewMetricsDto fetchMetricsFromPythonService(Long interviewId) {
-        // Fetch data from Python service
-       try {
-           PythonReportResponse response = webClient.get()
-                   .uri("/monitoring/report/{interviewId}", interviewId)
-                   .retrieve()
-                   .bodyToMono(PythonReportResponse.class)
-                   .block();
+    public Long getReportIdByCandidateId(Long candidateId) {
+        Report report = (Report) reportRepository.findByCandidateId(candidateId)
+                .orElseThrow(() -> new RuntimeException("Report not found for candidate ID: " + candidateId));
 
-           // Convert to InterviewMetricsDto
-           return mapToInterviewMetricsDto(response.getData());
-       }catch (Exception e) {
-           throw new RuntimeException("Failed to fetch metrics from Python service", e);
-       }
-
+        return report.getReportId();
     }
 
-    private InterviewMetricsDto mapToInterviewMetricsDto(List<MetricValue> metrics) {
-        InterviewMetricsDto dto = new InterviewMetricsDto();
 
-        for (MetricValue mv : metrics) {
-            switch (mv.getMetric()) {
-                case "Interview Duration":
-                    dto.setInterviewDurationSeconds(parseValue(mv.getValue(), "seconds"));
-                    break;
-                case "Off-Screen Duration":
-                    dto.setOffScreenDurationSeconds(parseValue(mv.getValue(), "seconds"));
-                    break;
-                case "Average Head Rotation":
-                    dto.setAverageHeadRotationDegrees(parseValue(mv.getValue(), "degrees"));
-                    break;
-                case "angry":
-                    dto.setAngryPercentage(parseValue(mv.getValue(), "%"));
-                    break;
-                case "disgust":
-                    dto.setDisgustPercentage(parseValue(mv.getValue(), "%"));
-                    break;
-                case "fear":
-                    dto.setFearPercentage(parseValue(mv.getValue(), "%"));
-                    break;
-                case "happy":
-                    dto.setHappyPercentage(parseValue(mv.getValue(), "%"));
-                    break;
-                case "sad":
-                    dto.setSadPercentage(parseValue(mv.getValue(), "%"));
-                    break;
-                case "surprise":
-                    dto.setSurprisePercentage(parseValue(mv.getValue(), "%"));
-                    break;
-                case "neutral":
-                    dto.setNeutralPercentage(parseValue(mv.getValue(), "%"));
-                    break;
-                case "Analyzed Frames":
-                    dto.setAnalyzedFrames(parseInt(mv.getValue()));
-                    break;
-                case "Valid Face Detections":
-                    dto.setValidFaceDetections(parseInt(mv.getValue()));
-                    break;
-            }
-        }
-        return dto;
-    }
 
-    private Double parseValue(String value, String unit) {
-        if (value == null || value.isEmpty()) return 0.0;
-        try {
-            return Double.parseDouble(value.replace(unit, "").trim());
-        } catch (NumberFormatException e) {
-            return 0.0;
-        }
-    }
+    // Fetch json from Python service ------------------------------------------------------
+//    @Override
+//    public InterviewMetricsDto fetchMetricsFromPythonService(Long interviewId) {
+//        // Fetch data from Python service
+//        try {
+//            String url = "/monitoring/report/" + interviewId;
+//            System.out.println("Calling Python service at: " + url);
+//
+//            PythonReportResponse response = webClient.get()
+//                    .uri(url)
+//                    .retrieve()
+//                    .onStatus(HttpStatusCode::isError, res -> {
+//                        System.err.println("Python service error! Status: " + res.statusCode());
+//                        return res.bodyToMono(String.class)
+//                                .flatMap(body -> {
+//                                    System.err.println("Error response body: " + body);
+//                                    return Mono.error(new RuntimeException("Python service error: " + body));
+//                                });
+//                    })
+//                    .bodyToMono(PythonReportResponse.class)
+//                    .doOnNext(r -> System.out.println("Raw Python response: " + r))
+//                    .block();
+//
+//            System.out.println("Python service response received successfully");
+//            return mapToInterviewMetricsDto(response.getData());
+//
+//        } catch (Exception e) {
+//            System.err.println("Critical error in fetchMetricsFromPythonService: " + e.getMessage());
+//            e.printStackTrace();
+//            throw new RuntimeException("Failed to fetch metrics: " + e.getMessage(), e);
+//        }
+//
+//    }
+//
+//    private InterviewMetricsDto mapToInterviewMetricsDto(List<MetricValue> metrics) {
+//        InterviewMetricsDto dto = new InterviewMetricsDto();
+//
+//        for (MetricValue mv : metrics) {
+//
+//            String metricName = mv.getMetric();
+//            String value = mv.getValue();
+//
+//            // Skip entries with null/empty metric names
+//            if (metricName == null || metricName.trim().isEmpty()) {
+//                System.err.println("Skipping metric with null/empty name. Value: " + value);
+//                continue;
+//            }
+//
+//            // Trim and switch on the metric name
+//            switch (metricName.trim()) {
+//                case "Interview Duration":
+//                    dto.setInterviewDurationSeconds(parseValue(value, "seconds"));
+//                    break;
+//                case "Off-Screen Duration":
+//                    dto.setOffScreenDurationSeconds(parseValue(value, "seconds"));
+//                    break;
+//                case "Average Head Rotation":
+//                    dto.setAverageHeadRotationDegrees(parseValue(value, "degrees"));
+//                    break;
+//                case "angry":
+//                    dto.setAngryPercentage(parseValue(value, "%"));
+//                    break;
+//                case "disgust":
+//                    dto.setDisgustPercentage(parseValue(value, "%"));
+//                    break;
+//                case "fear":
+//                    dto.setFearPercentage(parseValue(value, "%"));
+//                    break;
+//                case "happy":
+//                    dto.setHappyPercentage(parseValue(value, "%"));
+//                    break;
+//                case "sad":
+//                    dto.setSadPercentage(parseValue(value, "%"));
+//                    break;
+//                case "surprise":
+//                    dto.setSurprisePercentage(parseValue(value, "%"));
+//                    break;
+//                case "neutral":
+//                    dto.setNeutralPercentage(parseValue(value, "%"));
+//                    break;
+//                case "Analyzed Frames":
+//                    dto.setAnalyzedFrames(parseInt(value));
+//                    break;
+//                case "Valid Face Detections":
+//                    dto.setValidFaceDetections(parseInt(value));
+//                    break;
+//                default:
+//                    System.out.println("Unhandled metric: " + metricName);
+//                    break;
+//            }
+//        }
+//        return dto;
+//    }
+//
+//    private Double parseValue(String value, String unit) {
+//        if (value == null || value.isEmpty()) return 0.0;
+//        try {
+//            return Double.parseDouble(value.replace(unit, "").trim());
+//        } catch (NumberFormatException e) {
+//            return 0.0;
+//        }
+//    }
+//
+//    private Integer parseInt(String value) {
+//        if (value == null || value.isEmpty()) return 0;
+//        try {
+//            return Integer.parseInt(value.trim());
+//        } catch (NumberFormatException e) {
+//            return 0;
 
-    private Integer parseInt(String value) {
-        if (value == null || value.isEmpty()) return 0;
-        try {
-            return Integer.parseInt(value.trim());
-        } catch (NumberFormatException e) {
-            return 0;
-        }
-    }
+//        }
+//    }
+
+//        }
+//    }
 
 }

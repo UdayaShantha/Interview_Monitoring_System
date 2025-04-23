@@ -118,6 +118,12 @@ public class JwtAuthenticationFilter implements GlobalFilter {
                 if (path.startsWith("/api/v1/users/hr/candidate/position/") && "CANDIDATE".equals(userType)) {
                     return true;
                 }
+                if (path.startsWith("/api/v1/users/hr/get/") && "CANDIDATE".equals(userType)) {
+                    return true;
+                }
+//                if (path.startsWith("/api/v1/users/hr/get/interview-id/**") && "CANDIDATE".equals(userType)) {
+//                    return true;
+//                }
                 return false;
             }
             if (path.startsWith("/api/v1/interviews/") && !("TECHNICAL".equals(userType) || "HR".equals(userType))) {
@@ -125,6 +131,9 @@ public class JwtAuthenticationFilter implements GlobalFilter {
                     return true;
                 }
                 if (path.startsWith("/api/v1/interviews/update/interview/duration") && "CANDIDATE".equals(userType)) {
+                    return true;
+                }
+                if (path.startsWith("/api/v1/interviews/get/") && "CANDIDATE".equals(userType)) {
                     return true;
                 }
                 return false;
