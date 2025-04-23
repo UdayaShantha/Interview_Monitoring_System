@@ -608,9 +608,9 @@ def main():
     parser.add_argument('--camera_id', help='ID of camera.',
                         required=False, default=0, type=int)
     parser.add_argument('--frame_width', help='Width of frame to capture from camera.',
-                        required=False, default=640, type=int)
-    parser.add_argument('--frame_height', help='Height of frame to capture from camera.',
                         required=False, default=480, type=int)
+    parser.add_argument('--frame_height', help='Height of frame to capture from camera.',
+                        required=False, default=320, type=int)
     parser.add_argument('--candidate_id', help='Candidate ID to fetch stored photos',
                         required=True, type=int)
     parser.add_argument('--emotion_library', help="Emotion analysis library: 'deepface' (default) or 'fer'.",

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Clock, ChevronRight, AlertCircle } from 'lucide-react';
-import axios from '../axiosInstance';
+import { Mic, Video, Clock, ChevronRight, AlertCircle, Square, Circle } from 'lucide-react';
+import axiosInstance from '../axiosInstance';
+import axios from 'axios';
 import { toast } from 'react-toastify';
 import { jwtDecode } from 'jwt-decode';
 
@@ -12,9 +13,10 @@ function VideoPage() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [sessionCompleted, setSessionCompleted] = useState(false);
   const [showCompletionAlert, setShowCompletionAlert] = useState(false);
+  const [showNextQuestionWarning, setShowNextQuestionWarning] = useState(false);
   const [timer, setTimer] = useState(0);
-  const [questionTimer, setQuestionTimer] = useState(null); // Initially null until stream starts
-  const [initialQuestionDuration, setInitialQuestionDuration] = useState(0); // Store initial duration
+  const [questionTimer, setQuestionTimer] = useState(null); // Initially null until recording starts
+  const [initialQuestionDuration, setInitialQuestionDuration] = useState(0);
   const [loading, setLoading] = useState(true);
   const [tabSwitches, setTabSwitches] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -26,9 +28,16 @@ function VideoPage() {
   const [isServiceReady, setIsServiceReady] = useState(false);
   const [serviceInitializing, setServiceInitializing] = useState(false);
   const [backendStreamActive, setBackendStreamActive] = useState(false);
-  const videoFeedRef = useRef(null); // Reference for the video feed img element
+  const [timerStarted, setTimerStarted] = useState(false); // Control timer start
+  const videoFeedRef = useRef(null);
   const maxRetries = 10;
   const retryDelay = 2000;
+
+  // Audio recording states
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioChunks, setAudioChunks] = useState([]);
+  const mediaRecorderRef = useRef(null);
+  const audioStreamRef = useRef(null);
 
   // Axios instance for Python service
   const pythonServiceAxios = axios.create({
@@ -60,7 +69,7 @@ function VideoPage() {
         }
 
         try {
-          const positionResponse = await axios.get(`/users/hr/candidate/position/${userId}`);
+          const positionResponse = await axiosInstance.get(`/users/hr/candidate/position/${userId}`);
           if (positionResponse.data && positionResponse.data.data) {
             setPositionType(positionResponse.data.data);
           }
@@ -74,7 +83,7 @@ function VideoPage() {
 
         if (userId) {
           try {
-            const interviewResponse = await axios.get(`http://localhost:9191/api/v1/interviews/get/interviewId/by/candidateId?candidateId=${userId}`);
+            const interviewResponse = await axiosInstance.get(`http://localhost:9191/api/v1/interviews/get/interviewId/by/candidateId?candidateId=${userId}`);
             console.log("Interview ID response:", interviewResponse.data);
             if (interviewResponse.data && interviewResponse.data.data) {
               setInterviewId(interviewResponse.data.data);
@@ -156,8 +165,10 @@ function VideoPage() {
               videoFeedRef.current.src = `http://localhost:8001/video_feed/${interviewId}`;
             }
 
-            // Set the initial question timer only when streaming starts
-            setQuestionTimer(initialQuestionDuration);
+            // Set initial timer only once, but don’t start it
+            if (currentQuestionIndex === 0 && questionTimer === null) {
+              setQuestionTimer(initialQuestionDuration);
+            }
 
             toast.success('Interview session ready');
             toast.dismiss("service-init");
@@ -245,7 +256,7 @@ function VideoPage() {
         } catch (error) {
           console.warn("Heartbeat check failed:", error.message);
         }
-      }, 10000); // Check every 10 seconds
+      }, 10000);
     }
 
     return () => {
@@ -259,10 +270,9 @@ function VideoPage() {
       if (!positionType) return;
 
       try {
-        const response = await axios.get(`/questions/get/interview/questions?positionType=${positionType}`);
+        const response = await axiosInstance.get(`/questions/get/interview/questions?positionType=${positionType}`);
         if (response.data.data) {
           setQuestions(response.data.data);
-          // Store the initial duration but don't set questionTimer yet
           setInitialQuestionDuration(response.data.data[0]?.duration * 60 || 0);
         }
       } catch (error) {
@@ -292,7 +302,7 @@ function VideoPage() {
       });
 
       if (stopResponse.ok) {
-        const stopData = await stopResponse.json();
+        const stopData = await response.json();
         console.log("Backend services stopped successfully:", stopData);
         toast.success('Interview session ended and report saved');
       } else {
@@ -307,7 +317,7 @@ function VideoPage() {
       setBackendStreamActive(false);
       setFaceRecognitionStarted(false);
       if (videoFeedRef.current) {
-        videoFeedRef.current.src = ''; // Clear the video feed
+        videoFeedRef.current.src = '';
       }
     }
   };
@@ -403,48 +413,237 @@ function VideoPage() {
     };
   }, []);
 
-  // Timer logic (starts only when service is ready)
+  // Timer logic (only runs after recording starts and service is ready)
   useEffect(() => {
-    if (!isServiceReady || questions.length === 0) return; // Wait until service is ready and questions are loaded
+    if (!isServiceReady || questions.length === 0 || !timerStarted || questionTimer === null) return;
 
     const interval = setInterval(() => {
       setTimer(prev => prev + 1);
       setQuestionTimer(prev => {
         if (prev <= 0) {
           handleNextQuestion();
-          return questions[currentQuestionIndex + 1]?.duration * 60 || 0;
+          const nextIndex = currentQuestionIndex + 1;
+          return nextIndex < questions.length ? questions[nextIndex].duration * 60 : 0;
         }
         return prev - 1;
       });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isServiceReady, currentQuestionIndex, questions]);
+  }, [isServiceReady, currentQuestionIndex, questions, timerStarted, questionTimer]);
+
+  // Initialize audio recording
+  useEffect(() => {
+    const initializeAudioRecording = async () => {
+      try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error('getUserMedia is not supported in this browser');
+        }
+
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            sampleRate: 44100,
+            channelCount: 1
+          } 
+        });
+        
+        console.log('Audio stream obtained:', stream.getAudioTracks()[0].label);
+        audioStreamRef.current = stream;
+
+        if (!window.MediaRecorder) {
+          throw new Error('MediaRecorder is not supported in this browser');
+        }
+        
+        const mediaRecorder = new MediaRecorder(stream, {
+          audioBitsPerSecond: 128000
+        });
+        
+        mediaRecorderRef.current = mediaRecorder;
+        
+        mediaRecorderRef.current.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            console.log('Received audio chunk of size:', event.data.size);
+            setAudioChunks(prev => [...prev, event.data]);
+          }
+        };
+        
+        mediaRecorderRef.current.onerror = (event) => {
+          console.error('MediaRecorder error:', event.error);
+          toast.error('Recording error: ' + event.error.message);
+        };
+        
+        mediaRecorderRef.current.onstop = () => {
+          console.log('MediaRecorder stopped');
+          setIsRecording(false);
+        };
+        
+        console.log('MediaRecorder initialized successfully');
+        
+      } catch (error) {
+        console.error('Error initializing audio recording:', error);
+        toast.error('Failed to initialize audio recording: ' + error.message);
+      }
+    };
+
+    initializeAudioRecording();
+
+    return () => {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.stop();
+      }
+      if (audioStreamRef.current) {
+        audioStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
+
+  const startRecording = () => {
+    if (!mediaRecorderRef.current) {
+      toast.error('Recording not initialized. Please refresh the page.');
+      return;
+    }
+
+    if (!isServiceReady) {
+      toast.error('Please wait until the interview session is fully initialized.');
+      return;
+    }
+
+    try {
+      if (mediaRecorderRef.current.state === 'recording') {
+        stopRecording();
+        setTimeout(() => {
+          setAudioChunks([]);
+          mediaRecorderRef.current.start();
+          setIsRecording(true);
+          toast.info('Recording started');
+          if (!timerStarted) {
+            setTimerStarted(true); // Start timer only once
+          }
+        }, 100);
+      } else {
+        setAudioChunks([]);
+        mediaRecorderRef.current.start();
+        setIsRecording(true);
+        toast.info('Recording started');
+        if (!timerStarted) {
+          setTimerStarted(true); // Start timer only once
+        }
+      }
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      toast.error('Failed to start recording: ' + error.message);
+    }
+  };
+
+  const stopRecording = () => {
+    console.log('Attempting to stop recording');
+    if (!mediaRecorderRef.current) {
+      console.error('MediaRecorder not initialized');
+      return;
+    }
+
+    try {
+      if (mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.stop();
+        setIsRecording(false);
+        toast.info('Recording stopped');
+        console.log('Recording stopped successfully');
+      } else {
+        console.log('MediaRecorder not in recording state:', mediaRecorderRef.current.state);
+      }
+    } catch (error) {
+      console.error('Error stopping recording:', error);
+      toast.error('Failed to stop recording: ' + error.message);
+    }
+  };
 
   const formatTime = (seconds) => {
-    if (seconds === null) return "0:00"; // Handle null case before streaming starts
+    if (seconds === null) return "0:00";
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleNextQuestion = () => {
-    if (currentQuestionIndex === questions.length - 1) {
-      setSessionCompleted(true);
-      toast.success('You have completed the interview session!');
-    } else {
-      setCurrentQuestionIndex(prev => prev + 1);
-      setQuestionTimer(questions[currentQuestionIndex + 1]?.duration * 60 || 0);
+  const handleNextQuestion = async () => {
+    try {
+      if (isRecording) {
+        stopRecording();
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
+      const currentQuestion = questions[currentQuestionIndex];
+      const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+      const formData = new FormData();
+      formData.append('interview_id', interviewId);
+      formData.append('question_id', currentQuestion.questionId);
+      formData.append('audio_file', audioBlob, `answer_${interviewId}_${currentQuestion.questionId}.mp3`);
+
+      console.log('Sending data:', {
+        interview_id: interviewId,
+        question_id: currentQuestion.questionId,
+        audio_file: `answer_${interviewId}_${currentQuestion.questionId}.mp3`
+      });
+
+      saveAudioInBackground(formData);
+      setAudioChunks([]);
+
+      if (currentQuestionIndex === questions.length - 1) {
+        setSessionCompleted(true);
+        setQuestionTimer(0); // Stop timer
+        toast.success('You have completed the interview session!');
+      } else {
+        setCurrentQuestionIndex(prev => {
+          const nextIndex = prev + 1;
+          setQuestionTimer(questions[nextIndex]?.duration * 60 || 0);
+          return nextIndex;
+        });
+      }
+    } catch (error) {
+      console.error('Error processing question data:', error);
+      toast.error('Failed to process question data');
+      if (currentQuestionIndex === questions.length - 1) {
+        setSessionCompleted(true);
+        setQuestionTimer(0); // Stop timer
+        toast.success('You have completed the interview session!');
+      } else {
+        setCurrentQuestionIndex(prev => {
+          const nextIndex = prev + 1;
+          setQuestionTimer(questions[nextIndex]?.duration * 60 || 0);
+          return nextIndex;
+        });
+      }
+    }
+  };
+
+  const saveAudioInBackground = async (formData) => {
+    try {
+      const transcribeResponse = await axios.post('http://localhost:8000/transcribe', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      console.log('Transcription response:', transcribeResponse.data);
+      toast.success('Answer recorded successfully');
+    } catch (transcribeError) {
+      console.error('Transcription error:', transcribeError.response?.data || transcribeError);
+      toast.error('Failed to send audio recording. Please try again.');
     }
   };
 
   const handleActionButton = async () => {
+    if (!isServiceReady) {
+      toast.error('Please wait until the interview session is fully initialized.');
+      return;
+    }
+
     if (currentQuestionIndex < questions.length - 1) {
-      handleNextQuestion();
+      setShowNextQuestionWarning(true);
       return;
     }
     if (!sessionCompleted) {
-      await stopBackendServicesAndSaveReport(); // Stop streaming and save report on "Complete Session"
+      await stopBackendServicesAndSaveReport();
       setSessionCompleted(true);
       toast.success('You have completed the interview session!');
     } else {
@@ -452,8 +651,18 @@ function VideoPage() {
     }
   };
 
+  const handleConfirmNextQuestion = async () => {
+    setShowNextQuestionWarning(false);
+    await handleNextQuestion();
+  };
+
   const handleEndSession = async () => {
     try {
+      if (interviewId) {
+        const durationInMinutes = Math.ceil(timer / 60);
+        await axiosInstance.put(`/interviews/update/interview/duration?interviewId=${interviewId}&duration=${durationInMinutes}`);
+        console.log('Interview duration updated successfully');
+      }
       if (document.fullscreenElement) {
         await document.exitFullscreen();
       }
@@ -580,6 +789,36 @@ function VideoPage() {
         </div>
       )}
 
+      {showNextQuestionWarning && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 border border-emerald-100">
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center">
+                <AlertCircle className="w-8 h-8 text-yellow-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900">Proceed to Next Question?</h2>
+              <p className="text-gray-600">
+                You cannot return to this question once you proceed. Are you sure you want to continue?
+              </p>
+              <div className="flex gap-4 w-full mt-4">
+                <button
+                  onClick={() => setShowNextQuestionWarning(false)}
+                  className="flex-1 px-6 py-2.5 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmNextQuestion}
+                  className="flex-1 px-6 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors"
+                >
+                  Continue
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <header className="w-full bg-white shadow-sm py-4 px-4 md:px-6">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-4">
@@ -618,6 +857,30 @@ function VideoPage() {
             alt="Video Feed"
             className="w-full h-full object-cover"
           />
+        </div>
+
+        <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6 flex items-center gap-4">
+          <button
+            onClick={isRecording ? stopRecording : startRecording}
+            className={`p-6 rounded-full shadow-lg transition-all ${
+              isRecording 
+                ? 'bg-red-500 hover:bg-red-600' 
+                : 'bg-emerald-500 hover:bg-emerald-600'
+            }`}
+            disabled={!isServiceReady}
+          >
+            {isRecording ? (
+              <Square size={32} className="text-white" />
+            ) : (
+              <Circle size={32} className="text-white" />
+            )}
+          </button>
+          {isRecording && (
+            <div className="bg-red-100 px-3 py-1 rounded-full flex items-center gap-2">
+              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+              <span className="text-sm text-red-600 font-medium">Recording</span>
+            </div>
+          )}
         </div>
       </main>
 

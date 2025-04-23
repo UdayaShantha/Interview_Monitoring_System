@@ -18,7 +18,7 @@ from basicDetect import run as basic_detect
 from faceVerify import run as face_verify
 from reportGeneration import run as report_generation
 from faceRecognition import run as face_recognition
-from database import get_db, create_tables, async_session_maker
+from database import get_db, create_tables, async_session_maker,SessionLocal
 from models import InterviewReport
 import cv2
 
@@ -366,6 +366,15 @@ async def video_feed(interview_id: int):
         generate_frames(),
         media_type="multipart/x-mixed-replace; boundary=frame"
     )
+
+@app.get("/interview_exists/{interview_id}", response_model=bool)
+def interview_exists(interview_id: int, db: SessionLocal = Depends(get_db)):
+    """
+    Check if an InterviewReport exists for the given interview_id.
+    Returns True if exists, False otherwise.
+    """
+    exists = db.query(InterviewReport).filter(InterviewReport.interview_id == interview_id).first() is not None
+    return exists
 
 @app.post("/start/stream/{interview_id}")
 async def start_stream(

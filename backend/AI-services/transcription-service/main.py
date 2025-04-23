@@ -12,6 +12,7 @@ import os
 import logging
 
 from sqlalchemy.orm import Session
+from fastapi.middleware.cors import CORSMiddleware
 
 from database import get_db, create_tables, engine
 from models import Transcription
@@ -19,6 +20,13 @@ from models import Transcription
 # Initialize FastAPI
 app = FastAPI(title="Audio Transcription Service")
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # Token configuration for JWT authentication
 CLIENT_ID = "audio-service"
 CLIENT_SECRET = "super-secret-key"
@@ -53,7 +61,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Load Whisper model
-model = whisper.load_model("small")
+model = whisper.load_model("tiny")
 
 @app.on_event("startup")
 async def startup_event():
