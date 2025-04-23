@@ -17,6 +17,9 @@ public interface ReportService {
     // InterviewMetricsDto extractMetrics(InterviewMetricsDto);
 
     // InterviewMetricsDto fetchMetricsFromPythonService(Long interviewId);
+
+   // InterviewMetricsDto fetchMetricsFromPythonService(Long interviewId);
+
 //   public InterviewMetricsDto fetchMetricsFromPythonService(Long interviewId);
 
 

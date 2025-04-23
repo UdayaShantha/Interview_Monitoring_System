@@ -133,5 +133,7 @@ public class AccuracyRequest {
 //
 //    public void setAccuracyData(List<AccuracyData> accuracyData) {
 //        this.accuracyData = accuracyData;
+
 //}
+//    }
 }

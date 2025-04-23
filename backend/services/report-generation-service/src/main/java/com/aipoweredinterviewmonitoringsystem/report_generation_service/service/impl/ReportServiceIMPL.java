@@ -50,6 +50,7 @@ public class ReportServiceIMPL implements ReportService {
         return reportDownloadDTO;
     }
 
+
     @Override
     public Long getReportIdByCandidateId(Long candidateId) {
         Report report = (Report) reportRepository.findByCandidateId(candidateId)
@@ -57,6 +58,7 @@ public class ReportServiceIMPL implements ReportService {
 
         return report.getReportId();
     }
+
 
 
     // Fetch json from Python service ------------------------------------------------------
@@ -168,7 +170,11 @@ public class ReportServiceIMPL implements ReportService {
 //            return Integer.parseInt(value.trim());
 //        } catch (NumberFormatException e) {
 //            return 0;
+
 //        }
 //    }
+
+//        }
+//    }
 
 }

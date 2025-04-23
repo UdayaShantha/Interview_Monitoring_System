@@ -149,7 +149,9 @@ public class JasperReportController {
             emotionDataList.add(new EmotionData("Neutral", getAccuracyRequestDTO.getNeutral()));
             emotionDataList.add(new EmotionData("Surprise", getAccuracyRequestDTO.getSurprise()));
             emotionDataList.add(new EmotionData("Fear", getAccuracyRequestDTO.getFear()));
+
             emotionDataList.add(new EmotionData("Others", getAccuracyRequestDTO.getOthers()));
+
 
             // Convert to JRBeanCollectionDataSource
             JRBeanCollectionDataSource emotionDataSource = new JRBeanCollectionDataSource(emotionDataList);
