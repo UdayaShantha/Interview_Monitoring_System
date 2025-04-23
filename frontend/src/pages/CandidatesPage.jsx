@@ -510,20 +510,6 @@ const CandidatesPage = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-600">Schedule Date:</label>
-                        <div className="mt-1 p-2 w-full bg-gray-50 border border-gray-200 rounded-md">
-                          {selectedCandidate.scheduleDate ? new Date(selectedCandidate.scheduleDate).toLocaleDateString() : 'N/A'}
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-600">Start Time:</label>
-                        <div className="mt-1 p-2 w-full bg-gray-50 border border-gray-200 rounded-md">
-                          {selectedCandidate.startTime || 'N/A'}
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -532,9 +518,9 @@ const CandidatesPage = () => {
               <div className="px-6 py-3 bg-gray-50 flex justify-end">
                 <button
                   onClick={() => setShowViewModal(false)}
-                  className="px-4 py-2 bg-emerald-500 text-white rounded-md hover:bg-emerald-600 transition-colors"
+                  className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
                 >
-                  Edit
+                  Close
                 </button>
               </div>
             </motion.div>

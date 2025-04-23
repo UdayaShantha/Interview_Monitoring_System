@@ -38,6 +38,7 @@ public class SecurityConfig {
                                 "/api/v1/users/hr/candidate/save",
                                 "/api/v1/users/hr/candidate-interview/**",
                                 "/api/v1/interviews/get/user/{userId}",
+                                "/api/v1/users/get/user-Details-by-userId/**",
                                 "/api/v1/interviews/get/interview/questions",
                                 "/api/v1/users/hr/candidate/position/**",
                                 "/v3/api-docs/**",
